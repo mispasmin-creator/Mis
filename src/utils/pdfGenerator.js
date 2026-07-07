@@ -106,12 +106,12 @@ export const generateDashboardPDF = async (visibleColumnsList, filteredEmployees
     
     <table style="width: 100%; border-collapse: collapse; font-size: 11px; border: 1px solid #e5e7eb;">
       <thead>
-        <tr style="background-color: #2563eb; color: white;">
+        <tr style="background-color: #24888f; color: white;">
   `;
 
   // Add Headers
   visibleColumnsList.forEach(col => {
-    html += `<th style="padding: 10px 5px; text-align: left; border: 1px solid #3b82f6;">${col.label}</th>`;
+    html += `<th style="padding: 10px 5px; text-align: left; border: 1px solid #31bac4;">${col.label}</th>`;
   });
 
   html += `
@@ -155,7 +155,7 @@ export const generateDashboardPDF = async (visibleColumnsList, filteredEmployees
       </tbody>
     </table>
     <div style="margin-top: 30px; text-align: center; color: #9ca3af; font-size: 10px;">
-      © ${new Date().getFullYear()} MIS System Dashboard. Powered by Botivate.
+      © ${new Date().getFullYear()} MIS System Dashboard.
     </div>
   `;
 

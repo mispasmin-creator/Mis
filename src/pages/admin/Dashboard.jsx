@@ -1,24 +1,18 @@
 // ============ DASHBOARD PAGE ============
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { LayoutDashboard, Users, Calendar, Clock, AlertTriangle, Search, ChevronDown, Download, Filter, MessageSquare, Briefcase, TrendingUp, X, MapPin, Phone, Mail, User, Info, Loader2 } from 'lucide-react';
+import { LayoutDashboard, Users, Calendar, Clock, AlertTriangle, Search, ChevronDown, Download, Filter, MessageSquare, Briefcase, TrendingUp, Target, CheckSquare, X, MapPin, Phone, Mail, User, Info, Loader2 } from 'lucide-react';
 import { getDisplayableImageUrl } from '../../utils/imageUtils';
-import {
-  employees,
-  getTopScorers,
-  getLowestScorers,
-  getEmployeesByPendingTasks,
-  departments,
-  getWeeklyCommitmentComparison,
-} from "../../data/mockData";
 import EmployeesTable from "../../components/tables/EmployeesTable";
 import HalfCircleChart from "../../components/charts/HalfCircleChart";
 import HorizontalBarChart from "../../components/charts/HorizontalBarChart";
 import VerticalBarChart from "../../components/charts/VerticalBarChart";
+import StatsCard from "../../components/dashboard/StatsCard";
 import DashboardHeader from "./components/DashboardHeader";
 import EmployeeListSection from "./components/EmployeeListSection";
 import UserDetailsModal from "./components/UserDetailsModal";
 import ChartsGrid from "./components/ChartsGrid";
 import DepartmentScoreChart from "../../components/charts/DepartmentScoreChart";
+import DepartmentWorkloadChart from "../../components/charts/DepartmentWorkloadChart";
 import { useAuth } from "../../contexts/AuthContext";
 
 const getCurrentWeek = () => {
@@ -56,6 +50,7 @@ const AdminDashboard = () => {
   const [columnLabels, setColumnLabels] = useState({
     name: "Name",
     designation: "Designation",
+    department: "Department",
     target: "Target",
     actualWork: "Actual Work",
     weeklyDone: "Weekly Not Done %",
@@ -70,6 +65,7 @@ const AdminDashboard = () => {
 
     { key: "name", label: columnLabels.name },
     { key: "designation", label: columnLabels.designation },
+    { key: "department", label: columnLabels.department },
     { key: "target", label: columnLabels.target },
     { key: "actualWork", label: columnLabels.actualWork },
     { key: "weeklyDone", label: columnLabels.weeklyDone },
@@ -111,6 +107,7 @@ const AdminDashboard = () => {
   const [expandedEmployee, setExpandedEmployee] = useState(null);
   const [filterName, setFilterName] = useState("");
   const [filterDepartment, setFilterDepartment] = useState("");
+  const [filterDeptName, setFilterDeptName] = useState("");
   const [filterHR, setFilterHR] = useState("");
   const [selectedUserDetails, setSelectedUserDetails] = useState(null);
 
@@ -198,7 +195,7 @@ const AdminDashboard = () => {
         const scriptUrl = import.meta.env.VITE_APPS_SCRIPT_URL;
         if (!scriptUrl) {
           console.error("VITE_APPS_SCRIPT_URL not set");
-          setSheetEmployees(employees);
+          setSheetEmployees([]);
           setLoading(false);
           return;
         }
@@ -243,14 +240,16 @@ const AdminDashboard = () => {
           setDepartmentScores(parsedDeptScores);
         }
 
-        // Build image and designation maps from Master sheet (Column A: Name, Column D: Designation, Column E: Image, Column J: Reported By)
+        // Build image and designation maps from Master sheet (Column A: Name, Column C: Department, Column D: Designation, Column E: Image, Column J: Reported By)
         const imageMap = {};
         const designationMap = {};
+        const departmentMap = {};
         const phoneMap = {};
         const reportedByMap = {};
         if (masterResult.success && Array.isArray(masterResult.data)) {
           masterResult.data.slice(1).forEach(row => {
             const name = row[0] ? String(row[0]).trim().toLowerCase() : "";
+            const department = row[2] ? String(row[2]).trim() : "";
             const designation = row[3] ? String(row[3]).trim() : "";
             const imageUrl = row[4];
             const phone = row[1] ? String(row[1]).trim() : ""; // Column B (index 1)
@@ -258,6 +257,7 @@ const AdminDashboard = () => {
             if (name) {
               if (imageUrl) imageMap[name] = imageUrl;
               if (designation) designationMap[name] = designation;
+              if (department) departmentMap[name] = department;
               if (phone) phoneMap[name] = phone;
               if (reportedBy) reportedByMap[name] = reportedBy;
             }
@@ -355,7 +355,7 @@ const AdminDashboard = () => {
                 startDate: row[10] || "", // Column K (index 10)
                 endDate: row[11] || "",   // Column L (index 11)
                 designation: designationMap[normalizedName] || "",
-                department: "",
+                department: departmentMap[normalizedName] || "",
                 image: finalImageUrl,
 
                 score: row[5] || 0,       // Column F (index 5) - Weekly Work Done %
@@ -399,11 +399,11 @@ const AdminDashboard = () => {
           setSheetEmployees(finalData);
         } else {
           console.error("Failed to load sheet data", result);
-          setSheetEmployees(employees);
+          setSheetEmployees([]);
         }
       } catch (error) {
         console.error("Error fetching sheet data:", error);
-        setSheetEmployees(employees);
+        setSheetEmployees([]);
       } finally {
         setLoading(false);
       }
@@ -424,21 +424,25 @@ const AdminDashboard = () => {
     return sheetEmployees.filter((emp) => {
       const matchesName = emp.name.toLowerCase().includes(filterName.toLowerCase());
       const matchesDesignation = filterDepartment === "" || emp.designation === filterDepartment;
-      return matchesName && matchesDesignation;
+      const matchesDept = filterDeptName === "" || emp.department === filterDeptName;
+      return matchesName && matchesDesignation && matchesDept;
     });
-  }, [sheetEmployees, filterName, filterDepartment]);
+  }, [sheetEmployees, filterName, filterDepartment, filterDeptName]);
 
   // Get unique designations
   const uniqueDesignations = useMemo(() => [
     ...new Set(sheetEmployees.map((emp) => emp.designation).filter(Boolean)),
   ], [sheetEmployees]);
 
+  // Get unique departments
+  const uniqueDepartments = useMemo(() => [
+    ...new Set(sheetEmployees.map((emp) => emp.department).filter(Boolean)),
+  ], [sheetEmployees]);
+
   // Statistics - Memoized
   const {
     topScorers,
-    topBestPerformers,
-    lowestScorers,
-    commitmentComparison
+    topBestPerformers
   } = useMemo(() => {
     let topScorersList = [];
 
@@ -531,9 +535,7 @@ const AdminDashboard = () => {
 
     return {
       topScorers: topScorersList.length > 0 ? topScorersList : [],
-      topBestPerformers: topBestList.length > 0 ? topBestList : [],
-      lowestScorers: getLowestScorers(5),
-      commitmentComparison: getWeeklyCommitmentComparison()
+      topBestPerformers: topBestList.length > 0 ? topBestList : []
     };
   }, [sheetEmployees, columnLabels]);
 
@@ -551,9 +553,6 @@ const AdminDashboard = () => {
     const val = emp.totalTasks ?? 0;
     return isNaN(val) ? 0 : val;
   }), [topBestPerformers]);
-  const lowestScorersData = useMemo(() => lowestScorers.map((emp) => isNaN(emp.score) ? 0 : (emp.score ?? 0)), [lowestScorers]);
-  const lowestScorersLabels = useMemo(() => lowestScorers.map((emp) => emp.name), [lowestScorers]);
-
   // Pending Tasks by User — Column I (weekPending) sorted desc, Column D (target) as total
   const sortedPendingList = useMemo(() => {
     return [...sheetEmployees]
@@ -574,6 +573,36 @@ const AdminDashboard = () => {
   const departmentScoresLabels = useMemo(() => departmentScores.map((dept) => dept.name), [departmentScores]);
   const departmentScoresNotDoneOnTime = useMemo(() => departmentScores.map((dept) => dept.notDoneOnTimePct), [departmentScores]);
   const departmentScoresPending = useMemo(() => departmentScores.map((dept) => dept.pendingWorks), [departmentScores]);
+
+  // Department Workload — Target (work assigned) vs Actual (work done), summed per department
+  const departmentWorkload = useMemo(() => {
+    const byDept = {};
+    sheetEmployees.forEach((emp) => {
+      const dept = emp.department?.trim() || "Unassigned";
+      const target = parseFloat(emp.target) || 0;
+      const actual = parseFloat(emp.actualWorkDone) || 0;
+      if (!byDept[dept]) byDept[dept] = { department: dept, target: 0, actual: 0 };
+      byDept[dept].target += target;
+      byDept[dept].actual += actual;
+    });
+    return Object.values(byDept)
+      .filter((d) => d.target > 0 || d.actual > 0)
+      .sort((a, b) => b.target - a.target);
+  }, [sheetEmployees]);
+
+  const departmentWorkloadLabels = useMemo(() => departmentWorkload.map((d) => d.department), [departmentWorkload]);
+  const departmentWorkloadTarget = useMemo(() => departmentWorkload.map((d) => d.target), [departmentWorkload]);
+  const departmentWorkloadActual = useMemo(() => departmentWorkload.map((d) => d.actual), [departmentWorkload]);
+
+  // Top-level KPI summary — totals across every visible employee
+  const dashboardStats = useMemo(() => {
+    const totalEmployees = sheetEmployees.length;
+    const totalTarget = sheetEmployees.reduce((sum, emp) => sum + (parseFloat(emp.target) || 0), 0);
+    const totalActual = sheetEmployees.reduce((sum, emp) => sum + (parseFloat(emp.actualWorkDone) || 0), 0);
+    const totalPending = sheetEmployees.reduce((sum, emp) => sum + (parseFloat(emp.allPendingTillDate) || 0), 0);
+    const completionPct = totalTarget > 0 ? Math.round((totalActual / totalTarget) * 100) : 0;
+    return { totalEmployees, totalTarget, totalActual, totalPending, completionPct };
+  }, [sheetEmployees]);
 
   const handleSelectAll = () => {
     if (selectAll) {
@@ -1136,6 +1165,34 @@ Bhatiya.`;
         dataSheetRows={dataSheetRows}
       />
 
+      {/* KPI Summary */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+        <StatsCard
+          title="Total People"
+          value={loading ? '—' : dashboardStats.totalEmployees}
+          icon={Users}
+          color="blue"
+        />
+        <StatsCard
+          title="Work Assigned"
+          value={loading ? '—' : dashboardStats.totalTarget}
+          icon={Target}
+          color="purple"
+        />
+        <StatsCard
+          title="Work Done"
+          value={loading ? '—' : dashboardStats.totalActual}
+          icon={CheckSquare}
+          color="green"
+        />
+        <StatsCard
+          title="Completion Rate"
+          value={loading ? '—' : `${dashboardStats.completionPct}%`}
+          icon={TrendingUp}
+          color={dashboardStats.completionPct >= 75 ? 'green' : dashboardStats.completionPct >= 50 ? 'amber' : 'orange'}
+        />
+      </div>
+
       {/* Employee List */}
       <EmployeeListSection
         user={user}
@@ -1151,6 +1208,9 @@ Bhatiya.`;
         filterDepartment={filterDepartment}
         setFilterDepartment={setFilterDepartment}
         uniqueDesignations={uniqueDesignations}
+        filterDeptName={filterDeptName}
+        setFilterDeptName={setFilterDeptName}
+        uniqueDepartments={uniqueDepartments}
         onMainSubmit={handleMainSubmit}
         onWhatsAppSubmit={handleWhatsAppSubmit}
         selectedEmployees={selectedEmployees}
@@ -1193,6 +1253,32 @@ Bhatiya.`;
         topBestLabels={topBestLabels}
         topBestTotalData={topBestTotalData}
       />
+
+      {/* Department Workload (Target vs Actual) - Admin Only */}
+      {(user?.role === 'admin' || user?.role === 'superadmin') && (
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6 lg:p-8 mt-6">
+          <h2 className="text-sm md:text-base font-bold text-gray-800 flex items-center gap-2 mb-6">
+            <div className="w-1.5 h-6 bg-blue-500 rounded-full" />
+            Department Workload
+          </h2>
+          <div className="h-[320px] md:h-[380px]">
+            {loading ? (
+              <div className="flex flex-col items-center justify-center h-full text-gray-400 gap-3">
+                <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+                <span className="text-sm font-medium text-gray-500">Loading data...</span>
+              </div>
+            ) : departmentWorkload.length > 0 ? (
+              <DepartmentWorkloadChart
+                labels={departmentWorkloadLabels}
+                targetData={departmentWorkloadTarget}
+                actualData={departmentWorkloadActual}
+              />
+            ) : (
+              <div className="flex items-center justify-center h-full text-gray-400 text-sm italic">No department data available</div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Department Scores - Admin Only */}
       {(user?.role === 'admin' || user?.role === 'superadmin') && (

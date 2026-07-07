@@ -83,7 +83,7 @@ export const generateDashboardJPEG = async (visibleColumnsList, filteredEmployee
     <!-- Performance Analytics Chart Section -->
     <div style="margin-bottom: 30px; background-color: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px;">
       <h2 style="font-size: 20px; font-weight: bold; color: #374151; margin: 0 0 15px 0;">
-        <span style="display: inline-block; width: 6px; height: 20px; background-color: #2563eb; border-radius: 3px; margin-right: 10px; vertical-align: middle;"></span>
+        <span style="display: inline-block; width: 6px; height: 20px; background-color: #24888f; border-radius: 3px; margin-right: 10px; vertical-align: middle;"></span>
         Performance Analytics Graph
       </h2>
       <div style="width: 100%; height: 350px; background-color: #f9fafb; border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
@@ -115,7 +115,7 @@ export const generateDashboardJPEG = async (visibleColumnsList, filteredEmployee
             <tr style="background-color: ${index % 2 === 0 ? '#ffffff' : '#f9fafb'};">
               <td style="padding: 10px 15px; border: 1px solid #e5e7eb; font-weight: 600; color: #1e293b;">${dept.name}</td>
               <td style="padding: 10px 15px; border: 1px solid #e5e7eb; text-align: right; color: #d97706; font-weight: bold;">${dept.pendingWorks}</td>
-              <td style="padding: 10px 15px; border: 1px solid #e5e7eb; text-align: right; color: #2563eb; font-weight: bold;">${(dept.workNotDonePct || 0).toFixed(1)}%</td>
+              <td style="padding: 10px 15px; border: 1px solid #e5e7eb; text-align: right; color: #24888f; font-weight: bold;">${(dept.workNotDonePct || 0).toFixed(1)}%</td>
               <td style="padding: 10px 15px; border: 1px solid #e5e7eb; text-align: right; color: #dc2626; font-weight: bold;">${(dept.notDoneOnTimePct || 0).toFixed(1)}%</td>
             </tr>
           `).join('')}
@@ -130,12 +130,12 @@ export const generateDashboardJPEG = async (visibleColumnsList, filteredEmployee
     
     <table style="width: 100%; border-collapse: collapse; font-size: 12px; border: 1px solid #e5e7eb; background-color: white;">
       <thead>
-        <tr style="background-color: #2563eb; color: white;">
+        <tr style="background-color: #24888f; color: white;">
   `;
 
   // Add Headers
   visibleColumnsList.forEach(col => {
-    html += `<th style="padding: 12px 8px; text-align: left; border: 1px solid #3b82f6; background-color: #2563eb; color: white;">${col.label}</th>`;
+    html += `<th style="padding: 12px 8px; text-align: left; border: 1px solid #31bac4; background-color: #24888f; color: white;">${col.label}</th>`;
   });
 
   html += `

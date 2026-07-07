@@ -294,7 +294,7 @@ const AdminTodayTasks = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
+          <Loader2 className="h-12 w-12 animate-spin text-indigo-600" />
           <p className="text-gray-600 font-medium">Fetching Today's Tasks...</p>
         </div>
       </div>
@@ -314,14 +314,14 @@ const AdminTodayTasks = () => {
                 placeholder="Search by name..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-blue-500 shadow-sm"
+                className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-indigo-500 shadow-sm"
               />
             </div>
             <div className="flex flex-col sm:flex-row gap-2">
               <select
                 value={personFilter}
                 onChange={(e) => setPersonFilter(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-blue-500 bg-white"
+                className="px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-indigo-500 bg-white"
               >
                 <option value="all">All Persons</option>
                 {persons.map(p => <option key={p} value={p}>{p}</option>)}
@@ -334,7 +334,7 @@ const AdminTodayTasks = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200 flex items-center justify-between">
             <div><p className="text-xs font-medium text-gray-500 uppercase">Persons</p><p className="text-xl font-bold text-gray-900 mt-1">{groupedEmployees.length}</p></div>
-            <div className="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center"><Filter className="w-5 h-5 text-blue-600" /></div>
+            <div className="w-10 h-10 bg-indigo-50 rounded-full flex items-center justify-center"><Filter className="w-5 h-5 text-indigo-600" /></div>
           </div>
           <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200 flex items-center justify-between">
             <div><p className="text-xs font-medium text-gray-500 uppercase">FMS Names</p><p className="text-xl font-bold text-gray-900 mt-1">{[...new Set(enrichedTasks.map(t => t.fmsName))].length}</p></div>
@@ -359,7 +359,7 @@ const AdminTodayTasks = () => {
         <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
           <div className="px-5 py-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
             <h2 className="text-base font-bold text-gray-800">Unique Employees</h2>
-            {fetchingTodayCounts && <span className="text-xs text-blue-600 flex items-center gap-1"><Loader2 className="w-3 h-3 animate-spin" /> Updating counts...</span>}
+            {fetchingTodayCounts && <span className="text-xs text-indigo-600 flex items-center gap-1"><Loader2 className="w-3 h-3 animate-spin" /> Updating counts...</span>}
           </div>
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -373,7 +373,7 @@ const AdminTodayTasks = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredEmployees.length > 0 ? filteredEmployees.map((e, idx) => (
-                  <tr key={idx} className="hover:bg-blue-50/50 cursor-pointer transition-colors" onClick={() => handleRowClick(e)}>
+                  <tr key={idx} className="hover:bg-indigo-50/50 cursor-pointer transition-colors" onClick={() => handleRowClick(e)}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-medium">{idx + 1}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
@@ -383,7 +383,7 @@ const AdminTodayTasks = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-medium">{e.designation}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-right">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${e.plannedCount > 0 ? "bg-blue-100 text-blue-800" : "bg-gray-100 text-gray-500"}`}>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${e.plannedCount > 0 ? "bg-indigo-100 text-indigo-800" : "bg-gray-100 text-gray-500"}`}>
                         {e.plannedCount}
                       </span>
                     </td>
@@ -407,7 +407,7 @@ const AdminTodayTasks = () => {
             </div>
             <div className="overflow-y-auto flex-1 bg-white">
               {activeDrillDown.loading ? (
-                <div className="flex flex-col items-center justify-center py-20"><Loader2 className="h-10 w-10 animate-spin text-blue-600 mb-4" /><p className="text-gray-500 font-medium">Compiling all tasks for today...</p></div>
+                <div className="flex flex-col items-center justify-center py-20"><Loader2 className="h-10 w-10 animate-spin text-indigo-600 mb-4" /><p className="text-gray-500 font-medium">Compiling all tasks for today...</p></div>
               ) : activeDrillDown.error ? (
                 <div className="p-10 text-center text-red-500 font-medium"><p>Error: {activeDrillDown.error}</p></div>
               ) : (
@@ -422,8 +422,8 @@ const AdminTodayTasks = () => {
                   </thead>
                   <tbody className="divide-y divide-gray-50">
                     {activeDrillDown.rows.length > 0 ? activeDrillDown.rows.map((row, idx) => (
-                      <tr key={idx} className="hover:bg-blue-50/30 transition-colors">
-                        <td className="px-6 py-4 text-sm text-blue-600 font-semibold">{row.fmsName}</td>
+                      <tr key={idx} className="hover:bg-indigo-50/30 transition-colors">
+                        <td className="px-6 py-4 text-sm text-indigo-600 font-semibold">{row.fmsName}</td>
                         <td className="px-6 py-4 text-sm text-gray-800 font-medium">{row.taskName}</td>
                         <td className="px-6 py-4 text-sm text-gray-500">{row.planned}</td>
                         <td className="px-6 py-4 text-sm text-gray-500">{row.actual}</td>
@@ -434,7 +434,7 @@ const AdminTodayTasks = () => {
               )}
             </div>
             <div className="p-4 border-t border-gray-100 bg-gray-50 rounded-b-xl flex justify-end">
-              <button onClick={() => setActiveDrillDown(null)} className="px-6 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 font-bold transition-all">Close</button>
+              <button onClick={() => setActiveDrillDown(null)} className="px-6 py-2 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700 font-bold transition-all">Close</button>
             </div>
           </div>
         </div>

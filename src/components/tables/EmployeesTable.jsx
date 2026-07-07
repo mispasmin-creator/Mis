@@ -69,7 +69,7 @@ const EmployeesTable = ({ employees, isCompact = false }) => {
                     <div className="flex items-center">
                       <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
                         <div 
-                          className="h-2 rounded-full bg-blue-600"
+                          className="h-2 rounded-full bg-indigo-600"
                           style={{ width: `${employee.actualWorkDone}%` }}
                         ></div>
                       </div>

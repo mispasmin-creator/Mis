@@ -17,6 +17,9 @@ const EmployeeListSection = ({
     filterDepartment,
     setFilterDepartment,
     uniqueDesignations,
+    filterDeptName,
+    setFilterDeptName,
+    uniqueDepartments,
     // Submit
     onMainSubmit,
     onWhatsAppSubmit,
@@ -79,7 +82,7 @@ const EmployeeListSection = ({
                                             onMainSubmit(e);
                                         }}
                                         disabled={whatsappSubmitting || mainSubmitting}
-                                        className={`inline-flex items-center px-4 py-2 rounded-md shadow-sm text-sm font-medium text-white transition-all transform active:scale-95 ${mainSubmitting ? "bg-blue-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
+                                        className={`inline-flex items-center px-4 py-2 rounded-md shadow-sm text-sm font-medium text-white transition-all transform active:scale-95 ${mainSubmitting ? "bg-indigo-400 cursor-not-allowed" : "bg-indigo-600 hover:bg-indigo-700"
                                             }`}
                                     >
                                         {mainSubmitting ? (
@@ -100,7 +103,7 @@ const EmployeeListSection = ({
                         <div className="relative w-full sm:w-auto order-1">
                             <button
                                 onClick={() => setShowColumnFilter(!showColumnFilter)}
-                                className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                                className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
                             >
                                 <Filter className="h-4 w-4 mr-2" />
                                 Columns
@@ -113,7 +116,7 @@ const EmployeeListSection = ({
                                                 type="checkbox"
                                                 checked={Object.values(visibleColumns).every(Boolean)}
                                                 onChange={toggleAllColumns}
-                                                className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                                                className="h-4 w-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
                                             />
                                             <span className="ml-2 text-sm text-gray-900 font-semibold">Select All</span>
                                         </label>
@@ -128,7 +131,7 @@ const EmployeeListSection = ({
                                                     type="checkbox"
                                                     checked={visibleColumns[col.key]}
                                                     onChange={() => toggleColumn(col.key)}
-                                                    className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                                                    className="h-4 w-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
                                                 />
                                                 <span className="ml-2 text-sm text-gray-700">
                                                     {col.label}
@@ -146,7 +149,7 @@ const EmployeeListSection = ({
                                 placeholder="Search by name..."
                                 value={filterName}
                                 onChange={(e) => setFilterName(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                             />
                         </div>
 
@@ -154,12 +157,27 @@ const EmployeeListSection = ({
                             <select
                                 value={filterDepartment}
                                 onChange={(e) => setFilterDepartment(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                             >
                                 <option value="">All Designations</option>
                                 {uniqueDesignations.map((desig) => (
                                     <option key={desig} value={desig}>
                                         {desig}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className="flex-1 min-w-[200px] sm:min-w-[150px] order-4">
+                            <select
+                                value={filterDeptName}
+                                onChange={(e) => setFilterDeptName(e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                            >
+                                <option value="">All Departments</option>
+                                {uniqueDepartments.map((dept) => (
+                                    <option key={dept} value={dept}>
+                                        {dept}
                                     </option>
                                 ))}
                             </select>
@@ -178,7 +196,7 @@ const EmployeeListSection = ({
                                     type="checkbox"
                                     checked={selectAll}
                                     onChange={handleSelectAll}
-                                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                    className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                                 />
                             </th>
 
@@ -190,6 +208,11 @@ const EmployeeListSection = ({
                             {visibleColumns.designation && (
                                 <th className="px-2 min-w-24 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     {columnLabels.designation}
+                                </th>
+                            )}
+                            {visibleColumns.department && (
+                                <th className="px-2 min-w-24 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    {columnLabels.department}
                                 </th>
                             )}
                             {visibleColumns.target && (
@@ -264,7 +287,7 @@ const EmployeeListSection = ({
                             <tr>
                                 <td colSpan={ALL_COLUMNS.length + 1} className="px-6 py-10 text-center">
                                     <div className="flex flex-col items-center justify-center space-y-3">
-                                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
                                         <p className="text-sm text-gray-500 font-medium">Loading employee data...</p>
                                     </div>
                                 </td>
@@ -278,9 +301,9 @@ const EmployeeListSection = ({
                         ) : (
                             <>
                                 {loading && (
-                                    <tr className="bg-blue-50/30">
+                                    <tr className="bg-indigo-50/30">
                                         <td colSpan={ALL_COLUMNS.length + 1} className="px-3 py-1 text-center">
-                                            <span className="text-[10px] font-semibold text-blue-600 uppercase tracking-wider animate-pulse">
+                                            <span className="text-[10px] font-semibold text-indigo-600 uppercase tracking-wider animate-pulse">
                                                 Refreshing Data...
                                             </span>
                                         </td>
@@ -290,7 +313,7 @@ const EmployeeListSection = ({
                                     <tr
                                         key={employee.id}
                                         onClick={() => handleRowClick(employee)}
-                                        className={`hover:bg-gray-50 cursor-pointer ${selectedEmployees.includes(employee.id) ? "bg-blue-50" : ""
+                                        className={`hover:bg-gray-50 cursor-pointer ${selectedEmployees.includes(employee.id) ? "bg-indigo-50" : ""
                                             }`}
                                     >
                                         <td
@@ -301,7 +324,7 @@ const EmployeeListSection = ({
                                                 type="checkbox"
                                                 checked={selectedEmployees.includes(employee.id)}
                                                 onChange={() => handleCheckboxChange(employee.id)}
-                                                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                                className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                                             />
                                         </td>
 
@@ -324,6 +347,11 @@ const EmployeeListSection = ({
                                         {visibleColumns.designation && (
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                                 {employee.designation}
+                                            </td>
+                                        )}
+                                        {visibleColumns.department && (
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                {employee.department}
                                             </td>
                                         )}
                                         {visibleColumns.target && (
@@ -466,7 +494,7 @@ const EmployeeListSection = ({
                         type="checkbox"
                         checked={selectAll}
                         onChange={handleSelectAll}
-                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                     />
                     <span className="text-sm font-medium text-gray-700">
                         Select All ({filteredEmployees.length})
@@ -477,7 +505,7 @@ const EmployeeListSection = ({
                     {filteredEmployees.map((employee) => (
                         <div
                             key={employee.id}
-                            className={`border-b border-gray-200 ${selectedEmployees.includes(employee.id) ? "bg-blue-50" : ""
+                            className={`border-b border-gray-200 ${selectedEmployees.includes(employee.id) ? "bg-indigo-50" : ""
                                 }`}
                         >
                             <div className="p-3">
@@ -486,7 +514,7 @@ const EmployeeListSection = ({
                                         type="checkbox"
                                         checked={selectedEmployees.includes(employee.id)}
                                         onChange={() => handleEmployeeSelect(employee.id)}
-                                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 mt-1 flex-shrink-0"
+                                        className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 mt-1 flex-shrink-0"
                                     />
                                     <div className="flex-1 min-w-0">
                                         <div

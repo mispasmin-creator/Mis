@@ -8,7 +8,7 @@ const styles = StyleSheet.create({
     paddingBottom: 60,
   },
   headerContainer: {
-    backgroundColor: '#0a2e65',
+    backgroundColor: '#124649',
     paddingTop: 30,
     paddingBottom: 40,
     paddingHorizontal: 30,
@@ -17,12 +17,12 @@ const styles = StyleSheet.create({
   },
   innerHeaderBox: {
     borderWidth: 1,
-    borderColor: '#4267b2',
+    borderColor: '#31bac4',
     padding: 15,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#0c387a',
+    backgroundColor: '#16555a',
   },
   headerTitle: {
     color: '#ffffff',
@@ -34,7 +34,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   headerRightText1: {
-    color: '#a0bdf2',
+    color: '#c2edf0',
     fontSize: 8,
     marginBottom: 4,
   },
@@ -57,7 +57,7 @@ const styles = StyleSheet.create({
   dateText: {
     fontSize: 11,
     fontWeight: 'bold',
-    color: '#0a2e65',
+    color: '#124649',
   },
   body: {
     paddingHorizontal: 30,
@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 11,
     fontWeight: 'bold',
-    color: '#0a2e65',
+    color: '#124649',
     marginBottom: 10,
     marginTop: 10,
   },
@@ -120,8 +120,8 @@ const styles = StyleSheet.create({
   activityText: { display: 'none' },
   activityValue: { display: 'none' },
   
-  tableHeaderWrap: { flexDirection: 'row', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: '#0a2e65', paddingBottom: 6, marginBottom: 10 },
-  tableHeaderTitle: { fontSize: 10, fontWeight: 'bold', color: '#0a2e65' },
+  tableHeaderWrap: { flexDirection: 'row', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: '#124649', paddingBottom: 6, marginBottom: 10 },
+  tableHeaderTitle: { fontSize: 10, fontWeight: 'bold', color: '#124649' },
   tableSubTitle: { fontSize: 8, color: '#64748b' },
   table: { width: '100%', backgroundColor: '#ffffff', borderRadius: 8, padding: 8, borderWidth: 1, borderColor: '#e2e8f0' },
   tableRowHeader: { flexDirection: 'row', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#e2e8f0' },
@@ -144,9 +144,9 @@ const styles = StyleSheet.create({
   emptyText: { fontSize: 10, color: '#64748b', textAlign: 'center', marginTop: 20 },
   
   badge: {
-    backgroundColor: '#eff6ff',
+    backgroundColor: '#f3fbfc',
     borderWidth: 1,
-    borderColor: '#dbeafe',
+    borderColor: '#e2f6f8',
     borderRadius: 50,
     paddingVertical: 4,
     paddingHorizontal: 8,
@@ -154,7 +154,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   badgeText: {
-    color: '#2563eb',
+    color: '#24888f',
     fontSize: 6,
     fontWeight: 'bold',
     letterSpacing: 1,
@@ -353,14 +353,13 @@ const AllModulesPDF = ({ modules = [], allData = {}, logoPath }) => {
                   <Text style={[styles.col4, styles.colText, { width: '15%' }]}>{todayReports.length}</Text>
                   <Text style={[styles.col5, styles.colText, { width: '15%' }]}>{modCompleted}</Text>
                   <Text style={[styles.col4, styles.colText, { width: '20%' }]}>{modTotalPending}</Text>
-                  <Text style={[styles.col6, styles.colText, { width: '15%', color: progress === 100 ? '#16a34a' : '#2563eb' }]}>{progress}% Done</Text>
+                  <Text style={[styles.col6, styles.colText, { width: '15%', color: progress === 100 ? '#16a34a' : '#24888f' }]}>{progress}% Done</Text>
                 </View>
               );
             })}
           </View>
         </View>
         <View style={styles.footer} fixed>
-          <Text style={styles.footerText}>Powered by Botivate</Text>
           <Text style={styles.footerText} render={({ pageNumber, totalPages }) => (`Page ${pageNumber} of ${totalPages}`)} />
         </View>
       </Page>
@@ -508,7 +507,6 @@ const AllModulesPDF = ({ modules = [], allData = {}, logoPath }) => {
               })()}
             </View>
             <View style={styles.footer} fixed>
-              <Text style={styles.footerText}>Powered by Botivate</Text>
               <Text style={styles.footerText} render={({ pageNumber, totalPages }) => (`Page ${pageNumber} of ${totalPages}`)} />
             </View>
           </Page>

@@ -293,7 +293,7 @@ const KpiKra = () => {
         <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-6 pb-6 border-b border-gray-200">
           <div>
             <div className="flex items-center gap-4">
-              <div className="p-2.5 bg-blue-600 rounded-xl shadow-lg shadow-blue-200">
+              <div className="p-2.5 bg-indigo-600 rounded-xl shadow-lg shadow-indigo-200">
                 <Target className="w-6 h-6 text-white" />
               </div>
               <div>
@@ -301,8 +301,8 @@ const KpiKra = () => {
                 <div className="flex items-center gap-2 mt-1">
                   <p className="text-gray-500 text-sm md:text-base">Role-specific performance metrics & resources</p>
                   {userRole !== 'admin' && userDept && (
-                    <span className="flex items-center gap-1.5 px-2.5 py-0.5 bg-blue-50 border border-blue-100 rounded-full text-[11px] font-semibold text-blue-700 uppercase tracking-wider">
-                      <span className="w-1.5 h-1.5 bg-blue-600 rounded-full animate-pulse" />
+                    <span className="flex items-center gap-1.5 px-2.5 py-0.5 bg-indigo-50 border border-indigo-100 rounded-full text-[11px] font-semibold text-indigo-700 uppercase tracking-wider">
+                      <span className="w-1.5 h-1.5 bg-indigo-600 rounded-full animate-pulse" />
                       {userDept}
                     </span>
                   )}
@@ -314,9 +314,9 @@ const KpiKra = () => {
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 no-print">
             <button
               onClick={() => window.print()}
-              className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-semibold text-gray-700 shadow-sm hover:border-blue-400 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all group"
+              className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-semibold text-gray-700 shadow-sm hover:border-indigo-400 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all group"
             >
-              <Download className="w-4 h-4 text-gray-400 group-hover:text-blue-500 transition-colors" />
+              <Download className="w-4 h-4 text-gray-400 group-hover:text-indigo-500 transition-colors" />
               Download PDF
             </button>
             {(userRole === 'admin' || userRole === 'superadmin') && (
@@ -324,9 +324,9 @@ const KpiKra = () => {
                 <div className="relative" ref={dropdownRef}>
                   <button
                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                    className="flex items-center justify-between pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-semibold text-gray-700 shadow-sm hover:border-blue-400 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all cursor-pointer min-w-[240px] text-left group"
+                    className="flex items-center justify-between pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-semibold text-gray-700 shadow-sm hover:border-indigo-400 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all cursor-pointer min-w-[240px] text-left group"
                   >
-                    <Users className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-hover:text-blue-500 transition-colors" />
+                    <Users className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-hover:text-indigo-500 transition-colors" />
                     <span className="truncate">{selectedDesignation}</span>
                     <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-300 ${isDropdownOpen ? 'rotate-180' : ''}`} />
                   </button>
@@ -346,11 +346,11 @@ const KpiKra = () => {
                               handleSubmit(designation); // Immediate submission
                             }}
                             className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-left ${selectedDesignation === designation
-                              ? 'bg-blue-50 text-blue-700'
-                              : 'text-gray-600 hover:bg-gray-50 hover:text-blue-600'
+                              ? 'bg-indigo-50 text-indigo-700'
+                              : 'text-gray-600 hover:bg-gray-50 hover:text-indigo-600'
                               }`}
                           >
-                            <div className={`w-1.5 h-1.5 rounded-full transition-all ${selectedDesignation === designation ? 'bg-blue-600 scale-125' : 'bg-transparent'
+                            <div className={`w-1.5 h-1.5 rounded-full transition-all ${selectedDesignation === designation ? 'bg-indigo-600 scale-125' : 'bg-transparent'
                               }`} />
                             {designation}
                           </button>
@@ -365,7 +365,7 @@ const KpiKra = () => {
                   disabled={isSubmitting}
                   className={`relative overflow-hidden px-8 py-2.5 rounded-xl font-bold text-sm transition-all shadow-md hover:shadow-lg active:scale-95 flex items-center justify-center gap-2 ${isSubmitting
                     ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200'
-                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                    : 'bg-indigo-600 text-white hover:bg-indigo-700'
                     }`}
                 >
                   {isSubmitting ? (
@@ -405,16 +405,16 @@ const KpiKra = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* Role Information Card */}
           <div className="group bg-white rounded-2xl shadow-sm border border-gray-100 p-6 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 overflow-hidden relative">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full -mr-16 -mt-16 transition-transform group-hover:scale-110" />
+            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-full -mr-16 -mt-16 transition-transform group-hover:scale-110" />
             <div className="relative">
               <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 bg-blue-50 rounded-lg">
-                  <Briefcase className="w-5 h-5 text-blue-600" />
+                <div className="p-2 bg-indigo-50 rounded-lg">
+                  <Briefcase className="w-5 h-5 text-indigo-600" />
                 </div>
                 <h2 className="text-lg font-bold text-gray-900">Official Designation</h2>
               </div>
               <div className="space-y-1">
-                <p className="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-1">Primary Role</p>
+                <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-1">Primary Role</p>
                 {isLoadingDashboard ? (
                   <div className="flex items-center gap-2 animate-pulse">
                     <div className="h-6 w-48 bg-gray-100 rounded" />
@@ -487,10 +487,10 @@ const KpiKra = () => {
                   href={ensureAbsoluteUrl(instagramLink)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-between p-3 bg-gray-50 rounded-xl hover:bg-blue-600 hover:text-white transition-all group/link"
+                  className="flex items-center justify-between p-3 bg-gray-50 rounded-xl hover:bg-indigo-600 hover:text-white transition-all group/link"
                 >
                   <div className="flex items-center gap-3">
-                    <TrendingUp className="w-4 h-4 text-blue-600 group-hover/link:text-white" />
+                    <TrendingUp className="w-4 h-4 text-indigo-600 group-hover/link:text-white" />
                     <span className="text-sm font-semibold">How To Score Better</span>
                   </div>
                   <ChevronDown className="w-4 h-4 -rotate-90 opacity-0 group-hover/link:opacity-100 transition-all" />
@@ -534,7 +534,7 @@ const KpiKra = () => {
                 <h2 className="text-lg font-bold text-gray-900">Communication Protocol</h2>
               </div>
               <div className="space-y-4">
-                <div className="p-4 bg-gradient-to-br from-cyan-50 to-blue-50 rounded-2xl border border-cyan-100">
+                <div className="p-4 bg-gradient-to-br from-cyan-50 to-indigo-50 rounded-2xl border border-cyan-100">
                   <p className="text-sm font-bold text-cyan-800 mb-2 uppercase tracking-wide">Methodology</p>
                   {isLoadingDashboard ? (
                     <div className="space-y-2">
@@ -548,7 +548,7 @@ const KpiKra = () => {
 
                 <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100">
                   <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-md border border-gray-200 flex-shrink-0">
-                    <User className="w-6 h-6 text-blue-600" />
+                    <User className="w-6 h-6 text-indigo-600" />
                   </div>
                   <div>
                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Key Reporting Person</p>
@@ -589,7 +589,7 @@ const KpiKra = () => {
                 <div key={index} className="p-6 border-b border-gray-100 last:border-b-0 border-r border-gray-50 odd:border-r-gray-100">
                   <div className="space-y-4">
                     <div className="flex items-start justify-between">
-                      <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+                      <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
                         <Briefcase className="w-4 h-4" />
                       </div>
                       <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest">{system.systemName}</span>
@@ -604,7 +604,7 @@ const KpiKra = () => {
                           href={ensureAbsoluteUrl(system.systemLink)}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all text-[10px] font-bold uppercase"
+                          className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-all text-[10px] font-bold uppercase"
                         >
                           <Link className="w-3 h-3" />
                           <span>System</span>
@@ -653,14 +653,14 @@ const KpiKra = () => {
                   {isLoadingDashboard ? (
                     <tr>
                       <td colSpan="4" className="px-6 py-12 text-center">
-                        <div className="w-12 h-12 border-4 border-blue-600/30 border-t-blue-600 rounded-full animate-spin mx-auto mb-4" />
+                        <div className="w-12 h-12 border-4 border-indigo-600/30 border-t-indigo-600 rounded-full animate-spin mx-auto mb-4" />
                         <p className="text-sm text-gray-500 font-bold uppercase tracking-widest">Architecting view...</p>
                       </td>
                     </tr>
                   ) : (systemsData.length > 0 ? systemsData : []).map((system, index) => (
-                    <tr key={index} className="hover:bg-blue-50/30 transition-all group">
+                    <tr key={index} className="hover:bg-indigo-50/30 transition-all group">
                       <td className="px-6 py-6">
-                        <div className="text-sm font-bold text-blue-600 tracking-tight">{system.systemName}</div>
+                        <div className="text-sm font-bold text-indigo-600 tracking-tight">{system.systemName}</div>
                       </td>
                       <td className="px-6 py-6">
                         <div className="text-sm font-bold text-gray-900 mb-0.5">{system.taskName}</div>
@@ -675,7 +675,7 @@ const KpiKra = () => {
                               href={ensureAbsoluteUrl(system.systemLink)}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="p-2.5 bg-gray-50 text-gray-600 rounded-xl hover:bg-blue-600 hover:text-white transition-all shadow-sm group/btn" title="View System"
+                              className="p-2.5 bg-gray-50 text-gray-600 rounded-xl hover:bg-indigo-600 hover:text-white transition-all shadow-sm group/btn" title="View System"
                             >
                               <Link className="w-4 h-4" />
                             </a>

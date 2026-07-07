@@ -4,10 +4,10 @@ import { TrendingUp } from 'lucide-react';
 const StatsCard = ({ title, value, icon: Icon = TrendingUp, color = 'blue', trend }) => {
   const colorClasses = {
     blue: {
-      border: 'border-blue-200',
-      iconBg: 'bg-blue-100',
-      iconText: 'text-blue-600',
-      gradient: 'from-blue-50 to-blue-100'
+      border: 'border-indigo-200',
+      iconBg: 'bg-indigo-100',
+      iconText: 'text-indigo-600',
+      gradient: 'from-indigo-50 to-indigo-100'
     },
     green: {
       border: 'border-green-200',

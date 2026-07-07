@@ -122,7 +122,7 @@ const AdminHistoryCommitment = () => {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
                 <div className="flex flex-col items-center gap-4">
-                    <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
+                    <Loader2 className="h-12 w-12 animate-spin text-indigo-600" />
                     <p className="text-gray-600 font-medium">Loading History...</p>
                 </div>
             </div>
@@ -134,7 +134,7 @@ const AdminHistoryCommitment = () => {
             <div className="max-w-full mx-auto">
                 {/* Page Header */}
                 <div className="mb-5 flex items-center gap-3">
-                    <History className="w-6 h-6 text-blue-600" />
+                    <History className="w-6 h-6 text-indigo-600" />
                     <h1 className="text-xl font-bold text-gray-900">History</h1>
                     <span className="ml-auto text-sm text-gray-500 bg-white border border-gray-200 rounded px-3 py-1 shadow-sm">
                         {filteredRecords.length} of {records.length} records
@@ -151,14 +151,14 @@ const AdminHistoryCommitment = () => {
                                 placeholder="Search by name or date..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-blue-500"
+                                className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-indigo-500"
                             />
                         </div>
                         <div className="w-full md:w-56">
                             <select
                                 value={dateFilter}
                                 onChange={(e) => setDateFilter(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-blue-500 bg-white"
+                                className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-indigo-500 bg-white"
                             >
                                 <option value="all">All Dates</option>
                                 {uniqueDates.map(d => (
@@ -170,7 +170,7 @@ const AdminHistoryCommitment = () => {
                             <select
                                 value={nameFilter}
                                 onChange={(e) => setNameFilter(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-blue-500 bg-white"
+                                className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-indigo-500 bg-white"
                             >
                                 <option value="all">All Names</option>
                                 {uniqueNames.map(n => (
@@ -224,7 +224,7 @@ const AdminHistoryCommitment = () => {
                             <tbody className="bg-white divide-y divide-gray-100">
                                 {filteredRecords.length > 0 ? (
                                     filteredRecords.map((r, idx) => (
-                                        <tr key={r.id} className="hover:bg-blue-50/40 transition-colors">
+                                        <tr key={r.id} className="hover:bg-indigo-50/40 transition-colors">
                                             <td className="px-4 py-3 text-gray-500 font-medium text-center sticky left-0 bg-white z-10">{idx + 1}</td>
                                             <td className="px-4 py-3 text-gray-700 whitespace-nowrap bg-white">{formatValue(r.dateStart)}</td>
                                             <td className="px-4 py-3 text-gray-700 whitespace-nowrap bg-white">{formatValue(r.dateEnd)}</td>
@@ -256,7 +256,7 @@ const AdminHistoryCommitment = () => {
                                                 </span>
                                             </td>
                                             <td className="px-4 py-3 text-right">
-                                                <span className="inline-flex items-center justify-center px-2 py-0.5 rounded text-xs font-semibold bg-blue-100 text-blue-800 min-w-[3rem]">
+                                                <span className="inline-flex items-center justify-center px-2 py-0.5 rounded text-xs font-semibold bg-indigo-100 text-indigo-800 min-w-[3rem]">
                                                     {formatValue(r.totalWorkDone)}
                                                 </span>
                                             </td>
@@ -295,7 +295,7 @@ const AdminHistoryCommitment = () => {
                                                         href={r.linkWithName.startsWith('http') ? r.linkWithName : `https://${r.linkWithName}`}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
-                                                        className="text-blue-600 hover:text-blue-800 underline font-medium"
+                                                        className="text-indigo-600 hover:text-indigo-800 underline font-medium"
                                                     >
                                                         View
                                                     </a>

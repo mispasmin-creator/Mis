@@ -42,7 +42,7 @@ const DepartmentScoreChart = ({ labels, pendingData, notDoneData, notDoneOnTimeD
                     <span className="text-gray-600 font-medium">Not Done On Time %</span>
                 </div>
                 <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-blue-500 rounded-sm" />
+                    <div className="w-3 h-3 bg-indigo-500 rounded-sm" />
                     <span className="text-gray-600 font-medium">Work Not Done %</span>
                 </div>
             </div>
@@ -120,10 +120,10 @@ const DepartmentScoreChart = ({ labels, pendingData, notDoneData, notDoneOnTimeD
                                     {/* Blue Bar */}
                                     {notDoneVal !== 0 && (
                                         <div
-                                            className="w-full bg-blue-500 shadow-md relative transition-all duration-700 hover:brightness-110 mb-1 border-t border-blue-600/30"
+                                            className="w-full bg-indigo-500 shadow-md relative transition-all duration-700 hover:brightness-110 mb-1 border-t border-indigo-600/30"
                                             style={{ height: `${Math.abs(notDoneH)}%` }}
                                         >
-                                            <span className="absolute -left-1 top-0 text-[10px] font-bold text-blue-600 -translate-x-full pr-1 bg-white/40 rounded">
+                                            <span className="absolute -left-1 top-0 text-[10px] font-bold text-indigo-600 -translate-x-full pr-1 bg-white/40 rounded">
                                                 -{notDoneVal.toFixed(1)}
                                             </span>
                                         </div>

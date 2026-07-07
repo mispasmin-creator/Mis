@@ -74,7 +74,7 @@ const TasksTable = ({ tasks, isCompact = false, type = 'today' }) => {
                   <td className="px-3 py-2 whitespace-nowrap">
                     <div className="flex items-center">
                       {task.status === 'completed' && <CheckCircle className="w-4 h-4 text-green-500" />}
-                      {task.status === 'in-progress' && <Clock className="w-4 h-4 text-blue-500" />}
+                      {task.status === 'in-progress' && <Clock className="w-4 h-4 text-indigo-500" />}
                       {task.status === 'pending' && <AlertTriangle className="w-4 h-4 text-amber-500" />}
                       <span className="ml-1.5 text-xs text-gray-700 capitalize">{task.status}</span>
                     </div>
