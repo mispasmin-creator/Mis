@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, LogOut, LineChart, History } from 'lucide-react';
+import { LayoutDashboard, LogOut, LineChart, History, Building2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { getDisplayableImageUrl } from '../utils/imageUtils';
 import Footer from '../components/Footer';
@@ -16,6 +16,7 @@ const AdminLayout = () => {
 
   const navItems = [
     { to: `${basePrefix}/dashboard`, label: 'Dashboard', icon: LayoutDashboard, match: ['/admin/dashboard', '/user/dashboard'] },
+    { to: `${basePrefix}/department`, label: 'Department', icon: Building2, match: ['/admin/department', '/user/department'] },
     { to: `${basePrefix}/history-commitment`, label: 'History', icon: History, match: ['/admin/history-commitment', '/user/history-commitment'] },
     { to: `${basePrefix}/kpi-kra`, label: 'KPI & KRA', icon: LineChart, match: ['/admin/kpi-kra', '/user/kpi-kra'] },
   ];
@@ -171,7 +172,7 @@ const AdminLayout = () => {
       </nav>
 
       {/* Main content */}
-      <main className="flex-1 pt-28 pb-10 sm:pb-12 overflow-auto mobile-scroll">
+      <main className="flex-1 pt-28 pb-10 sm:pb-12 overflow-y-auto overflow-x-hidden mobile-scroll">
         <div className="p-4 sm:p-6 lg:p-8 max-w-full min-h-full">
           <Outlet />
         </div>
