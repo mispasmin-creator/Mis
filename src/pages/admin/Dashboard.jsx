@@ -1070,7 +1070,7 @@ Here is your performance summary:
 Please review your performance and ensure timely completion of pending tasks.
 
 Best regards,  
-Bhatiya.`;
+Passary Refractories.`;
 
         const phone = emp.email || "";
         const cleanPhone = phone.replace(/\D/g, "");

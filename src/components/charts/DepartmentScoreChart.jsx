@@ -30,7 +30,7 @@ const DepartmentScoreChart = ({ labels, pendingData, notDoneData, notDoneOnTimeD
     }, [pendingData]);
 
     return (
-        <div className="w-full h-full flex flex-col bg-white rounded-xl shadow-sm border border-gray-100">
+        <div className="w-full h-full flex flex-col bg-white rounded-xl shadow-sm border border-gray-100 isolate">
             {/* Legend */}
             <div className="flex flex-wrap justify-center gap-4 mb-6 text-[10px] md:text-xs pt-4">
                 <div className="flex items-center gap-2">
@@ -51,7 +51,7 @@ const DepartmentScoreChart = ({ labels, pendingData, notDoneData, notDoneOnTimeD
             <div className="flex-1 flex overflow-x-auto overflow-y-hidden custom-scrollbar pb-16 relative min-h-[400px]">
 
                 {/* Fixed Y-Axis (Sticky) */}
-                <div className="sticky left-0 z-40 bg-white/95 backdrop-blur-sm flex flex-col justify-between pr-2 border-r border-gray-200 text-[10px] text-gray-500 w-12 shrink-0 h-full">
+                <div className="sticky left-0 z-10 bg-white/95 backdrop-blur-sm flex flex-col justify-between pr-2 border-r border-gray-200 text-[10px] text-gray-500 w-12 shrink-0 h-full">
                     {yAxisTicks.map((tick, i) => (
                         <div
                             key={tick}
@@ -100,7 +100,7 @@ const DepartmentScoreChart = ({ labels, pendingData, notDoneData, notDoneOnTimeD
                                 {/* Pending Bar (Upwards) */}
                                 {pendingVal !== 0 && (
                                     <div
-                                        className="absolute w-8 md:w-12 bg-amber-500 shadow-lg transition-all duration-700 hover:brightness-110 flex flex-col items-center justify-end rounded-t-sm z-20"
+                                        className="absolute w-8 md:w-12 bg-amber-500 shadow-lg transition-all duration-700 hover:brightness-110 flex flex-col items-center justify-end rounded-t-sm z-0"
                                         style={{
                                             height: `${Math.abs(pendingH)}%`,
                                             bottom: `${100 - zeroPos}%`
@@ -114,7 +114,7 @@ const DepartmentScoreChart = ({ labels, pendingData, notDoneData, notDoneOnTimeD
 
                                 {/* Percentage Bars (Downwards / Bottom) */}
                                 <div
-                                    className="absolute w-10 md:w-14 flex flex-col z-30"
+                                    className="absolute w-10 md:w-14 flex flex-col z-10"
                                     style={{ top: `${zeroPos}%` }}
                                 >
                                     {/* Blue Bar */}
@@ -142,7 +142,7 @@ const DepartmentScoreChart = ({ labels, pendingData, notDoneData, notDoneOnTimeD
                                 </div>
 
                                 {/* Label */}
-                                <div className="absolute bottom-4 w-full flex flex-col items-center z-40 px-1">
+                                <div className="absolute bottom-4 w-full flex flex-col items-center z-10 px-1">
                                     <span className="text-[9px] md:text-[10px] text-gray-800 font-bold text-center leading-tight max-w-full break-words bg-white/80 py-1 rounded">
                                         {label}
                                     </span>

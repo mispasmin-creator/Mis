@@ -113,6 +113,34 @@ const AdminHistoryCommitment = () => {
         });
     }, [records, searchQuery, nameFilter, dateFilter]);
 
+    const averages = useMemo(() => {
+        if (filteredRecords.length === 0) return null;
+        
+        let targetSum = 0, actualSum = 0, wndSum = 0, wndotSum = 0, totalSum = 0, weekPendingSum = 0, allPendingSum = 0;
+        let count = 0;
+
+        filteredRecords.forEach(r => {
+            targetSum += parseFloat(String(r.target).replace(/,/g, '')) || 0;
+            actualSum += parseFloat(String(r.actualWorkDone).replace(/,/g, '')) || 0;
+            wndSum += parseFloat(String(r.workNotDone).replace(/%/g, '').replace(/,/g, '')) || 0;
+            wndotSum += parseFloat(String(r.workNotDoneOnTime).replace(/%/g, '').replace(/,/g, '')) || 0;
+            totalSum += parseFloat(String(r.totalWorkDone).replace(/,/g, '')) || 0;
+            weekPendingSum += parseFloat(String(r.weekPending).replace(/,/g, '')) || 0;
+            allPendingSum += parseFloat(String(r.allPendingTillDate).replace(/,/g, '')) || 0;
+            count++;
+        });
+
+        return {
+            target: (targetSum / count).toFixed(2).replace(/\.00$/, ''),
+            actualWorkDone: (actualSum / count).toFixed(2).replace(/\.00$/, ''),
+            workNotDone: (wndSum / count).toFixed(2).replace(/\.00$/, ''),
+            workNotDoneOnTime: (wndotSum / count).toFixed(2).replace(/\.00$/, ''),
+            totalWorkDone: (totalSum / count).toFixed(2).replace(/\.00$/, ''),
+            weekPending: (weekPendingSum / count).toFixed(2).replace(/\.00$/, ''),
+            allPendingTillDate: (allPendingSum / count).toFixed(2).replace(/\.00$/, '')
+        };
+    }, [filteredRecords]);
+
     const formatValue = (val) => {
         if (val === "" || val === null || val === undefined) return "-";
         return String(val);
@@ -320,6 +348,21 @@ const AdminHistoryCommitment = () => {
                                     </tr>
                                 )}
                             </tbody>
+                            {filteredRecords.length > 0 && averages && (
+                                <tfoot className="bg-gray-50 font-bold sticky bottom-0 z-30 shadow-[0_-1px_3px_rgba(0,0,0,0.1)]">
+                                    <tr>
+                                        <td colSpan="4" className="px-4 py-3 text-right text-gray-800 border-t border-gray-200">Average:</td>
+                                        <td className="px-4 py-3 text-right text-gray-800 border-t border-gray-200">{averages.target}</td>
+                                        <td className="px-4 py-3 text-right text-gray-800 border-t border-gray-200">{averages.actualWorkDone}</td>
+                                        <td className="px-4 py-3 text-right text-gray-800 border-t border-gray-200">{averages.workNotDone}%</td>
+                                        <td className="px-4 py-3 text-right text-gray-800 border-t border-gray-200">{averages.workNotDoneOnTime}%</td>
+                                        <td className="px-4 py-3 text-right text-gray-800 border-t border-gray-200">{averages.totalWorkDone}</td>
+                                        <td className="px-4 py-3 text-right text-gray-800 border-t border-gray-200">{averages.weekPending}</td>
+                                        <td className="px-4 py-3 text-right text-gray-800 border-t border-gray-200">{averages.allPendingTillDate}</td>
+                                        <td colSpan="6" className="border-t border-gray-200"></td>
+                                    </tr>
+                                </tfoot>
+                            )}
                         </table>
                     </div>
                 </div>
