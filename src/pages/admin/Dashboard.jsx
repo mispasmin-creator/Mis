@@ -45,6 +45,8 @@ const AdminDashboard = () => {
   const [departmentScores, setDepartmentScores] = useState([]);
   const [dataSheetRows, setDataSheetRows] = useState([]);
   const [dataSheetDateRange, setDataSheetDateRange] = useState({ fromDate: "", toDate: "" });
+  const [rawParsedData, setRawParsedData] = useState([]);
+  const [reportedByMap, setReportedByMap] = useState({});
 
   // Dynamic Column Labels
   const [columnLabels, setColumnLabels] = useState({
@@ -377,33 +379,15 @@ const AdminDashboard = () => {
               };
             });
 
-          const isAdmin = user && (user.role === 'admin' || user.role === 'superadmin');
-          const isHod = user && user.role === 'hod';
-          const lowerName = (user?.name || "").toLowerCase().trim();
-          const lowerId = (user?.id || "").toLowerCase().trim();
-
-          // Filter data based on user permission level (Admin/Superadmin sees all, HOD sees self + reportees, Ordinary User sees self only)
-          const finalData = isAdmin
-            ? parsedData
-            : isHod
-            ? parsedData.filter(emp => {
-                const empLowerName = emp.name.toLowerCase().trim();
-                const empManager = reportedByMap[empLowerName] || "";
-                return empLowerName === lowerName || empManager === lowerName || empManager === lowerId;
-              })
-            : parsedData.filter(emp => {
-                const empLowerName = emp.name.toLowerCase().trim();
-                return empLowerName === lowerName;
-              });
-
-          setSheetEmployees(finalData);
+          setRawParsedData(parsedData);
+          setReportedByMap(reportedByMap);
         } else {
           console.error("Failed to load sheet data", result);
-          setSheetEmployees([]);
+          setRawParsedData([]);
         }
       } catch (error) {
         console.error("Error fetching sheet data:", error);
-        setSheetEmployees([]);
+        setRawParsedData([]);
       } finally {
         setLoading(false);
       }
@@ -411,6 +395,32 @@ const AdminDashboard = () => {
 
     fetchData();
   }, []);
+
+  // Re-filter data by role whenever the raw data or the logged-in user changes
+  // (user is loaded asynchronously from localStorage/Master sheet in AuthContext,
+  // so it may still be null on the first render of the fetch effect above).
+  useEffect(() => {
+    const isAdmin = user && (user.role === 'admin' || user.role === 'superadmin');
+    const isHod = user && user.role === 'hod';
+    const lowerName = (user?.name || "").toLowerCase().trim();
+    const lowerId = (user?.id || "").toLowerCase().trim();
+
+    // Filter data based on user permission level (Admin/Superadmin sees all, HOD sees self + reportees, Ordinary User sees self only)
+    const finalData = isAdmin
+      ? rawParsedData
+      : isHod
+      ? rawParsedData.filter(emp => {
+          const empLowerName = emp.name.toLowerCase().trim();
+          const empManager = reportedByMap[empLowerName] || "";
+          return empLowerName === lowerName || empManager === lowerName || empManager === lowerId;
+        })
+      : rawParsedData.filter(emp => {
+          const empLowerName = emp.name.toLowerCase().trim();
+          return empLowerName === lowerName;
+        });
+
+    setSheetEmployees(finalData);
+  }, [rawParsedData, reportedByMap, user]);
 
   useEffect(() => {
     const saved = localStorage.getItem("employeeCommitments");
@@ -675,7 +685,12 @@ const AdminDashboard = () => {
       plannedSheetRef: row[7] || "",
       actualSheetRef: row[8] || "",
       target: row[10] || 0,
-      totalAchievement: row[11] || 0,
+      totalAchievement: (() => {
+        const target = parseFloat(row[10]) || 0;
+        const achievement = parseFloat(row[11]) || 0;
+        // Achievement can never exceed the assigned target
+        return target > 0 ? Math.min(achievement, target) : achievement;
+      })(),
       workNotDone: row[12] || 0,
       workNotDoneOnTime: row[13] || 0,
       allPendingTillDate: row[14] || 0,
