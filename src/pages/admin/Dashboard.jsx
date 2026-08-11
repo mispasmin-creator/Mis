@@ -53,6 +53,7 @@ const AdminDashboard = () => {
     name: "Name",
     designation: "Designation",
     department: "Department",
+    firm: "Firm Name",
     target: "Target",
     actualWork: "Actual Work",
     weeklyDone: "Weekly Not Done %",
@@ -68,6 +69,7 @@ const AdminDashboard = () => {
     { key: "name", label: columnLabels.name },
     { key: "designation", label: columnLabels.designation },
     { key: "department", label: columnLabels.department },
+    { key: "firm", label: columnLabels.firm },
     { key: "target", label: columnLabels.target },
     { key: "actualWork", label: columnLabels.actualWork },
     { key: "weeklyDone", label: columnLabels.weeklyDone },
@@ -110,6 +112,7 @@ const AdminDashboard = () => {
   const [filterName, setFilterName] = useState("");
   const [filterDepartment, setFilterDepartment] = useState("");
   const [filterDeptName, setFilterDeptName] = useState("");
+  const [filterFirmName, setFilterFirmName] = useState("");
   const [filterHR, setFilterHR] = useState("");
   const [selectedUserDetails, setSelectedUserDetails] = useState(null);
 
@@ -248,6 +251,7 @@ const AdminDashboard = () => {
         const departmentMap = {};
         const phoneMap = {};
         const reportedByMap = {};
+        const firmMap = {};
         if (masterResult.success && Array.isArray(masterResult.data)) {
           masterResult.data.slice(1).forEach(row => {
             const name = row[0] ? String(row[0]).trim().toLowerCase() : "";
@@ -256,12 +260,14 @@ const AdminDashboard = () => {
             const imageUrl = row[4];
             const phone = row[1] ? String(row[1]).trim() : ""; // Column B (index 1)
             const reportedBy = row[9] ? String(row[9]).trim().toLowerCase() : "";
+            const firmName = row[8] ? String(row[8]).trim() : ""; // Column I (index 8)
             if (name) {
               if (imageUrl) imageMap[name] = imageUrl;
               if (designation) designationMap[name] = designation;
               if (department) departmentMap[name] = department;
               if (phone) phoneMap[name] = phone;
               if (reportedBy) reportedByMap[name] = reportedBy;
+              if (firmName) firmMap[name] = firmName;
             }
           });
         }
@@ -358,6 +364,7 @@ const AdminDashboard = () => {
                 endDate: row[11] || "",   // Column L (index 11)
                 designation: designationMap[normalizedName] || "",
                 department: departmentMap[normalizedName] || "",
+                firm: firmMap[normalizedName] || "",
                 image: finalImageUrl,
 
                 score: row[5] || 0,       // Column F (index 5) - Weekly Work Done %
@@ -429,15 +436,23 @@ const AdminDashboard = () => {
     }
   }, []);
 
+  // Scope everything below (table, KPIs, charts) to the selected Firm Name.
+  // "" (All Firms) keeps the original combined behavior.
+  const firmFilteredEmployees = useMemo(() => {
+    return filterFirmName === ""
+      ? sheetEmployees
+      : sheetEmployees.filter((emp) => emp.firm === filterFirmName);
+  }, [sheetEmployees, filterFirmName]);
+
   // Filter employees
   const filteredEmployees = useMemo(() => {
-    return sheetEmployees.filter((emp) => {
+    return firmFilteredEmployees.filter((emp) => {
       const matchesName = emp.name.toLowerCase().includes(filterName.toLowerCase());
       const matchesDesignation = filterDepartment === "" || emp.designation === filterDepartment;
       const matchesDept = filterDeptName === "" || emp.department === filterDeptName;
       return matchesName && matchesDesignation && matchesDept;
     });
-  }, [sheetEmployees, filterName, filterDepartment, filterDeptName]);
+  }, [firmFilteredEmployees, filterName, filterDepartment, filterDeptName]);
 
   // Get unique designations
   const uniqueDesignations = useMemo(() => [
@@ -449,6 +464,11 @@ const AdminDashboard = () => {
     ...new Set(sheetEmployees.map((emp) => emp.department).filter(Boolean)),
   ], [sheetEmployees]);
 
+  // Get unique firm names
+  const uniqueFirms = useMemo(() => [
+    ...new Set(sheetEmployees.map((emp) => emp.firm).filter(Boolean)),
+  ], [sheetEmployees]);
+
   // Statistics - Memoized
   const {
     topScorers,
@@ -456,8 +476,8 @@ const AdminDashboard = () => {
   } = useMemo(() => {
     let topScorersList = [];
 
-    if (sheetEmployees.length > 0) {
-      const latestDateStr = sheetEmployees.reduce((latest, emp) => {
+    if (firmFilteredEmployees.length > 0) {
+      const latestDateStr = firmFilteredEmployees.reduce((latest, emp) => {
         if (!emp.endDate) return latest;
         const currentEnd = new Date(emp.endDate);
         if (isNaN(currentEnd)) return latest;
@@ -465,7 +485,7 @@ const AdminDashboard = () => {
         return latest;
       }, "");
 
-      topScorersList = sheetEmployees
+      topScorersList = firmFilteredEmployees
         .filter(emp => emp.endDate === latestDateStr)
         .map(emp => ({
           name: emp.name,
@@ -501,8 +521,8 @@ const AdminDashboard = () => {
 
     // --- Top 5 Best Performers: most tasks done (Column E), sorted descending ---
     let topBestList = [];
-    if (sheetEmployees.length > 0) {
-      const latestDateStr = sheetEmployees.reduce((latest, emp) => {
+    if (firmFilteredEmployees.length > 0) {
+      const latestDateStr = firmFilteredEmployees.reduce((latest, emp) => {
         if (!emp.endDate) return latest;
         const currentEnd = new Date(emp.endDate);
         if (isNaN(currentEnd)) return latest;
@@ -510,7 +530,7 @@ const AdminDashboard = () => {
         return latest;
       }, "");
 
-      topBestList = sheetEmployees
+      topBestList = firmFilteredEmployees
         .filter(emp => emp.endDate === latestDateStr)
         .map(emp => ({
           name: emp.name,
@@ -547,7 +567,7 @@ const AdminDashboard = () => {
       topScorers: topScorersList.length > 0 ? topScorersList : [],
       topBestPerformers: topBestList.length > 0 ? topBestList : []
     };
-  }, [sheetEmployees, columnLabels]);
+  }, [firmFilteredEmployees, columnLabels]);
 
   const topScorersData = useMemo(() => topScorers.map((emp) => {
     const val = emp.donePct ?? emp.score ?? 0;
@@ -565,7 +585,7 @@ const AdminDashboard = () => {
   }), [topBestPerformers]);
   // Pending Tasks by User — Column I (weekPending) sorted desc, Column D (target) as total
   const sortedPendingList = useMemo(() => {
-    return [...sheetEmployees]
+    return [...firmFilteredEmployees]
       .map(emp => ({
         name: emp.name,
         pending: parseFloat(emp.weekPending) || 0,
@@ -574,7 +594,7 @@ const AdminDashboard = () => {
       .filter(emp => emp.pending > 0)
       .sort((a, b) => b.pending - a.pending)
       .slice(0, 5);
-  }, [sheetEmployees]);
+  }, [firmFilteredEmployees]);
 
   const pendingTasksData = useMemo(() => sortedPendingList.map(emp => emp.pending), [sortedPendingList]);
   const pendingTasksLabels = useMemo(() => sortedPendingList.map(emp => emp.name), [sortedPendingList]);
@@ -587,7 +607,7 @@ const AdminDashboard = () => {
   // Department Workload — Target (work assigned) vs Actual (work done), summed per department
   const departmentWorkload = useMemo(() => {
     const byDept = {};
-    sheetEmployees.forEach((emp) => {
+    firmFilteredEmployees.forEach((emp) => {
       const dept = emp.department?.trim() || "Unassigned";
       const target = parseFloat(emp.target) || 0;
       const actual = parseFloat(emp.actualWorkDone) || 0;
@@ -598,7 +618,7 @@ const AdminDashboard = () => {
     return Object.values(byDept)
       .filter((d) => d.target > 0 || d.actual > 0)
       .sort((a, b) => b.target - a.target);
-  }, [sheetEmployees]);
+  }, [firmFilteredEmployees]);
 
   const departmentWorkloadLabels = useMemo(() => departmentWorkload.map((d) => d.department), [departmentWorkload]);
   const departmentWorkloadTarget = useMemo(() => departmentWorkload.map((d) => d.target), [departmentWorkload]);
@@ -606,13 +626,13 @@ const AdminDashboard = () => {
 
   // Top-level KPI summary — totals across every visible employee
   const dashboardStats = useMemo(() => {
-    const totalEmployees = sheetEmployees.length;
-    const totalTarget = sheetEmployees.reduce((sum, emp) => sum + (parseFloat(emp.target) || 0), 0);
-    const totalActual = sheetEmployees.reduce((sum, emp) => sum + (parseFloat(emp.actualWorkDone) || 0), 0);
-    const totalPending = sheetEmployees.reduce((sum, emp) => sum + (parseFloat(emp.allPendingTillDate) || 0), 0);
+    const totalEmployees = firmFilteredEmployees.length;
+    const totalTarget = firmFilteredEmployees.reduce((sum, emp) => sum + (parseFloat(emp.target) || 0), 0);
+    const totalActual = firmFilteredEmployees.reduce((sum, emp) => sum + (parseFloat(emp.actualWorkDone) || 0), 0);
+    const totalPending = firmFilteredEmployees.reduce((sum, emp) => sum + (parseFloat(emp.allPendingTillDate) || 0), 0);
     const completionPct = totalTarget > 0 ? Math.round((totalActual / totalTarget) * 100) : 0;
     return { totalEmployees, totalTarget, totalActual, totalPending, completionPct };
-  }, [sheetEmployees]);
+  }, [firmFilteredEmployees]);
 
   const handleSelectAll = () => {
     if (selectAll) {
@@ -1226,6 +1246,9 @@ Passary Refractories.`;
         filterDeptName={filterDeptName}
         setFilterDeptName={setFilterDeptName}
         uniqueDepartments={uniqueDepartments}
+        filterFirmName={filterFirmName}
+        setFilterFirmName={setFilterFirmName}
+        uniqueFirms={uniqueFirms}
         onMainSubmit={handleMainSubmit}
         onWhatsAppSubmit={handleWhatsAppSubmit}
         selectedEmployees={selectedEmployees}

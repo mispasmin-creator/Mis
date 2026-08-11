@@ -130,6 +130,7 @@ export const generateDashboardPDF = async (visibleColumnsList, filteredEmployees
       switch (col.key) {
         case 'id': value = emp.id; break;
         case 'name': value = emp.name; break;
+        case 'firm': value = emp.firm; break;
         case 'target': value = emp.target; break;
         case 'actualWork': value = emp.actualWorkDone; break;
         case 'weeklyDone': value = emp.weeklyWorkDone; break;

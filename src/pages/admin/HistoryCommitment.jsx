@@ -9,6 +9,7 @@ const AdminHistoryCommitment = () => {
     const [searchQuery, setSearchQuery] = useState("");
     const [nameFilter, setNameFilter] = useState("all");
     const [dateFilter, setDateFilter] = useState("all");
+    const [firmFilter, setFirmFilter] = useState("all");
 
     useEffect(() => {
         const fetchRecords = async () => {
@@ -29,12 +30,17 @@ const AdminHistoryCommitment = () => {
                 const masterResult = await masterResponse.json();
 
                 const reportedByMap = {};
+                const firmMap = {};
                 if (masterResult.success && Array.isArray(masterResult.data)) {
                     masterResult.data.slice(1).forEach(row => {
                         const name = row[0] ? String(row[0]).trim().toLowerCase() : "";
                         const reportedBy = row[9] ? String(row[9]).trim().toLowerCase() : "";
+                        const firmName = row[8] ? String(row[8]).trim() : "";
                         if (name && reportedBy) {
                             reportedByMap[name] = reportedBy;
+                        }
+                        if (name && firmName) {
+                            firmMap[name] = firmName;
                         }
                     });
                 }
@@ -46,6 +52,7 @@ const AdminHistoryCommitment = () => {
                         dateStart: row[0] || "",         // Column A (index 0)
                         dateEnd: row[1] || "",           // Column B (index 1)
                         name: row[2] || "",              // Column C (index 2)
+                        firm: firmMap[String(row[2] || "").trim().toLowerCase()] || "",
                         target: row[3] || "",            // Column D (index 3)
                         actualWorkDone: row[4] || "",    // Column E (index 4)
                         workNotDone: row[5] || "",       // Column F (index 5)
@@ -101,6 +108,10 @@ const AdminHistoryCommitment = () => {
         return [...new Set(records.map(r => r.dateStart))].filter(Boolean).sort((a, b) => new Date(b) - new Date(a));
     }, [records]);
 
+    const uniqueFirms = useMemo(() => {
+        return [...new Set(records.map(r => r.firm))].filter(Boolean).sort();
+    }, [records]);
+
     const filteredRecords = useMemo(() => {
         return records.filter(r => {
             const matchesSearch =
@@ -109,9 +120,10 @@ const AdminHistoryCommitment = () => {
                 r.dateEnd.toLowerCase().includes(searchQuery.toLowerCase());
             const matchesName = nameFilter === "all" || r.name === nameFilter;
             const matchesDate = dateFilter === "all" || r.dateStart === dateFilter;
-            return matchesSearch && matchesName && matchesDate;
+            const matchesFirm = firmFilter === "all" || r.firm === firmFilter;
+            return matchesSearch && matchesName && matchesDate && matchesFirm;
         });
-    }, [records, searchQuery, nameFilter, dateFilter]);
+    }, [records, searchQuery, nameFilter, dateFilter, firmFilter]);
 
     const averages = useMemo(() => {
         if (filteredRecords.length === 0) return null;
@@ -206,6 +218,18 @@ const AdminHistoryCommitment = () => {
                                 ))}
                             </select>
                         </div>
+                        <div className="w-full md:w-56">
+                            <select
+                                value={firmFilter}
+                                onChange={(e) => setFirmFilter(e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-indigo-500 bg-white"
+                            >
+                                <option value="all">All Firms</option>
+                                {uniqueFirms.map(f => (
+                                    <option key={f} value={f}>{f}</option>
+                                ))}
+                            </select>
+                        </div>
                     </div>
                 </div>
 
@@ -233,6 +257,7 @@ const AdminHistoryCommitment = () => {
                                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap bg-gray-50 border-b border-gray-200">Date Start</th>
                                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap bg-gray-50 border-b border-gray-200">Date End</th>
                                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap sticky left-12 top-0 bg-gray-50 z-40 border-l border-b border-gray-200">Name</th>
+                                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap bg-gray-50 border-b border-gray-200">Firm</th>
                                     <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">Target</th>
                                     <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">Actual Work Done</th>
                                     <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">% Work Not Done</th>
@@ -257,6 +282,7 @@ const AdminHistoryCommitment = () => {
                                             <td className="px-4 py-3 text-gray-700 whitespace-nowrap bg-white">{formatValue(r.dateStart)}</td>
                                             <td className="px-4 py-3 text-gray-700 whitespace-nowrap bg-white">{formatValue(r.dateEnd)}</td>
                                             <td className="px-4 py-3 font-semibold text-gray-900 whitespace-nowrap sticky left-12 bg-white z-10 border-l border-gray-200">{formatValue(r.name)}</td>
+                                            <td className="px-4 py-3 text-gray-700 whitespace-nowrap bg-white">{formatValue(r.firm)}</td>
                                             <td className="px-4 py-3 text-right text-gray-700">{formatValue(r.target)}</td>
                                             <td className="px-4 py-3 text-right">
                                                 <span className="inline-flex items-center justify-center px-2 py-0.5 rounded text-xs font-semibold bg-green-100 text-green-800 min-w-[3rem]">
@@ -342,7 +368,7 @@ const AdminHistoryCommitment = () => {
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan="11" className="px-6 py-12 text-center text-gray-400">
+                                        <td colSpan="12" className="px-6 py-12 text-center text-gray-400">
                                             No records found.
                                         </td>
                                     </tr>
@@ -351,7 +377,7 @@ const AdminHistoryCommitment = () => {
                             {filteredRecords.length > 0 && averages && (
                                 <tfoot className="bg-gray-50 font-bold sticky bottom-0 z-30 shadow-[0_-1px_3px_rgba(0,0,0,0.1)]">
                                     <tr>
-                                        <td colSpan="4" className="px-4 py-3 text-right text-gray-800 border-t border-gray-200">Average:</td>
+                                        <td colSpan="5" className="px-4 py-3 text-right text-gray-800 border-t border-gray-200">Average:</td>
                                         <td className="px-4 py-3 text-right text-gray-800 border-t border-gray-200">{averages.target}</td>
                                         <td className="px-4 py-3 text-right text-gray-800 border-t border-gray-200">{averages.actualWorkDone}</td>
                                         <td className="px-4 py-3 text-right text-gray-800 border-t border-gray-200">{averages.workNotDone}%</td>

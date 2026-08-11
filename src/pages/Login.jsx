@@ -55,7 +55,7 @@ const Login = () => {
             <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 border border-gray-100">
               <div className="text-center mb-6 sm:mb-8">
                 <div className="inline-flex items-center justify-center w-16 h-16 bg-indigo-100 rounded-full mb-4">
-                  <span className="text-2xl font-bold text-indigo-600">MIS</span>
+                  <img src="/logo.png" alt="Logo" className="w-12 h-12 object-contain" />
                 </div>
                 <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Welcome Back</h1>
                 <p className="text-gray-600 mt-2 text-sm sm:text-base">Management Information System</p>

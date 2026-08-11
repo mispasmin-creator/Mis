@@ -51,7 +51,7 @@ const AdminLayout = () => {
         <div className="px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between max-w-full">
           <div className="flex items-center gap-3 sm:gap-4 min-w-0">
             <Link to={`${basePrefix}/dashboard`} className="flex items-center gap-2 sm:gap-3 min-w-0">
-              <span className="text-lg sm:text-xl lg:text-2xl font-bold text-indigo-600 truncate">MIS</span>
+              <img src="/logo.png" alt="Logo" className="h-9 w-9 sm:h-11 sm:w-11 object-contain flex-shrink-0" />
               <span className={`text-xs sm:text-sm text-white px-2 sm:px-3 py-1 rounded whitespace-nowrap uppercase ${
                 user?.role === 'superadmin' ? 'bg-purple-600' : (user?.role === 'admin' ? 'bg-indigo-600' : 'bg-green-600')
                 }`}>

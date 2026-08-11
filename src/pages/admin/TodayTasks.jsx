@@ -9,6 +9,7 @@ const AdminTodayTasks = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [personFilter, setPersonFilter] = useState("all");
   const [fmsFilter, setFmsFilter] = useState("all");
+  const [firmFilter, setFirmFilter] = useState("all");
   const [activeDrillDown, setActiveDrillDown] = useState(null);
   const [taskTodayCounts, setTaskTodayCounts] = useState({});
   const [fetchingTodayCounts, setFetchingTodayCounts] = useState(false);
@@ -57,11 +58,14 @@ const AdminTodayTasks = () => {
         const recordsResult = await recordsResponse.json();
 
         const imageMap = {};
+        const firmMap = {};
         if (masterResult.success && Array.isArray(masterResult.data)) {
           masterResult.data.slice(1).forEach(row => {
             const name = row[0] ? String(row[0]).trim().toLowerCase() : "";
             const imageUrl = row[4];
+            const firmName = row[8] ? String(row[8]).trim() : "";
             if (name && imageUrl) imageMap[name] = imageUrl;
+            if (name && firmName) firmMap[name] = firmName;
           });
         }
 
@@ -86,7 +90,8 @@ const AdminTodayTasks = () => {
                 name: empName,
                 image: finalImageUrl,
                 department: row[0] || "N/A",
-                designation: row[3] || "N/A"
+                designation: row[3] || "N/A",
+                firm: firmMap[normalizedName] || ""
               };
             });
           setSheetEmployees(parsed);
@@ -165,6 +170,7 @@ const AdminTodayTasks = () => {
         personImage: employee?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(personName)}&background=0D8ABC&color=fff&size=128`,
         department: row[0] || "N/A",
         designation: employee?.designation || "N/A",
+        firm: employee?.firm || "",
         plannedCount: taskTodayCounts[idx] !== undefined ? taskTodayCounts[idx] : (fetchingTodayCounts ? "..." : 0),
         scriptUrl: row[25] || "",
         plannedSheetRef: row[7] || "",
@@ -186,6 +192,7 @@ const AdminTodayTasks = () => {
           personImage: task.personImage,
           assignedTo: task.assignedTo,
           designation: task.designation,
+          firm: task.firm,
           plannedCount: 0,
           tasks: []
         };
@@ -200,13 +207,16 @@ const AdminTodayTasks = () => {
 
   const persons = useMemo(() => [...new Set(groupedEmployees.map(e => e.personName))].sort(), [groupedEmployees]);
 
+  const uniqueFirms = useMemo(() => [...new Set(groupedEmployees.map(e => e.firm))].filter(Boolean).sort(), [groupedEmployees]);
+
   const filteredEmployees = useMemo(() => {
     return groupedEmployees.filter((e) => {
       const matchesSearch = e.personName.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesPerson = personFilter === "all" || e.personName === personFilter;
-      return matchesSearch && matchesPerson;
+      const matchesFirm = firmFilter === "all" || e.firm === firmFilter;
+      return matchesSearch && matchesPerson && matchesFirm;
     });
-  }, [groupedEmployees, searchQuery, personFilter]);
+  }, [groupedEmployees, searchQuery, personFilter, firmFilter]);
 
   const handleRowClick = async (empGroup) => {
     setActiveDrillDown({
@@ -326,6 +336,14 @@ const AdminTodayTasks = () => {
                 <option value="all">All Persons</option>
                 {persons.map(p => <option key={p} value={p}>{p}</option>)}
               </select>
+              <select
+                value={firmFilter}
+                onChange={(e) => setFirmFilter(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-indigo-500 bg-white"
+              >
+                <option value="all">All Firms</option>
+                {uniqueFirms.map(f => <option key={f} value={f}>{f}</option>)}
+              </select>
             </div>
           </div>
         </div>
@@ -368,6 +386,7 @@ const AdminTodayTasks = () => {
                   <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">S.No</th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Name</th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Target</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Firm</th>
                   <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Today's Task</th>
                 </tr>
               </thead>
@@ -382,6 +401,7 @@ const AdminTodayTasks = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-medium">{e.designation}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{e.firm}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-right">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${e.plannedCount > 0 ? "bg-indigo-100 text-indigo-800" : "bg-gray-100 text-gray-500"}`}>
                         {e.plannedCount}
@@ -389,7 +409,7 @@ const AdminTodayTasks = () => {
                     </td>
                   </tr>
                 )) : (
-                  <tr><td colSpan="4" className="px-6 py-12 text-center text-gray-400 text-sm">No employees found.</td></tr>
+                  <tr><td colSpan="5" className="px-6 py-12 text-center text-gray-400 text-sm">No employees found.</td></tr>
                 )}
               </tbody>
             </table>

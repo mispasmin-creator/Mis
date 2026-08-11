@@ -34,6 +34,7 @@ const DepartmentDashboard = () => {
 
   const [selectedDepartment, setSelectedDepartment] = useState("");
   const [selectedDesignation, setSelectedDesignation] = useState("");
+  const [selectedFirm, setSelectedFirm] = useState("");
   const [performanceFilter, setPerformanceFilter] = useState("all");
   const [searchName, setSearchName] = useState("");
   const [sortConfig, setSortConfig] = useState({ key: "completionPct", dir: "desc" });
@@ -87,6 +88,7 @@ const DepartmentDashboard = () => {
         const imageMap = {};
         const phoneMap = {};
         const reportedByMap = {};
+        const firmMap = {};
         if (masterResult.success && Array.isArray(masterResult.data)) {
           masterResult.data.slice(1).forEach((row) => {
             const name = row[0] ? String(row[0]).trim().toLowerCase() : "";
@@ -95,12 +97,14 @@ const DepartmentDashboard = () => {
             const imageUrl = row[4];
             const phone = row[1] ? String(row[1]).trim() : "";
             const reportedBy = row[9] ? String(row[9]).trim().toLowerCase() : "";
+            const firmName = row[8] ? String(row[8]).trim() : "";
             if (name) {
               if (imageUrl) imageMap[name] = imageUrl;
               if (designation) designationMap[name] = designation;
               if (department) departmentMap[name] = department;
               if (phone) phoneMap[name] = phone;
               if (reportedBy) reportedByMap[name] = reportedBy;
+              if (firmName) firmMap[name] = firmName;
             }
           });
         }
@@ -120,6 +124,7 @@ const DepartmentDashboard = () => {
                 name: empName,
                 designation: designationMap[normalizedName] || "",
                 department: departmentMap[normalizedName] || "Unassigned",
+                firm: firmMap[normalizedName] || "",
                 phone: phoneMap[normalizedName] || "",
                 image: finalImageUrl,
                 target: parseFloat(row[3]) || 0,
@@ -175,9 +180,20 @@ const DepartmentDashboard = () => {
     [employeesWithStats]
   );
 
+  const uniqueFirms = useMemo(
+    () => [...new Set(employeesWithStats.map((e) => e.firm).filter(Boolean))].sort(),
+    [employeesWithStats]
+  );
+
+  // Scope departments/stats/charts to the selected Firm. "" (All Firms) keeps the original combined behavior.
+  const firmFilteredEmployees = useMemo(
+    () => (selectedFirm === "" ? employeesWithStats : employeesWithStats.filter((e) => e.firm === selectedFirm)),
+    [employeesWithStats, selectedFirm]
+  );
+
   const departmentAgg = useMemo(() => {
     const byDept = {};
-    employeesWithStats.forEach((emp) => {
+    firmFilteredEmployees.forEach((emp) => {
       const dept = emp.department || "Unassigned";
       if (!byDept[dept]) {
         byDept[dept] = { department: dept, staffCount: 0, target: 0, actual: 0, pending: 0, employees: [] };
@@ -196,16 +212,16 @@ const DepartmentDashboard = () => {
         return { ...d, completionPct, topPerformer };
       })
       .sort((a, b) => b.staffCount - a.staffCount);
-  }, [employeesWithStats]);
+  }, [firmFilteredEmployees]);
 
   const overallStats = useMemo(() => {
-    const totalStaff = employeesWithStats.length;
-    const totalTarget = employeesWithStats.reduce((s, e) => s + e.target, 0);
-    const totalActual = employeesWithStats.reduce((s, e) => s + e.actualWorkDone, 0);
-    const totalPending = employeesWithStats.reduce((s, e) => s + e.allPendingTillDate, 0);
+    const totalStaff = firmFilteredEmployees.length;
+    const totalTarget = firmFilteredEmployees.reduce((s, e) => s + e.target, 0);
+    const totalActual = firmFilteredEmployees.reduce((s, e) => s + e.actualWorkDone, 0);
+    const totalPending = firmFilteredEmployees.reduce((s, e) => s + e.allPendingTillDate, 0);
     const completionPct = totalTarget > 0 ? Math.round((totalActual / totalTarget) * 100) : 0;
     return { totalDepartments: departmentAgg.length, totalStaff, completionPct, totalPending };
-  }, [employeesWithStats, departmentAgg]);
+  }, [firmFilteredEmployees, departmentAgg]);
 
   const departmentWorkloadLabels = useMemo(() => departmentAgg.map((d) => d.department), [departmentAgg]);
   const departmentWorkloadTarget = useMemo(() => departmentAgg.map((d) => d.target), [departmentAgg]);
@@ -221,7 +237,7 @@ const DepartmentDashboard = () => {
   );
 
   const filteredStaff = useMemo(() => {
-    let list = employeesWithStats.filter((emp) => {
+    let list = firmFilteredEmployees.filter((emp) => {
       const matchesDept = !selectedDepartment || emp.department === selectedDepartment;
       const matchesDesignation = !selectedDesignation || emp.designation === selectedDesignation;
       const matchesName = !searchName || emp.name.toLowerCase().includes(searchName.toLowerCase());
@@ -249,13 +265,14 @@ const DepartmentDashboard = () => {
     });
 
     return list;
-  }, [employeesWithStats, selectedDepartment, selectedDesignation, searchName, performanceFilter, sortConfig]);
+  }, [firmFilteredEmployees, selectedDepartment, selectedDesignation, searchName, performanceFilter, sortConfig]);
 
-  const hasActiveFilters = selectedDepartment || selectedDesignation || searchName || performanceFilter !== "all";
+  const hasActiveFilters = selectedDepartment || selectedDesignation || selectedFirm || searchName || performanceFilter !== "all";
 
   const clearFilters = () => {
     setSelectedDepartment("");
     setSelectedDesignation("");
+    setSelectedFirm("");
     setSearchName("");
     setPerformanceFilter("all");
   };
@@ -484,6 +501,19 @@ const DepartmentDashboard = () => {
           </select>
 
           <select
+            value={selectedFirm}
+            onChange={(e) => setSelectedFirm(e.target.value)}
+            className="px-3 py-2.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+            <option value="">All Firms</option>
+            {uniqueFirms.map((f) => (
+              <option key={f} value={f}>
+                {f}
+              </option>
+            ))}
+          </select>
+
+          <select
             value={performanceFilter}
             onChange={(e) => setPerformanceFilter(e.target.value)}
             className="px-3 py-2.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -513,6 +543,7 @@ const DepartmentDashboard = () => {
               <tr>
                 <th className="px-3 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Staff</th>
                 <th className="px-3 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Department</th>
+                <th className="px-3 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">Firm</th>
                 <th
                   className="px-3 py-3 text-xs font-medium tracking-wider text-center text-gray-500 uppercase cursor-pointer select-none"
                   onClick={() => handleSort("target")}
@@ -557,6 +588,7 @@ const DepartmentDashboard = () => {
                       </div>
                     </td>
                     <td className="px-3 py-2.5 text-sm text-gray-700 whitespace-nowrap">{emp.department}</td>
+                    <td className="px-3 py-2.5 text-sm text-gray-700 whitespace-nowrap">{emp.firm}</td>
                     <td className="px-3 py-2.5 text-sm text-center text-gray-900">{emp.target}</td>
                     <td className="px-3 py-2.5 text-sm text-center text-gray-900">{emp.actualWorkDone}</td>
                     <td className="px-3 py-2.5 text-center">
@@ -573,7 +605,7 @@ const DepartmentDashboard = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="6" className="px-4 py-8 text-center text-gray-500">
+                  <td colSpan="7" className="px-4 py-8 text-center text-gray-500">
                     No staff found for the selected filters
                   </td>
                 </tr>
@@ -595,7 +627,7 @@ const DepartmentDashboard = () => {
                   <Avatar src={emp.image} name={emp.name} className="w-9 h-9 rounded-full text-xs flex-shrink-0" />
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium text-gray-900 truncate">{emp.name}</p>
-                    <p className="text-xs text-gray-500 truncate">{emp.department}</p>
+                    <p className="text-xs text-gray-500 truncate">{emp.department}{emp.firm ? ` • ${emp.firm}` : ""}</p>
                   </div>
                 </div>
                 <div className="grid grid-cols-4 gap-1 text-center">

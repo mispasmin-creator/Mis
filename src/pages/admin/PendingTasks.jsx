@@ -67,6 +67,7 @@ const AdminPendingTasks = () => {
   const [personFilter, setPersonFilter] = useState('all');
   const [fmsFilter, setFmsFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [firmFilter, setFirmFilter] = useState('all');
   const [activeDrillDown, setActiveDrillDown] = useState(null);
   const [drillDownLoading, setDrillDownLoading] = useState(false);
 
@@ -81,8 +82,21 @@ const AdminPendingTasks = () => {
           return;
         }
 
-        const res = await fetch(`${scriptUrl}?sheet=Data`);
+        const [res, masterRes] = await Promise.all([
+          fetch(`${scriptUrl}?sheet=Data`),
+          fetch(`${scriptUrl}?sheet=Master`),
+        ]);
         const result = await res.json();
+        const masterResult = await masterRes.json();
+
+        const firmMap = {};
+        if (masterResult.success && Array.isArray(masterResult.data)) {
+          masterResult.data.slice(1).forEach((row) => {
+            const name = row[0] ? String(row[0]).trim().toLowerCase() : "";
+            const firmName = row[8] ? String(row[8]).trim() : "";
+            if (name && firmName) firmMap[name] = firmName;
+          });
+        }
 
         if (result.success && Array.isArray(result.data)) {
           const parsed = result.data
@@ -94,6 +108,7 @@ const AdminPendingTasks = () => {
               fmsName: row[2] || "",
               taskName: row[3] || "",
               personName: row[4] || "",
+              firm: firmMap[String(row[4] || "").trim().toLowerCase()] || "",
               sheetId: row[5] || "",
               plannedSheetRef: row[7] || "",
               actualSheetRef: row[8] || "",
@@ -262,6 +277,10 @@ const AdminPendingTasks = () => {
     return uniqueFMS.sort();
   }, [tasks]);
 
+  const uniqueFirms = useMemo(() => {
+    return [...new Set(tasks.map(task => task.firm))].filter(Boolean).sort();
+  }, [tasks]);
+
   const filteredTasks = useMemo(() => {
     return tasks.filter(task => {
       const matchesSearch =
@@ -271,15 +290,16 @@ const AdminPendingTasks = () => {
 
       const matchesPerson = personFilter === 'all' || task.personName === personFilter;
       const matchesFMS = fmsFilter === 'all' || task.fmsName === fmsFilter;
+      const matchesFirm = firmFilter === 'all' || task.firm === firmFilter;
 
       let matchesStatus = true;
       if (statusFilter === 'ontime') matchesStatus = task.allPendingTillDate === 0;
       if (statusFilter === 'pending') matchesStatus = task.allPendingTillDate > 0;
       if (statusFilter === 'delay') matchesStatus = task.totalPendingDelayTask > 0;
 
-      return matchesSearch && matchesPerson && matchesFMS && matchesStatus;
+      return matchesSearch && matchesPerson && matchesFMS && matchesFirm && matchesStatus;
     });
-  }, [tasks, searchQuery, personFilter, fmsFilter, statusFilter]);
+  }, [tasks, searchQuery, personFilter, fmsFilter, firmFilter, statusFilter]);
 
   if (loading) {
     return (
@@ -328,6 +348,19 @@ const AdminPendingTasks = () => {
                 <option value="all">All FMS Names</option>
                 {fmsNames.map(fms => (
                   <option key={fms} value={fms}>{fms}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="w-full md:w-56">
+              <select
+                value={firmFilter}
+                onChange={(e) => setFirmFilter(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-indigo-500 appearance-none bg-white"
+              >
+                <option value="all">All Firms</option>
+                {uniqueFirms.map(firm => (
+                  <option key={firm} value={firm}>{firm}</option>
                 ))}
               </select>
             </div>
@@ -440,6 +473,7 @@ const AdminPendingTasks = () => {
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employee</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Firm</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">FMS Name</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Task Name</th>
                       <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Delay Count</th>
@@ -462,6 +496,7 @@ const AdminPendingTasks = () => {
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span className="text-sm text-gray-900">{task.personName}</span>
                           </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{task.firm}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{task.fmsName}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{task.taskName}</td>
                           <td className={`px-6 py-4 whitespace-nowrap text-right text-sm font-medium ${isDelay ? 'text-orange-600' : 'text-gray-900'}`}>
@@ -494,7 +529,7 @@ const AdminPendingTasks = () => {
                     <div key={task.id} className={`p-4 ${rowBg} hover:bg-opacity-80 cursor-pointer transition-colors border-b border-gray-100`} onClick={() => handleRowClick(task)}>
                       <div className="flex justify-between items-start mb-3">
                         <div className="flex-1">
-                          <div className="text-xs text-gray-500 mb-1">{task.department}</div>
+                          <div className="text-xs text-gray-500 mb-1">{task.department}{task.firm ? ` • ${task.firm}` : ""}</div>
                           <div className="text-sm font-medium text-gray-900">{task.personName}</div>
                         </div>
                         <div className="ml-4 text-right">
