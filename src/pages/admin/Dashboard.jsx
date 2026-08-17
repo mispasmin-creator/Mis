@@ -705,6 +705,8 @@ const AdminDashboard = () => {
       plannedSheetRef: row[7] || "",
       actualSheetRef: row[8] || "",
       target: row[10] || 0,
+      extraDone: row[17] || 0,
+      actualAchievement: row[18] || 0,
       totalAchievement: (() => {
         const target = parseFloat(row[10]) || 0;
         const achievement = parseFloat(row[11]) || 0;
