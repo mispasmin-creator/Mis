@@ -1,5 +1,5 @@
 import React from "react";
-import { Download } from "lucide-react";
+import { Download, Calendar } from "lucide-react";
 import { generateDashboardPDF } from "../../../utils/pdfGenerator";
 import DailyReportButton from "./DailyReportButton";
 
@@ -14,6 +14,7 @@ const DashboardHeader = ({
     pendingTasks,
     departmentScores = [],
     dataSheetRows = [],
+    reportDateRange = { startDate: "", endDate: "" },
 }) => {
     const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
 
@@ -23,6 +24,24 @@ const DashboardHeader = ({
                 {isAdmin ? "Admin Dashboard" : (user?.role === 'hod' ? "HOD Dashboard" : "Employee Dashboard")}
             </h1>
             <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto justify-start sm:justify-end">
+                {/* Live Date Range Info */}
+                {(reportDateRange?.startDate || reportDateRange?.endDate) && (
+                    <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 rounded-lg shadow-sm text-xs hover:border-indigo-200 transition-colors">
+                        <Calendar className="h-4 w-4 text-indigo-600 flex-shrink-0" />
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="text-gray-500 font-medium">Target:</span>
+                            <span className="font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100 shadow-xs" title="Target data calculate date (Start date)">
+                                {reportDateRange.startDate || "-"}
+                            </span>
+                            <span className="text-gray-400 font-bold px-0.5">to</span>
+                            <span className="text-gray-500 font-medium">Actual Achievement:</span>
+                            <span className="font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 shadow-xs" title="Actual achievement data date (End date)">
+                                {reportDateRange.endDate || "-"}
+                            </span>
+                        </div>
+                    </div>
+                )}
+
                 <DailyReportButton dataSheetRows={dataSheetRows} />
                 <button
                     onClick={() => {

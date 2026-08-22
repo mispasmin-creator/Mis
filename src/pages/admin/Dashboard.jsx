@@ -33,6 +33,21 @@ const getCurrentWeek = () => {
 
 // DateAssignmentToolbar removed as dates are now extracted from sheet data during submission.
 
+const formatDateDisplay = (dateVal) => {
+  if (!dateVal) return "";
+  const str = String(dateVal).trim();
+  if (/^\d{1,2}-[A-Za-z]{3}-\d{4}$/.test(str)) return str;
+  const d = new Date(str);
+  if (!isNaN(d.getTime())) {
+    const day = String(d.getDate()).padStart(2, '0');
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const month = monthNames[d.getMonth()];
+    const year = d.getFullYear();
+    return `${day}-${month}-${year}`;
+  }
+  return str;
+};
+
 const AdminDashboard = () => {
   const { user } = useAuth();
   const [selectedEmployees, setSelectedEmployees] = useState([]);
@@ -45,6 +60,7 @@ const AdminDashboard = () => {
   const [departmentScores, setDepartmentScores] = useState([]);
   const [dataSheetRows, setDataSheetRows] = useState([]);
   const [dataSheetDateRange, setDataSheetDateRange] = useState({ fromDate: "", toDate: "" });
+  const [reportDateRange, setReportDateRange] = useState({ startDate: "", endDate: "" });
   const [rawParsedData, setRawParsedData] = useState([]);
   const [reportedByMap, setReportedByMap] = useState({});
 
@@ -60,7 +76,8 @@ const AdminDashboard = () => {
     weeklyOnTime: "Weekly On Time Not Done %",
     totalWork: "Total Work",
     weekPending: "Week Pending",
-    allPending: "All Pending"
+    allPending: "All Pending",
+    incentiveCategory: "Incentive Category"
   });
 
   // Column Visibility State
@@ -77,6 +94,7 @@ const AdminDashboard = () => {
     { key: "totalWork", label: columnLabels.totalWork },
     { key: "weekPending", label: columnLabels.weekPending },
     { key: "allPending", label: columnLabels.allPending },
+    { key: "incentiveCategory", label: columnLabels.incentiveCategory || "Incentive Category" },
     { key: "lastWeekPlannedNotDone", label: "Last Week Planned Work Not Done %" },
     { key: "lastWeekPlannedNotDoneOnTime", label: "Last Week Planned Work Not Done On Time %" },
     { key: "lastWeekCommitment", label: "Last Week Commitment" },
@@ -113,6 +131,7 @@ const AdminDashboard = () => {
   const [filterDepartment, setFilterDepartment] = useState("");
   const [filterDeptName, setFilterDeptName] = useState("");
   const [filterFirmName, setFilterFirmName] = useState("");
+  const [filterIncentiveCategory, setFilterIncentiveCategory] = useState("");
   const [filterHR, setFilterHR] = useState("");
   const [selectedUserDetails, setSelectedUserDetails] = useState(null);
 
@@ -221,14 +240,46 @@ const AdminDashboard = () => {
         const deptScoreResult = await deptScoreResponse.json();
 
         // Store Data sheet rows (skip header row)
+        const incentiveMap = {};
+        const firmMap = {};
+
         if (dataResult.success && Array.isArray(dataResult.data)) {
           setDataSheetRows(dataResult.data.slice(1));
-          // Column V (index 21) and W (index 22) in header row contain global date range
           const headerRow = dataResult.data[0] || [];
-          const globalFromDate = headerRow[21] ? String(headerRow[21]).trim() : "";
-          const globalToDate = headerRow[22] ? String(headerRow[22]).trim() : "";
+
+          // Column V (index 21) or header search for Incentive Category
+          let incentiveColIdx = headerRow.findIndex(h => h && String(h).trim().toLowerCase() === "incentive category");
+          if (incentiveColIdx === -1) incentiveColIdx = 21;
+
+          // Column W (index 22) or header search for Firm Name
+          let firmColIdx = headerRow.findIndex(h => h && String(h).trim().toLowerCase() === "firm name");
+          if (firmColIdx === -1) firmColIdx = 22;
+
+          // Header row date range columns
+          const globalFromDate = headerRow[23] ? String(headerRow[23]).trim() : (headerRow[22] ? String(headerRow[22]).trim() : "");
+          const globalToDate = headerRow[24] ? String(headerRow[24]).trim() : (headerRow[23] ? String(headerRow[23]).trim() : "");
           setDataSheetDateRange({ fromDate: globalFromDate, toDate: globalToDate });
-          console.log("[Data Sheet] Global Date Range from header → V:", globalFromDate, "W:", globalToDate);
+          console.log("[Data Sheet] Global Date Range from header →", globalFromDate, "To:", globalToDate);
+          
+          if (globalFromDate || globalToDate) {
+            setReportDateRange(prev => ({
+              startDate: prev.startDate || formatDateDisplay(globalFromDate),
+              endDate: prev.endDate || formatDateDisplay(globalToDate)
+            }));
+          }
+
+          // Populate incentiveMap and firmMap from Data sheet rows (Person Name is at Column index 4)
+          dataResult.data.slice(1).forEach(row => {
+            const pName = row[4] ? String(row[4]).trim().toLowerCase() : "";
+            const cat = row[incentiveColIdx] ? String(row[incentiveColIdx]).trim() : "";
+            const firm = row[firmColIdx] ? String(row[firmColIdx]).trim() : "";
+            if (pName && cat && !incentiveMap[pName]) {
+              incentiveMap[pName] = cat;
+            }
+            if (pName && firm && !firmMap[pName]) {
+              firmMap[pName] = firm;
+            }
+          });
         }
 
         // Store Department Scores
@@ -251,8 +302,13 @@ const AdminDashboard = () => {
         const departmentMap = {};
         const phoneMap = {};
         const reportedByMap = {};
-        const firmMap = {};
         if (masterResult.success && Array.isArray(masterResult.data)) {
+          const masterHeader = masterResult.data[0] || [];
+          let masterIncentiveIdx = masterHeader.findIndex(h => h && String(h).trim().toLowerCase() === "incentive category");
+          if (masterIncentiveIdx === -1) masterIncentiveIdx = 10;
+          let masterFirmIdx = masterHeader.findIndex(h => h && String(h).trim().toLowerCase() === "firm name");
+          if (masterFirmIdx === -1) masterFirmIdx = 8;
+
           masterResult.data.slice(1).forEach(row => {
             const name = row[0] ? String(row[0]).trim().toLowerCase() : "";
             const department = row[2] ? String(row[2]).trim() : "";
@@ -260,14 +316,19 @@ const AdminDashboard = () => {
             const imageUrl = row[4];
             const phone = row[1] ? String(row[1]).trim() : ""; // Column B (index 1)
             const reportedBy = row[9] ? String(row[9]).trim().toLowerCase() : "";
-            const firmName = row[8] ? String(row[8]).trim() : ""; // Column I (index 8)
+            const firmName = row[masterFirmIdx] ? String(row[masterFirmIdx]).trim() : "";
+            const masterIncentive = row[masterIncentiveIdx] ? String(row[masterIncentiveIdx]).trim() : "";
+
             if (name) {
               if (imageUrl) imageMap[name] = imageUrl;
               if (designation) designationMap[name] = designation;
               if (department) departmentMap[name] = department;
               if (phone) phoneMap[name] = phone;
               if (reportedBy) reportedByMap[name] = reportedBy;
-              if (firmName) firmMap[name] = firmName;
+              if (firmName && !firmMap[name]) firmMap[name] = firmName;
+              if (masterIncentive && !incentiveMap[name]) {
+                incentiveMap[name] = masterIncentive;
+              }
             }
           });
         }
@@ -326,6 +387,27 @@ const AdminDashboard = () => {
         if (result.success && Array.isArray(result.data)) {
           const headers = result.data[0];
 
+          // Extract live report start and end date from For Records sheet
+          let extractedStart = "";
+          let extractedEnd = "";
+          if (result.data[2]) {
+            extractedStart = result.data[2][0] ? String(result.data[2][0]).trim() : "";
+            extractedEnd = result.data[2][1] ? String(result.data[2][1]).trim() : "";
+          }
+          if ((!extractedStart || !extractedEnd) && result.data[0] && result.data[0][0]) {
+            const match = String(result.data[0][0]).match(/Report From\s+(.+?)\s+To\s+(.+)/i);
+            if (match) {
+              if (!extractedStart) extractedStart = match[1].trim();
+              if (!extractedEnd) extractedEnd = match[2].trim();
+            }
+          }
+          if (extractedStart || extractedEnd) {
+            setReportDateRange({
+              startDate: formatDateDisplay(extractedStart),
+              endDate: formatDateDisplay(extractedEnd)
+            });
+          }
+
           if (headers) {
             setColumnLabels(prev => ({
               ...prev,
@@ -365,6 +447,7 @@ const AdminDashboard = () => {
                 designation: designationMap[normalizedName] || "",
                 department: departmentMap[normalizedName] || "",
                 firm: firmMap[normalizedName] || "",
+                incentiveCategory: incentiveMap[normalizedName] || "",
                 image: finalImageUrl,
 
                 score: row[5] || 0,       // Column F (index 5) - Weekly Work Done %
@@ -436,13 +519,15 @@ const AdminDashboard = () => {
     }
   }, []);
 
-  // Scope everything below (table, KPIs, charts) to the selected Firm Name.
-  // "" (All Firms) keeps the original combined behavior.
+  // Scope everything below (table, KPIs, charts) to the selected Firm Name and Incentive Category.
+  // "" (All Firms / All Categories) keeps the original combined behavior.
   const firmFilteredEmployees = useMemo(() => {
-    return filterFirmName === ""
-      ? sheetEmployees
-      : sheetEmployees.filter((emp) => emp.firm === filterFirmName);
-  }, [sheetEmployees, filterFirmName]);
+    return sheetEmployees.filter((emp) => {
+      const matchesFirm = filterFirmName === "" || emp.firm === filterFirmName;
+      const matchesIncentive = filterIncentiveCategory === "" || emp.incentiveCategory === filterIncentiveCategory;
+      return matchesFirm && matchesIncentive;
+    });
+  }, [sheetEmployees, filterFirmName, filterIncentiveCategory]);
 
   // Filter employees
   const filteredEmployees = useMemo(() => {
@@ -464,9 +549,16 @@ const AdminDashboard = () => {
     ...new Set(sheetEmployees.map((emp) => emp.department).filter(Boolean)),
   ], [sheetEmployees]);
 
-  // Get unique firm names
-  const uniqueFirms = useMemo(() => [
-    ...new Set(sheetEmployees.map((emp) => emp.firm).filter(Boolean)),
+  // Get unique firm names (from Data sheet Column W and mapped employees)
+  const uniqueFirms = useMemo(() => {
+    const fromEmployees = sheetEmployees.map((emp) => emp.firm).filter(Boolean);
+    const fromDataSheet = dataSheetRows.map((row) => (row[22] ? String(row[22]).trim() : "")).filter(Boolean);
+    return [...new Set([...fromEmployees, ...fromDataSheet])].sort();
+  }, [sheetEmployees, dataSheetRows]);
+
+  // Get unique incentive categories
+  const uniqueIncentiveCategories = useMemo(() => [
+    ...new Set(sheetEmployees.map((emp) => emp.incentiveCategory).filter(Boolean)),
   ], [sheetEmployees]);
 
   // Statistics - Memoized
@@ -1200,6 +1292,7 @@ Passary Refractories.`;
         pendingTasks={sortedPendingList}
         departmentScores={departmentScores}
         dataSheetRows={dataSheetRows}
+        reportDateRange={reportDateRange}
       />
 
       {/* KPI Summary */}
@@ -1251,6 +1344,9 @@ Passary Refractories.`;
         filterFirmName={filterFirmName}
         setFilterFirmName={setFilterFirmName}
         uniqueFirms={uniqueFirms}
+        filterIncentiveCategory={filterIncentiveCategory}
+        setFilterIncentiveCategory={setFilterIncentiveCategory}
+        uniqueIncentiveCategories={uniqueIncentiveCategories}
         onMainSubmit={handleMainSubmit}
         onWhatsAppSubmit={handleWhatsAppSubmit}
         selectedEmployees={selectedEmployees}

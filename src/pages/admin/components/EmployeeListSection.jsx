@@ -23,6 +23,9 @@ const EmployeeListSection = ({
     filterFirmName,
     setFilterFirmName,
     uniqueFirms,
+    filterIncentiveCategory,
+    setFilterIncentiveCategory,
+    uniqueIncentiveCategories,
     // Submit
     onMainSubmit,
     onWhatsAppSubmit,
@@ -200,6 +203,21 @@ const EmployeeListSection = ({
                                 ))}
                             </select>
                         </div>
+
+                        <div className="flex-1 min-w-[200px] sm:min-w-[150px] order-5">
+                            <select
+                                value={filterIncentiveCategory}
+                                onChange={(e) => setFilterIncentiveCategory(e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                            >
+                                <option value="">All Incentive Categories</option>
+                                {uniqueIncentiveCategories?.map((category) => (
+                                    <option key={category} value={category}>
+                                        {category}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -271,6 +289,11 @@ const EmployeeListSection = ({
                             {visibleColumns.allPending && (
                                 <th className="px-2 min-w-24 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     {columnLabels.allPending}
+                                </th>
+                            )}
+                            {visibleColumns.incentiveCategory && (
+                                <th className="px-2 min-w-28 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    {columnLabels.incentiveCategory || "Incentive Category"}
                                 </th>
                             )}
                             {visibleColumns.lastWeekPlannedNotDone && (
@@ -424,6 +447,17 @@ const EmployeeListSection = ({
                                         {visibleColumns.allPending && (
                                             <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
                                                 {employee.allPendingTillDate}
+                                            </td>
+                                        )}
+                                        {visibleColumns.incentiveCategory && (
+                                            <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                                                {employee.incentiveCategory ? (
+                                                    <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                                                        {employee.incentiveCategory}
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-gray-400">-</span>
+                                                )}
                                             </td>
                                         )}
                                         {visibleColumns.lastWeekPlannedNotDone && (
@@ -637,6 +671,12 @@ const EmployeeListSection = ({
                                                 <p className="text-gray-500">All Pending</p>
                                                 <p className="font-semibold text-gray-900">
                                                     {employee.allPendingTillDate}
+                                                </p>
+                                            </div>
+                                            <div className="bg-gray-50 p-2 rounded">
+                                                <p className="text-gray-500">Incentive Category</p>
+                                                <p className="font-semibold text-gray-900">
+                                                    {employee.incentiveCategory || "-"}
                                                 </p>
                                             </div>
                                         </div>

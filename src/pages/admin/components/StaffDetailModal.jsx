@@ -65,14 +65,24 @@ const StaffDetailModal = ({ employee, onClose }) => {
 
         <div className="px-5 pt-3 pb-5">
           <h3 className="text-lg font-bold text-gray-900">{employee.name}</h3>
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-sm text-gray-500">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 mt-2 text-xs text-gray-600">
             {employee.designation && (
-              <span className="flex items-center gap-1">
-                <Briefcase className="w-3.5 h-3.5" /> {employee.designation}
+              <span className="flex items-center gap-1 bg-gray-100 px-2 py-0.5 rounded">
+                <Briefcase className="w-3.5 h-3.5 text-gray-500" /> {employee.designation}
+              </span>
+            )}
+            {employee.firm && (
+              <span className="flex items-center gap-1 bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded border border-indigo-100">
+                <Building2 className="w-3.5 h-3.5 text-indigo-500" /> {employee.firm}
+              </span>
+            )}
+            {employee.incentiveCategory && (
+              <span className="inline-flex items-center px-2 py-0.5 rounded font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                {employee.incentiveCategory}
               </span>
             )}
             {employee.phone && (
-              <span className="flex items-center gap-1">
+              <span className="flex items-center gap-1 text-gray-500 ml-auto">
                 <Phone className="w-3.5 h-3.5" /> {employee.phone}
               </span>
             )}

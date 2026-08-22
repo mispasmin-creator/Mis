@@ -130,6 +130,8 @@ export const generateDashboardPDF = async (visibleColumnsList, filteredEmployees
       switch (col.key) {
         case 'id': value = emp.id; break;
         case 'name': value = emp.name; break;
+        case 'designation': value = emp.designation; break;
+        case 'department': value = emp.department; break;
         case 'firm': value = emp.firm; break;
         case 'target': value = emp.target; break;
         case 'actualWork': value = emp.actualWorkDone; break;
@@ -138,6 +140,7 @@ export const generateDashboardPDF = async (visibleColumnsList, filteredEmployees
         case 'totalWork': value = emp.totalWorkDone; break;
         case 'weekPending': value = emp.weekPending; break;
         case 'allPending': value = emp.allPendingTillDate; break;
+        case 'incentiveCategory': value = emp.incentiveCategory || ''; break;
         case 'lastWeekPlannedNotDone': value = emp.plannedWorkNotDone; break;
         case 'lastWeekPlannedNotDoneOnTime': value = emp.plannedWorkNotDoneOnTime; break;
         case 'lastWeekCommitment': value = emp.commitment; break;
