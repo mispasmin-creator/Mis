@@ -529,8 +529,8 @@ const UserDetailsModal = ({
                                                     <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap">Task Name</th>
                                                     <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap">Department</th>
                                                     <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap">Target</th>
-                                                    <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap">Extra Done</th>
                                                     <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap">Actual Achievement</th>
+                                                    <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap">Extra Done</th>
                                                     <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap">Total Achievement</th>
                                                     <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap">% Work Not Done</th>
                                                     <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap">% Work Not Done on Time</th>
@@ -549,8 +549,8 @@ const UserDetailsModal = ({
                                                             <td className="px-3 py-2 text-xs text-gray-900">{task.taskName}</td>
                                                             <td className="px-3 py-2 text-xs text-gray-900">{task.department}</td>
                                                             <td className="px-3 py-2 text-xs text-gray-900 font-medium">{task.target}</td>
-                                                            <td className="px-3 py-2 text-xs text-gray-900 font-medium">{task.extraDone}</td>
                                                             <td className="px-3 py-2 text-xs text-gray-900 font-medium">{task.actualAchievement}</td>
+                                                            <td className="px-3 py-2 text-xs text-gray-900 font-medium">{task.extraDone}</td>
                                                             <td className="px-3 py-2 text-xs font-medium">
                                                                 <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${parseFloat(task.totalAchievement) < parseFloat(task.target) ? "bg-red-100 text-red-800" : parseFloat(task.totalAchievement) === parseFloat(task.target) ? "bg-green-100 text-green-800" : "bg-indigo-100 text-indigo-800"}`}>
                                                                     {task.totalAchievement}
@@ -592,12 +592,12 @@ const UserDetailsModal = ({
                                                             <p className="text-xs text-gray-700 font-semibold truncate">{task.department}</p>
                                                         </div>
                                                         <div>
-                                                            <p className="text-[10px] text-gray-400 font-medium uppercase">Extra Done</p>
-                                                            <p className="text-xs text-gray-700 font-semibold">{task.extraDone}</p>
-                                                        </div>
-                                                        <div>
                                                             <p className="text-[10px] text-gray-400 font-medium uppercase">Actual Achievement</p>
                                                             <p className="text-xs text-gray-700 font-semibold">{task.actualAchievement}</p>
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-[10px] text-gray-400 font-medium uppercase">Extra Done</p>
+                                                            <p className="text-xs text-gray-700 font-semibold">{task.extraDone}</p>
                                                         </div>
                                                         <div>
                                                             <p className="text-[10px] text-gray-400 font-medium uppercase">All Pending</p>
