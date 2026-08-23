@@ -509,9 +509,7 @@ const UserDetailsModal = ({
                                     <X className="w-5 h-5 text-gray-600" />
                                 </button>
                             </div>
-                        </div>
-
-                        {/* Scrollable Content */}
+                        </div>                        {/* Scrollable Content */}
                         <div className="flex-1 overflow-y-auto">
                             <div className="p-4 space-y-4">
                                 {/* Tasks Details Section */}
@@ -521,20 +519,20 @@ const UserDetailsModal = ({
                                     </h3>
 
                                     {/* Desktop View - Table */}
-                                    <div className="hidden md:block overflow-x-auto border border-gray-200 rounded-lg">
-                                        <table className="min-w-full divide-y divide-gray-200">
-                                            <thead className="bg-gray-100">
+                                    <div className="hidden md:block overflow-auto max-h-[calc(95vh-220px)] border border-gray-200 rounded-lg relative">
+                                        <table className="min-w-full divide-y divide-gray-200 border-separate border-spacing-0">
+                                            <thead className="bg-gray-100 sticky top-0 z-20 shadow-xs">
                                                 <tr>
-                                                    <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap">FMS Name</th>
-                                                    <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap">Task Name</th>
-                                                    <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap">Department</th>
-                                                    <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap">Target</th>
-                                                    <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap">Actual Achievement</th>
-                                                    <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap">Extra Done</th>
-                                                    <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap">Total Achievement</th>
-                                                    <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap">% Work Not Done</th>
-                                                    <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap">% Work Not Done on Time</th>
-                                                    <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap">All Pending Till Date</th>
+                                                    <th className="sticky top-0 bg-gray-100 z-20 px-3 py-2.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">FMS Name</th>
+                                                    <th className="sticky top-0 bg-gray-100 z-20 px-3 py-2.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">Task Name</th>
+                                                    <th className="sticky top-0 bg-gray-100 z-20 px-3 py-2.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">Department</th>
+                                                    <th className="sticky top-0 bg-gray-100 z-20 px-3 py-2.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">Target</th>
+                                                    <th className="sticky top-0 bg-gray-100 z-20 px-3 py-2.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">Actual Achievement</th>
+                                                    <th className="sticky top-0 bg-gray-100 z-20 px-3 py-2.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">Extra Done</th>
+                                                    <th className="sticky top-0 bg-gray-100 z-20 px-3 py-2.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">Total Achievement</th>
+                                                    <th className="sticky top-0 bg-gray-100 z-20 px-3 py-2.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">% Work Not Done</th>
+                                                    <th className="sticky top-0 bg-gray-100 z-20 px-3 py-2.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">% Work Not Done on Time</th>
+                                                    <th className="sticky top-0 bg-gray-100 z-20 px-3 py-2.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">All Pending Till Date</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="bg-white divide-y divide-gray-200">
@@ -545,20 +543,20 @@ const UserDetailsModal = ({
                                                             onClick={(e) => handleDrillDown(task, "Total Achievement", task.totalAchievement, e)}
                                                             className="hover:bg-indigo-50 cursor-pointer transition-colors"
                                                         >
-                                                            <td className="px-3 py-2 text-xs text-gray-900">{task.fmsName}</td>
-                                                            <td className="px-3 py-2 text-xs text-gray-900">{task.taskName}</td>
-                                                            <td className="px-3 py-2 text-xs text-gray-900">{task.department}</td>
-                                                            <td className="px-3 py-2 text-xs text-gray-900 font-medium">{task.target}</td>
-                                                            <td className="px-3 py-2 text-xs text-gray-900 font-medium">{task.actualAchievement}</td>
-                                                            <td className="px-3 py-2 text-xs text-gray-900 font-medium">{task.extraDone}</td>
-                                                            <td className="px-3 py-2 text-xs font-medium">
+                                                            <td className="px-3 py-2 text-xs text-gray-900 border-b border-gray-100">{task.fmsName}</td>
+                                                            <td className="px-3 py-2 text-xs text-gray-900 border-b border-gray-100">{task.taskName}</td>
+                                                            <td className="px-3 py-2 text-xs text-gray-900 border-b border-gray-100">{task.department}</td>
+                                                            <td className="px-3 py-2 text-xs text-gray-900 font-medium border-b border-gray-100">{task.target}</td>
+                                                            <td className="px-3 py-2 text-xs text-gray-900 font-medium border-b border-gray-100">{task.actualAchievement}</td>
+                                                            <td className="px-3 py-2 text-xs text-gray-900 font-medium border-b border-gray-100">{task.extraDone}</td>
+                                                            <td className="px-3 py-2 text-xs font-medium border-b border-gray-100">
                                                                 <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${parseFloat(task.totalAchievement) < parseFloat(task.target) ? "bg-red-100 text-red-800" : parseFloat(task.totalAchievement) === parseFloat(task.target) ? "bg-green-100 text-green-800" : "bg-indigo-100 text-indigo-800"}`}>
                                                                     {task.totalAchievement}
                                                                 </span>
                                                             </td>
-                                                            <td className="px-3 py-2 text-xs text-gray-900">{formatDecimal(task.workNotDone)}</td>
-                                                            <td className="px-3 py-2 text-xs text-gray-900">{formatDecimal(task.workNotDoneOnTime)}</td>
-                                                            <td className="px-3 py-2 text-xs text-gray-900">{task.allPendingTillDate}</td>
+                                                            <td className="px-3 py-2 text-xs text-gray-900 border-b border-gray-100">{formatDecimal(task.workNotDone)}</td>
+                                                            <td className="px-3 py-2 text-xs text-gray-900 border-b border-gray-100">{formatDecimal(task.workNotDoneOnTime)}</td>
+                                                            <td className="px-3 py-2 text-xs text-gray-900 border-b border-gray-100">{task.allPendingTillDate}</td>
                                                         </tr>
                                                     ))
                                                 ) : (
@@ -683,24 +681,24 @@ const UserDetailsModal = ({
                             ) : (
                                 <div className="p-4">
                                     {/* Desktop View - Table */}
-                                    <div className="hidden md:block overflow-x-auto border border-gray-200 rounded-lg">
-                                        <table className="min-w-full divide-y divide-gray-200">
-                                            <thead className="bg-gray-50 sticky top-0">
+                                    <div className="hidden md:block overflow-auto max-h-[55vh] border border-gray-200 rounded-lg relative">
+                                        <table className="min-w-full divide-y divide-gray-200 border-separate border-spacing-0">
+                                            <thead className="bg-gray-50 sticky top-0 z-20 shadow-xs">
                                                 <tr>
-                                                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Task Name</th>
-                                                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Planned</th>
-                                                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Actual</th>
-                                                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Delay</th>
+                                                    <th className="sticky top-0 bg-gray-50 z-20 px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-200">Task Name</th>
+                                                    <th className="sticky top-0 bg-gray-50 z-20 px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-200">Planned</th>
+                                                    <th className="sticky top-0 bg-gray-50 z-20 px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-200">Actual</th>
+                                                    <th className="sticky top-0 bg-gray-50 z-20 px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-b border-gray-200">Delay</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="bg-white divide-y divide-gray-200">
                                                 {filteredRows && filteredRows.length > 0 ? (
                                                     filteredRows.map((row, idx) => (
                                                         <tr key={idx} className={`${getRowBg(row)} transition-colors`}>
-                                                            <td className="px-4 py-3 text-sm text-gray-700">{row.taskName}</td>
-                                                            <td className="px-4 py-3 text-sm text-gray-700">{row.planned}</td>
-                                                            <td className="px-4 py-3 text-sm text-gray-500">{row.actual || '-'}</td>
-                                                            <td className={`px-4 py-3 text-sm font-medium ${isDelayRow(row) ? 'text-orange-600' : 'text-gray-700'}`}>{row.delay || '00:00:00'}</td>
+                                                            <td className="px-4 py-3 text-sm text-gray-700 border-b border-gray-100">{row.taskName}</td>
+                                                            <td className="px-4 py-3 text-sm text-gray-700 border-b border-gray-100">{row.planned}</td>
+                                                            <td className="px-4 py-3 text-sm text-gray-500 border-b border-gray-100">{row.actual || '-'}</td>
+                                                            <td className={`px-4 py-3 text-sm font-medium border-b border-gray-100 ${isDelayRow(row) ? 'text-orange-600' : 'text-gray-700'}`}>{row.delay || '00:00:00'}</td>
                                                         </tr>
                                                     ))
                                                 ) : (
