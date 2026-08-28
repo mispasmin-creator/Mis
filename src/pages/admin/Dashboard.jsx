@@ -15,7 +15,7 @@ import DepartmentScoreChart from "../../components/charts/DepartmentScoreChart";
 import DepartmentWorkloadChart from "../../components/charts/DepartmentWorkloadChart";
 import { useAuth } from "../../contexts/AuthContext";
 import CategoryTabs from "../../components/CategoryTabs";
-import { categorizeByBasis, CATEGORY_KEYS, CATEGORY_LABELS } from "../../utils/categorize";
+import { categorizeByBasis, CATEGORY_KEYS } from "../../utils/categorize";
 
 const getCurrentWeek = () => {
   const today = new Date();
@@ -521,23 +521,6 @@ const AdminDashboard = () => {
       setEmployeeCommitments(JSON.parse(saved));
     }
   }, []);
-
-  const isAdmin = user && (user.role === 'admin' || user.role === 'superadmin');
-  const isHod = user && user.role === 'hod';
-  const isAdminOrHod = isAdmin || isHod;
-
-  // Determine regular user's own category from sheet records or user profile
-  const currentUserCategory = useMemo(() => {
-    const incentive = sheetEmployees[0]?.incentiveCategory || user?.incentiveCategory || "";
-    return categorizeByBasis(incentive);
-  }, [sheetEmployees, user]);
-
-  // For regular user, automatically select their own assigned category
-  useEffect(() => {
-    if (!isAdminOrHod && currentUserCategory) {
-      setSelectedCategory(currentUserCategory);
-    }
-  }, [isAdminOrHod, currentUserCategory]);
 
   // Category counts across all sheetEmployees
   const categoryCounts = useMemo(() => {
@@ -1341,24 +1324,12 @@ Passary Refractories.`;
         reportDateRange={reportDateRange}
       />
 
-      {/* Category Tabs for Admin/HOD OR Single Category Name Badge for Regular User */}
-      {isAdminOrHod ? (
-        <CategoryTabs
-          activeCategory={selectedCategory}
-          onSelectCategory={setSelectedCategory}
-          counts={categoryCounts}
-        />
-      ) : (
-        <div className="bg-white rounded-xl shadow-2xs border border-gray-200 p-3 sm:p-4 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-teal-600 animate-pulse"></span>
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Report Category:</span>
-            <span className="inline-flex items-center px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-bold bg-teal-50 text-teal-800 border border-teal-200 shadow-2xs">
-              {CATEGORY_LABELS.find(c => c.key === currentUserCategory)?.label || 'MIS Category Report'}
-            </span>
-          </div>
-        </div>
-      )}
+      {/* Category Tabs: MIS Category Report | Non MIS Category Report | Other Category Report */}
+      <CategoryTabs
+        activeCategory={selectedCategory}
+        onSelectCategory={setSelectedCategory}
+        counts={categoryCounts}
+      />
 
       {/* KPI Summary */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">

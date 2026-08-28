@@ -12,19 +12,14 @@ const AdminLayout = () => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState(null);
 
-  const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
-  const isHod = user?.role === 'hod';
+  const basePrefix = (user?.role === 'admin' || user?.role === 'superadmin') ? '/admin' : '/user';
 
-  const navItems = (isAdmin || isHod)
-    ? [
-        { to: `${basePrefix}/dashboard`, label: 'Dashboard', icon: LayoutDashboard, match: ['/admin/dashboard', '/user/dashboard'] },
-        { to: `${basePrefix}/department`, label: 'Department', icon: Building2, match: ['/admin/department', '/user/department'] },
-        { to: `${basePrefix}/history-commitment`, label: 'History', icon: History, match: ['/admin/history-commitment', '/user/history-commitment'] },
-        { to: `${basePrefix}/kpi-kra`, label: 'KPI & KRA', icon: LineChart, match: ['/admin/kpi-kra', '/user/kpi-kra'] },
-      ]
-    : [
-        { to: `${basePrefix}/dashboard`, label: 'Dashboard', icon: LayoutDashboard, match: ['/admin/dashboard', '/user/dashboard'] },
-      ];
+  const navItems = [
+    { to: `${basePrefix}/dashboard`, label: 'Dashboard', icon: LayoutDashboard, match: ['/admin/dashboard', '/user/dashboard'] },
+    { to: `${basePrefix}/department`, label: 'Department', icon: Building2, match: ['/admin/department', '/user/department'] },
+    { to: `${basePrefix}/history-commitment`, label: 'History', icon: History, match: ['/admin/history-commitment', '/user/history-commitment'] },
+    { to: `${basePrefix}/kpi-kra`, label: 'KPI & KRA', icon: LineChart, match: ['/admin/kpi-kra', '/user/kpi-kra'] },
+  ];
 
   const handleImageChange = async (e) => {
     const file = e.target.files?.[0];
