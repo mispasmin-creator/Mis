@@ -23,6 +23,8 @@ import DepartmentWorkloadChart from "../../components/charts/DepartmentWorkloadC
 import DepartmentScoreChart from "../../components/charts/DepartmentScoreChart";
 import DoughnutChart from "../../components/charts/DoughnutChart";
 import StaffDetailModal from "./components/StaffDetailModal";
+import CategoryTabs from "../../components/CategoryTabs";
+import { categorizeByBasis, CATEGORY_KEYS } from "../../utils/categorize";
 
 const PALETTE = [
   "#6366f1", "#10b981", "#f59e0b", "#ef4444", "#06b6d4",
@@ -57,6 +59,7 @@ const DepartmentDashboard = () => {
   const [selectedDesignation, setSelectedDesignation] = useState("");
   const [selectedFirm, setSelectedFirm] = useState("");
   const [selectedIncentiveCategory, setSelectedIncentiveCategory] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState(CATEGORY_KEYS.MIS);
   const [performanceFilter, setPerformanceFilter] = useState("all");
   const [searchName, setSearchName] = useState("");
   const [sortConfig, setSortConfig] = useState({ key: "completionPct", dir: "desc" });
@@ -226,14 +229,40 @@ const DepartmentDashboard = () => {
     fetchData();
   }, [user]);
 
+  // Category counts across all employees
+  const categoryCounts = useMemo(() => {
+    const counts = {
+      [CATEGORY_KEYS.MIS]: 0,
+      [CATEGORY_KEYS.NON_MIS]: 0,
+      [CATEGORY_KEYS.OTHER]: 0,
+    };
+    employees.forEach((emp) => {
+      const cat = categorizeByBasis(emp.incentiveCategory);
+      if (counts[cat] !== undefined) {
+        counts[cat]++;
+      } else {
+        counts[CATEGORY_KEYS.OTHER]++;
+      }
+    });
+    return counts;
+  }, [employees]);
+
+  // Filter employees by the selected Category tab
+  const categoryFilteredEmployees = useMemo(() => {
+    return employees.filter((emp) => {
+      const cat = categorizeByBasis(emp.incentiveCategory);
+      return cat === selectedCategory;
+    });
+  }, [employees, selectedCategory]);
+
   const employeesWithStats = useMemo(
     () =>
-      employees.map((emp) => {
+      categoryFilteredEmployees.map((emp) => {
         const completionPct =
           emp.target > 0 ? Math.round((emp.actualWorkDone / emp.target) * 100) : emp.actualWorkDone > 0 ? 100 : 0;
         return { ...emp, completionPct };
       }),
-    [employees]
+    [categoryFilteredEmployees]
   );
 
   const uniqueDesignations = useMemo(
@@ -461,6 +490,13 @@ const DepartmentDashboard = () => {
           <p className="text-sm text-gray-500 mt-0.5">Department-wise, firm-wise &amp; category-wise performance overview</p>
         </div>
       </div>
+
+      {/* Category Tabs */}
+      <CategoryTabs
+        activeCategory={selectedCategory}
+        onSelectCategory={setSelectedCategory}
+        counts={categoryCounts}
+      />
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">

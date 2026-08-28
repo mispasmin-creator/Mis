@@ -14,6 +14,8 @@ import ChartsGrid from "./components/ChartsGrid";
 import DepartmentScoreChart from "../../components/charts/DepartmentScoreChart";
 import DepartmentWorkloadChart from "../../components/charts/DepartmentWorkloadChart";
 import { useAuth } from "../../contexts/AuthContext";
+import CategoryTabs from "../../components/CategoryTabs";
+import { categorizeByBasis, CATEGORY_KEYS } from "../../utils/categorize";
 
 const getCurrentWeek = () => {
   const today = new Date();
@@ -134,6 +136,7 @@ const AdminDashboard = () => {
   const [filterIncentiveCategory, setFilterIncentiveCategory] = useState("");
   const [filterHR, setFilterHR] = useState("");
   const [selectedUserDetails, setSelectedUserDetails] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState(CATEGORY_KEYS.MIS);
 
   // Lock body scroll when popup is open
   useEffect(() => {
@@ -519,15 +522,41 @@ const AdminDashboard = () => {
     }
   }, []);
 
-  // Scope everything below (table, KPIs, charts) to the selected Firm Name and Incentive Category.
-  // "" (All Firms / All Categories) keeps the original combined behavior.
-  const firmFilteredEmployees = useMemo(() => {
+  // Category counts across all sheetEmployees
+  const categoryCounts = useMemo(() => {
+    const counts = {
+      [CATEGORY_KEYS.MIS]: 0,
+      [CATEGORY_KEYS.NON_MIS]: 0,
+      [CATEGORY_KEYS.OTHER]: 0,
+    };
+    sheetEmployees.forEach((emp) => {
+      const cat = categorizeByBasis(emp.incentiveCategory);
+      if (counts[cat] !== undefined) {
+        counts[cat]++;
+      } else {
+        counts[CATEGORY_KEYS.OTHER]++;
+      }
+    });
+    return counts;
+  }, [sheetEmployees]);
+
+  // Filter employees by the selected Category tab
+  const categoryFilteredEmployees = useMemo(() => {
     return sheetEmployees.filter((emp) => {
+      const cat = categorizeByBasis(emp.incentiveCategory);
+      return cat === selectedCategory;
+    });
+  }, [sheetEmployees, selectedCategory]);
+
+  // Scope everything below (table, KPIs, charts) to the selected Firm Name and Incentive Category within the active Category tab.
+  // "" (All Firms / All Categories) keeps the combined behavior for that category.
+  const firmFilteredEmployees = useMemo(() => {
+    return categoryFilteredEmployees.filter((emp) => {
       const matchesFirm = filterFirmName === "" || emp.firm === filterFirmName;
       const matchesIncentive = filterIncentiveCategory === "" || emp.incentiveCategory === filterIncentiveCategory;
       return matchesFirm && matchesIncentive;
     });
-  }, [sheetEmployees, filterFirmName, filterIncentiveCategory]);
+  }, [categoryFilteredEmployees, filterFirmName, filterIncentiveCategory]);
 
   // Filter employees
   const filteredEmployees = useMemo(() => {
@@ -541,25 +570,25 @@ const AdminDashboard = () => {
 
   // Get unique designations
   const uniqueDesignations = useMemo(() => [
-    ...new Set(sheetEmployees.map((emp) => emp.designation).filter(Boolean)),
-  ], [sheetEmployees]);
+    ...new Set(categoryFilteredEmployees.map((emp) => emp.designation).filter(Boolean)),
+  ], [categoryFilteredEmployees]);
 
   // Get unique departments
   const uniqueDepartments = useMemo(() => [
-    ...new Set(sheetEmployees.map((emp) => emp.department).filter(Boolean)),
-  ], [sheetEmployees]);
+    ...new Set(categoryFilteredEmployees.map((emp) => emp.department).filter(Boolean)),
+  ], [categoryFilteredEmployees]);
 
   // Get unique firm names (from Data sheet Column W and mapped employees)
   const uniqueFirms = useMemo(() => {
-    const fromEmployees = sheetEmployees.map((emp) => emp.firm).filter(Boolean);
+    const fromEmployees = categoryFilteredEmployees.map((emp) => emp.firm).filter(Boolean);
     const fromDataSheet = dataSheetRows.map((row) => (row[22] ? String(row[22]).trim() : "")).filter(Boolean);
     return [...new Set([...fromEmployees, ...fromDataSheet])].sort();
-  }, [sheetEmployees, dataSheetRows]);
+  }, [categoryFilteredEmployees, dataSheetRows]);
 
   // Get unique incentive categories
   const uniqueIncentiveCategories = useMemo(() => [
-    ...new Set(sheetEmployees.map((emp) => emp.incentiveCategory).filter(Boolean)),
-  ], [sheetEmployees]);
+    ...new Set(categoryFilteredEmployees.map((emp) => emp.incentiveCategory).filter(Boolean)),
+  ], [categoryFilteredEmployees]);
 
   // Statistics - Memoized
   const {
@@ -1293,6 +1322,13 @@ Passary Refractories.`;
         departmentScores={departmentScores}
         dataSheetRows={dataSheetRows}
         reportDateRange={reportDateRange}
+      />
+
+      {/* Category Tabs: MIS Category Report | Non MIS Category Report | Other Category Report */}
+      <CategoryTabs
+        activeCategory={selectedCategory}
+        onSelectCategory={setSelectedCategory}
+        counts={categoryCounts}
       />
 
       {/* KPI Summary */}
