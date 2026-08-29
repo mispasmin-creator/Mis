@@ -83,40 +83,41 @@ function buildHistoryReportHTML({
 
     rowsHtml += `
       <tr style="background-color: ${rowBg}; page-break-inside: avoid; break-inside: avoid;">
-        <td style="padding: 6px 4px; text-align: center; color: #6b7280; font-weight: 500; border-bottom: 1px solid #e5e7eb;">${idx + 1}</td>
-        <td style="padding: 6px 6px; text-align: center; font-weight: 600; color: #111827; border-bottom: 1px solid #e5e7eb;">${formatVal(r.name)}</td>
-        <td style="padding: 6px 4px; text-align: center; color: #4b5563; border-bottom: 1px solid #e5e7eb;">${formatVal(r.firm)}</td>
-        <td style="padding: 6px 4px; text-align: center; color: #374151; font-weight: 600; border-bottom: 1px solid #e5e7eb;">${formatVal(r.target)}</td>
-        <td style="padding: 6px 4px; text-align: center; border-bottom: 1px solid #e5e7eb;">
+        <td style="padding: 6px 4px; text-align: center; color: #6b7280; font-weight: 500; border-bottom: 1px solid #e5e7eb; border-right: 1px solid #e5e7eb;">${idx + 1}</td>
+        <td style="padding: 6px 6px; text-align: center; font-weight: 600; color: #111827; border-bottom: 1px solid #e5e7eb; border-right: 1px solid #e5e7eb;">${formatVal(r.name)}</td>
+        <td style="padding: 6px 4px; text-align: center; color: #4b5563; border-bottom: 1px solid #e5e7eb; border-right: 1px solid #e5e7eb;">${formatVal(r.firm)}</td>
+        <td style="padding: 6px 4px; text-align: center; color: #374151; font-weight: 600; border-bottom: 1px solid #e5e7eb; border-right: 1px solid #e5e7eb;">${formatVal(r.target)}</td>
+        <td style="padding: 6px 4px; text-align: center; border-bottom: 1px solid #e5e7eb; border-right: 1px solid #e5e7eb;">
           <span style="display: inline-block; padding: 2px 6px; background-color: #dcfce7; color: #166534; font-weight: 700; border-radius: 4px; font-size: 10px;">
             ${formatVal(r.actualWorkDone)}
           </span>
         </td>
-        <td style="padding: 6px 4px; text-align: center; border-bottom: 1px solid #e5e7eb;">
+        <td style="padding: 6px 4px; text-align: center; border-bottom: 1px solid #e5e7eb; border-right: 1px solid #e5e7eb;">
           <span style="display: inline-block; padding: 2px 6px; background-color: ${wndBg}; color: ${wndColor}; font-weight: 700; border-radius: 4px; font-size: 10px;">
             ${formatVal(r.workNotDone)}
           </span>
         </td>
-        <td style="padding: 6px 4px; text-align: center; border-bottom: 1px solid #e5e7eb;">
+        <td style="padding: 6px 4px; text-align: center; border-bottom: 1px solid #e5e7eb; border-right: 1px solid #e5e7eb;">
           <span style="display: inline-block; padding: 2px 6px; background-color: ${wndotBg}; color: ${wndotColor}; font-weight: 700; border-radius: 4px; font-size: 10px;">
             ${formatVal(r.workNotDoneOnTime)}
           </span>
         </td>
-        <td style="padding: 6px 4px; text-align: center; border-bottom: 1px solid #e5e7eb;">
+        <td style="padding: 6px 4px; text-align: center; border-bottom: 1px solid #e5e7eb; border-right: 1px solid #e5e7eb;">
           <span style="display: inline-block; padding: 2px 6px; background-color: #e0e7ff; color: #3730a3; font-weight: 700; border-radius: 4px; font-size: 10px;">
             ${formatVal(r.totalWorkDone)}
           </span>
         </td>
-        <td style="padding: 6px 4px; text-align: center; border-bottom: 1px solid #e5e7eb;">
+        <td style="padding: 6px 4px; text-align: center; border-bottom: 1px solid #e5e7eb; border-right: 1px solid #e5e7eb;">
           <span style="display: inline-block; padding: 2px 6px; background-color: ${wpBg}; color: ${wpColor}; font-weight: 700; border-radius: 4px; font-size: 10px;">
             ${formatVal(r.weekPending)}
           </span>
         </td>
-        <td style="padding: 6px 4px; text-align: center; border-bottom: 1px solid #e5e7eb;">
+        <td style="padding: 6px 4px; text-align: center; border-bottom: 1px solid #e5e7eb; border-right: 1px solid #e5e7eb;">
           <span style="display: inline-block; padding: 2px 6px; background-color: ${apBg}; color: ${apColor}; font-weight: 700; border-radius: 4px; font-size: 10px;">
             ${formatVal(r.allPendingTillDate)}
           </span>
         </td>
+        <td style="padding: 6px 6px; text-align: center; border-bottom: 1px solid #e5e7eb; min-width: 90px;"></td>
       </tr>
     `;
   });
@@ -125,14 +126,15 @@ function buildHistoryReportHTML({
   if (averages && records.length > 0) {
     averageRowHtml = `
       <tr style="background-color: #f3f4f6; font-weight: bold; border-top: 2px solid #16555a; border-bottom: 2px solid #16555a; page-break-inside: avoid; break-inside: avoid;">
-        <td colspan="3" style="padding: 7px 8px; text-align: center; color: #111827; font-size: 11px; text-transform: uppercase;">Average:</td>
-        <td style="padding: 7px 4px; text-align: center; color: #111827; font-size: 11px;">${averages.target}</td>
-        <td style="padding: 7px 4px; text-align: center; color: #166534; font-size: 11px;">${averages.actualWorkDone}</td>
-        <td style="padding: 7px 4px; text-align: center; color: #111827; font-size: 11px;">${averages.workNotDone}%</td>
-        <td style="padding: 7px 4px; text-align: center; color: #111827; font-size: 11px;">${averages.workNotDoneOnTime}%</td>
-        <td style="padding: 7px 4px; text-align: center; color: #3730a3; font-size: 11px;">${averages.totalWorkDone}</td>
-        <td style="padding: 7px 4px; text-align: center; color: #111827; font-size: 11px;">${averages.weekPending}</td>
-        <td style="padding: 7px 4px; text-align: center; color: #111827; font-size: 11px;">${averages.allPendingTillDate}</td>
+        <td colspan="3" style="padding: 7px 8px; text-align: center; color: #111827; font-size: 11px; text-transform: uppercase; border-right: 1px solid #d1d5db;">Average:</td>
+        <td style="padding: 7px 4px; text-align: center; color: #111827; font-size: 11px; border-right: 1px solid #d1d5db;">${averages.target}</td>
+        <td style="padding: 7px 4px; text-align: center; color: #166534; font-size: 11px; border-right: 1px solid #d1d5db;">${averages.actualWorkDone}</td>
+        <td style="padding: 7px 4px; text-align: center; color: #111827; font-size: 11px; border-right: 1px solid #d1d5db;">${averages.workNotDone}%</td>
+        <td style="padding: 7px 4px; text-align: center; color: #111827; font-size: 11px; border-right: 1px solid #d1d5db;">${averages.workNotDoneOnTime}%</td>
+        <td style="padding: 7px 4px; text-align: center; color: #3730a3; font-size: 11px; border-right: 1px solid #d1d5db;">${averages.totalWorkDone}</td>
+        <td style="padding: 7px 4px; text-align: center; color: #111827; font-size: 11px; border-right: 1px solid #d1d5db;">${averages.weekPending}</td>
+        <td style="padding: 7px 4px; text-align: center; color: #111827; font-size: 11px; border-right: 1px solid #d1d5db;">${averages.allPendingTillDate}</td>
+        <td style="padding: 7px 4px; text-align: center; color: #111827; font-size: 11px;"></td>
       </tr>
     `;
   }
@@ -179,7 +181,7 @@ function buildHistoryReportHTML({
         </div>
       </div>
 
-      <!-- Scoped Table: Name to All Pending Till Date -->
+      <!-- Scoped Table: Name to All Pending Till Date + Remark -->
       <table style="width: 100%; border-collapse: collapse; font-size: 10.5px; border: 1px solid #d1d5db; table-layout: auto;">
         <thead>
           <tr style="background-color: #16555a; color: #ffffff; text-align: center;">
@@ -192,13 +194,14 @@ function buildHistoryReportHTML({
             <th style="padding: 7px 4px; font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; text-align: center; border-right: 1px solid #1d6d72;">% Not Done On Time</th>
             <th style="padding: 7px 4px; font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; text-align: center; border-right: 1px solid #1d6d72;">Total Work Done</th>
             <th style="padding: 7px 4px; font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; text-align: center; border-right: 1px solid #1d6d72;">Week Pending</th>
-            <th style="padding: 7px 4px; font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; text-align: center;">All Pending Till Date</th>
+            <th style="padding: 7px 4px; font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; text-align: center; border-right: 1px solid #1d6d72;">All Pending Till Date</th>
+            <th style="padding: 7px 6px; font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; text-align: center; width: 90px; min-width: 80px;">Remark</th>
           </tr>
         </thead>
         <tbody>
-          ${rowsHtml || `<tr><td colspan="10" style="padding: 20px; text-align: center; color: #9ca3af;">No records found.</td></tr>`}
+          ${rowsHtml || `<tr><td colspan="11" style="padding: 20px; text-align: center; color: #9ca3af;">No records found.</td></tr>`}
+          ${averageRowHtml}
         </tbody>
-        ${averageRowHtml ? `<tfoot>${averageRowHtml}</tfoot>` : ''}
       </table>
 
       <!-- Footer -->
@@ -280,7 +283,7 @@ export function printHistoryReport({
             display: table-header-group;
           }
           tfoot {
-            display: table-footer-group;
+            display: table-row-group;
           }
           @media print {
             html, body {
@@ -364,6 +367,7 @@ export async function downloadHistoryPDF({
         { content: 'TOTAL WORK DONE', styles: { halign: 'center' } },
         { content: 'WEEK PENDING', styles: { halign: 'center' } },
         { content: 'ALL PENDING TILL DATE', styles: { halign: 'center' } },
+        { content: 'REMARK', styles: { halign: 'center' } },
       ]
     ];
 
@@ -397,6 +401,7 @@ export async function downloadHistoryPDF({
         { content: formatVal(r.totalWorkDone), styles: { halign: 'center', fontStyle: 'bold', fillColor: [224, 231, 255], textColor: [55, 48, 163] } },
         { content: formatVal(r.weekPending), styles: { halign: 'center', fontStyle: 'bold', fillColor: wpFill, textColor: wpText } },
         { content: formatVal(r.allPendingTillDate), styles: { halign: 'center', fontStyle: 'bold', fillColor: apFill, textColor: apText } },
+        { content: '', styles: { halign: 'center' } },
       ];
     });
 
@@ -411,6 +416,7 @@ export async function downloadHistoryPDF({
         { content: String(averages.totalWorkDone), styles: { halign: 'center', fontStyle: 'bold', textColor: [55, 48, 163] } },
         { content: String(averages.weekPending), styles: { halign: 'center', fontStyle: 'bold', textColor: [17, 24, 39] } },
         { content: String(averages.allPendingTillDate), styles: { halign: 'center', fontStyle: 'bold', textColor: [17, 24, 39] } },
+        { content: '', styles: { halign: 'center' } },
       ]
     ] : undefined;
 
