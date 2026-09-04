@@ -50,6 +50,18 @@ const formatDateDisplay = (dateVal) => {
   return str;
 };
 
+const getLiveReportDateRange = () => {
+  const today = new Date();
+  const startOfWeek = new Date(today);
+  const day = today.getDay(); // Sunday is 0
+  startOfWeek.setDate(today.getDate() - day);
+
+  return {
+    startDate: formatDateDisplay(startOfWeek),
+    endDate: formatDateDisplay(today)
+  };
+};
+
 const AdminDashboard = () => {
   const { user } = useAuth();
   const [selectedEmployees, setSelectedEmployees] = useState([]);
@@ -62,7 +74,7 @@ const AdminDashboard = () => {
   const [departmentScores, setDepartmentScores] = useState([]);
   const [dataSheetRows, setDataSheetRows] = useState([]);
   const [dataSheetDateRange, setDataSheetDateRange] = useState({ fromDate: "", toDate: "" });
-  const [reportDateRange, setReportDateRange] = useState({ startDate: "", endDate: "" });
+  const [reportDateRange, setReportDateRange] = useState(getLiveReportDateRange());
   const [rawParsedData, setRawParsedData] = useState([]);
   const [reportedByMap, setReportedByMap] = useState({});
 
@@ -264,12 +276,8 @@ const AdminDashboard = () => {
           setDataSheetDateRange({ fromDate: globalFromDate, toDate: globalToDate });
           console.log("[Data Sheet] Global Date Range from header →", globalFromDate, "To:", globalToDate);
           
-          if (globalFromDate || globalToDate) {
-            setReportDateRange(prev => ({
-              startDate: prev.startDate || formatDateDisplay(globalFromDate),
-              endDate: prev.endDate || formatDateDisplay(globalToDate)
-            }));
-          }
+          // Live dynamic date range (Week Start Sunday to Today)
+          setReportDateRange(getLiveReportDateRange());
 
           // Populate incentiveMap and firmMap from Data sheet rows (Person Name is at Column index 4)
           dataResult.data.slice(1).forEach(row => {
@@ -390,26 +398,8 @@ const AdminDashboard = () => {
         if (result.success && Array.isArray(result.data)) {
           const headers = result.data[0];
 
-          // Extract live report start and end date from For Records sheet
-          let extractedStart = "";
-          let extractedEnd = "";
-          if (result.data[2]) {
-            extractedStart = result.data[2][0] ? String(result.data[2][0]).trim() : "";
-            extractedEnd = result.data[2][1] ? String(result.data[2][1]).trim() : "";
-          }
-          if ((!extractedStart || !extractedEnd) && result.data[0] && result.data[0][0]) {
-            const match = String(result.data[0][0]).match(/Report From\s+(.+?)\s+To\s+(.+)/i);
-            if (match) {
-              if (!extractedStart) extractedStart = match[1].trim();
-              if (!extractedEnd) extractedEnd = match[2].trim();
-            }
-          }
-          if (extractedStart || extractedEnd) {
-            setReportDateRange({
-              startDate: formatDateDisplay(extractedStart),
-              endDate: formatDateDisplay(extractedEnd)
-            });
-          }
+          // Live dynamic date range (Week Start Sunday to Today)
+          setReportDateRange(getLiveReportDateRange());
 
           if (headers) {
             setColumnLabels(prev => ({

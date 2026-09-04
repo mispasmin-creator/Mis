@@ -153,7 +153,7 @@ function buildHistoryReportHTML({
                 ${categoryName}
               </span>
             </div>
-            <p style="font-size: 11px; color: #6b7280; margin: 0;">Performance &amp; Commitment History Report</p>
+            <p style="font-size: 11px; color: #6b7280; margin: 0;">Performance &amp; Commitment Weekly Report</p>
           </div>
 
           <!-- Date Range Header Box -->
@@ -206,7 +206,7 @@ function buildHistoryReportHTML({
 
       <!-- Footer -->
       <div style="margin-top: 15px; display: flex; justify-content: space-between; align-items: center; font-size: 9.5px; color: #9ca3af; border-top: 1px solid #e5e7eb; padding-top: 8px;">
-        <span>MIS Passary System • History Performance Report</span>
+        <span>MIS Passary System • Weekly Performance Report</span>
         <span>Page 1 of 1</span>
       </div>
     </div>
@@ -471,7 +471,7 @@ export async function downloadHistoryPDF({
         doc.setFontSize(8);
         doc.setFont('helvetica', 'normal');
         doc.setTextColor(107, 114, 128);
-        doc.text('Performance & Commitment History Report', 10, 17);
+        doc.text('Performance & Commitment Weekly Report', 10, 17);
 
         // Date Range Box (Top Right)
         doc.setFillColor(240, 253, 250); // #f0fdfa
@@ -499,7 +499,7 @@ export async function downloadHistoryPDF({
         // Bottom Footer
         doc.setFontSize(7.5);
         doc.setTextColor(156, 163, 175);
-        doc.text('MIS Passary System • History Performance Report', 10, pageHeight - 6);
+        doc.text('MIS Passary System • Weekly Performance Report', 10, pageHeight - 6);
         doc.text(`Page ${data.pageNumber}`, pageWidth - 10, pageHeight - 6, { align: 'right' });
       },
     });

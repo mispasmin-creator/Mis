@@ -17,7 +17,7 @@ const AdminLayout = () => {
   const navItems = [
     { to: `${basePrefix}/dashboard`, label: 'Dashboard', icon: LayoutDashboard, match: ['/admin/dashboard', '/user/dashboard'] },
     { to: `${basePrefix}/department`, label: 'Department', icon: Building2, match: ['/admin/department', '/user/department'] },
-    { to: `${basePrefix}/history-commitment`, label: 'History', icon: History, match: ['/admin/history-commitment', '/user/history-commitment'] },
+    { to: `${basePrefix}/history-commitment`, label: 'Weekly Report Record', icon: History, match: ['/admin/history-commitment', '/user/history-commitment'] },
     { to: `${basePrefix}/kpi-kra`, label: 'KPI & KRA', icon: LineChart, match: ['/admin/kpi-kra', '/user/kpi-kra'] },
   ];
 

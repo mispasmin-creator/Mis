@@ -4,6 +4,8 @@ import { useAuth } from "../../contexts/AuthContext";
 import CategoryTabs from "../../components/CategoryTabs";
 import { categorizeByBasis, CATEGORY_KEYS, CATEGORY_LABELS } from "../../utils/categorize";
 import { extractDateRange, printHistoryReport, downloadHistoryPDF } from "../../utils/historyReportPrint";
+import { getDisplayableImageUrl } from "../../utils/imageUtils";
+import HistoryTaskModal from "./components/HistoryTaskModal";
 
 const AdminHistoryCommitment = () => {
     const { user } = useAuth();
@@ -16,6 +18,12 @@ const AdminHistoryCommitment = () => {
     const [firmFilter, setFirmFilter] = useState("all");
     const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
 
+    // Task details modal state & data from "Task Wise Record" sheet
+    const [selectedUserDetails, setSelectedUserDetails] = useState(null);
+    const [taskWiseData, setTaskWiseData] = useState([]);
+    const [imageMap, setImageMap] = useState({});
+    const [departmentMap, setDepartmentMap] = useState({});
+
     useEffect(() => {
         const fetchRecords = async () => {
             try {
@@ -27,19 +35,23 @@ const AdminHistoryCommitment = () => {
                     return;
                 }
 
-                // Fetch Records, Master, and Data sheets in parallel
-                const [recordsResponse, masterResponse, dataResponse] = await Promise.all([
+                // Fetch Records, Master, Data, and Task Wise Record sheets in parallel
+                const [recordsResponse, masterResponse, dataResponse, taskWiseResponse] = await Promise.all([
                     fetch(`${scriptUrl}?sheet=Records`),
                     fetch(`${scriptUrl}?sheet=Master`),
-                    fetch(`${scriptUrl}?sheet=Data`)
+                    fetch(`${scriptUrl}?sheet=Data`),
+                    fetch(`${scriptUrl}?sheet=Task Wise Record`)
                 ]);
                 const result = await recordsResponse.json();
                 const masterResult = await masterResponse.json();
                 const dataResult = await dataResponse.json();
+                const taskWiseResult = await taskWiseResponse.json();
 
                 const reportedByMap = {};
                 const firmMap = {};
                 const incentiveMap = {};
+                const imgMap = {};
+                const deptMap = {};
 
                 // 1. Extract Incentive Category & Firm Name from Data Sheet (Column V / index 21, Column W / index 22)
                 if (dataResult.success && Array.isArray(dataResult.data)) {
@@ -72,20 +84,30 @@ const AdminHistoryCommitment = () => {
 
                     masterResult.data.slice(1).forEach(row => {
                         const name = row[0] ? String(row[0]).trim().toLowerCase() : "";
+                        const department = row[2] ? String(row[2]).trim() : "";
+                        const imageUrl = row[4] ? String(row[4]).trim() : "";
                         const reportedBy = row[9] ? String(row[9]).trim().toLowerCase() : "";
                         const firmName = row[masterFirmIdx] ? String(row[masterFirmIdx]).trim() : "";
                         const masterIncentive = row[masterIncentiveIdx] ? String(row[masterIncentiveIdx]).trim() : "";
 
-                        if (name && reportedBy) {
-                            reportedByMap[name] = reportedBy;
-                        }
-                        if (name && firmName && !firmMap[name]) {
-                            firmMap[name] = firmName;
-                        }
-                        if (name && masterIncentive && !incentiveMap[name]) {
-                            incentiveMap[name] = masterIncentive;
+                        if (name) {
+                            if (department) deptMap[name] = department;
+                            if (imageUrl) imgMap[name] = imageUrl;
+                            if (reportedBy) reportedByMap[name] = reportedBy;
+                            if (firmName && !firmMap[name]) firmMap[name] = firmName;
+                            if (masterIncentive && !incentiveMap[name]) {
+                                incentiveMap[name] = masterIncentive;
+                            }
                         }
                     });
+                }
+
+                setImageMap(imgMap);
+                setDepartmentMap(deptMap);
+
+                // 3. Store Task Wise Record sheet data
+                if (taskWiseResult.success && Array.isArray(taskWiseResult.data)) {
+                    setTaskWiseData(taskWiseResult.data);
                 }
 
                 if (result.success && Array.isArray(result.data)) {
@@ -160,6 +182,123 @@ const AdminHistoryCommitment = () => {
 
         fetchRecords();
     }, [user]);
+
+    // Helper to normalize various date formats (e.g. 23-Aug-2026, 2026-08-23, 23/08/2026) to YYYY-MM-DD
+    const normalizeDate = (d) => {
+        if (!d) return "";
+        const str = String(d).trim();
+        if (!str) return "";
+
+        const monthMap = {
+            jan: '01', feb: '02', mar: '03', apr: '04', may: '05', jun: '06',
+            jul: '07', aug: '08', sep: '09', oct: '10', nov: '11', dec: '12'
+        };
+
+        // Check custom format like 23-Aug-2026 or 6-Jul-2026
+        const customMatch = str.match(/^(\d{1,2})[-/ ]([a-zA-Z]{3,})[-/ ](\d{4})$/);
+        if (customMatch) {
+            const dd = customMatch[1].padStart(2, '0');
+            const monStr = customMatch[2].substring(0, 3).toLowerCase();
+            const mm = monthMap[monStr] || '01';
+            const yyyy = customMatch[3];
+            return `${yyyy}-${mm}-${dd}`;
+        }
+
+        // Check ISO format YYYY-MM-DD
+        const isoMatch = str.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+        if (isoMatch) {
+            const yyyy = isoMatch[1];
+            const mm = isoMatch[2].padStart(2, '0');
+            const dd = isoMatch[3].padStart(2, '0');
+            return `${yyyy}-${mm}-${dd}`;
+        }
+
+        // Check DD/MM/YYYY or DD-MM-YYYY
+        const dmyMatch = str.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
+        if (dmyMatch) {
+            const dd = dmyMatch[1].padStart(2, '0');
+            const mm = dmyMatch[2].padStart(2, '0');
+            const yyyy = dmyMatch[3];
+            return `${yyyy}-${mm}-${dd}`;
+        }
+
+        const parsed = new Date(str);
+        if (!isNaN(parsed.getTime())) {
+            const yyyy = parsed.getFullYear();
+            const mm = String(parsed.getMonth() + 1).padStart(2, '0');
+            const dd = String(parsed.getDate()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd}`;
+        }
+
+        return str.toLowerCase();
+    };
+
+    // Handle row click in History table to open popup matching Date Start (Col A) & Date End (Col B) from Task Wise Record
+    const handleRowClick = (record) => {
+        if (!record || !record.name) return;
+
+        const recordName = String(record.name || "").trim().toLowerCase();
+        const normRecordDateStart = normalizeDate(record.dateStart);
+        const normRecordDateEnd = normalizeDate(record.dateEnd);
+
+        // Header in Task Wise Record is typically at index 1 (Col A: Date Start, Col B: Date End, Col C: Name)
+        const headerRowIdx = taskWiseData.findIndex(row => 
+            row.some(c => String(c).toLowerCase().includes("date start") || String(c).toLowerCase().includes("system type"))
+        );
+        const rowsToProcess = headerRowIdx >= 0 ? taskWiseData.slice(headerRowIdx + 1) : taskWiseData.slice(2);
+
+        // Strict Filter: Match Name (Col C), Date Start (Col A), and Date End (Col B)
+        const exactDateMatches = rowsToProcess.filter(row => {
+            const rowName = row[2] ? String(row[2]).trim().toLowerCase() : "";
+            const rowStart = normalizeDate(row[0]);
+            const rowEnd = normalizeDate(row[1]);
+
+            const isNameMatch = rowName === recordName;
+            const isDateStartMatch = Boolean(normRecordDateStart && rowStart && rowStart === normRecordDateStart);
+            const isDateEndMatch = Boolean(normRecordDateEnd && rowEnd && rowEnd === normRecordDateEnd);
+
+            return isNameMatch && isDateStartMatch && isDateEndMatch;
+        });
+
+        const tasks = exactDateMatches.map(row => ({
+            dateStart: row[0] || "",
+            dateEnd: row[1] || "",
+            name: row[2] || "",
+            department: row[3] || "",
+            systemType: row[4] || "",
+            taskName: row[4] || row[5] || "",
+            fmsName: row[5] || "",
+            target: row[6] || 0,
+            totalAchievement: row[7] || 0,
+            workNotDone: row[8] || 0,
+            workNotDoneOnTime: row[9] || 0,
+            allPendingTillDate: row[10] || 0,
+            todayTask: row[11] || 0,
+            allWorkShouldBeDoneOnTime: row[12] || 0,
+            extraDone: row[13] || 0,
+            actualAchievement: row[14] || 0,
+            weekPending: row[15] || 0,
+            actualOnTime: row[16] || 0
+        }));
+
+        const rawImg = imageMap[recordName];
+        let finalImageUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(record.name)}&background=0D8ABC&color=fff&size=128`;
+        if (rawImg) {
+            const processedUrl = getDisplayableImageUrl(rawImg);
+            if (processedUrl) finalImageUrl = processedUrl;
+        }
+
+        const userDept = (tasks[0] && tasks[0].department) || departmentMap[recordName] || record.firm || "Operations";
+
+        setSelectedUserDetails({
+            name: record.name,
+            department: userDept,
+            image: finalImageUrl,
+            dateStart: record.dateStart,
+            dateEnd: record.dateEnd,
+            tasks: tasks
+        });
+    };
 
     // Category counts across all role-filtered records
     const categoryCounts = useMemo(() => {
@@ -315,7 +454,7 @@ const AdminHistoryCommitment = () => {
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
                 <div className="flex flex-col items-center gap-4">
                     <Loader2 className="h-12 w-12 animate-spin text-indigo-600" />
-                    <p className="text-gray-600 font-medium">Loading History...</p>
+                    <p className="text-gray-600 font-medium">Loading Weekly Report Records...</p>
                 </div>
             </div>
         );
@@ -329,8 +468,8 @@ const AdminHistoryCommitment = () => {
                     <div className="flex items-center gap-3">
                         <History className="w-6 h-6 text-indigo-600" />
                         <div>
-                            <h1 className="text-xl font-bold text-gray-900 leading-tight">History</h1>
-                            <p className="text-xs text-gray-500">View and print performance records by category</p>
+                            <h1 className="text-xl font-bold text-gray-900 leading-tight">Weekly Report Record</h1>
+                            <p className="text-xs text-gray-500">View and print weekly performance records by category (Click any row to view task details)</p>
                         </div>
                     </div>
 
@@ -466,7 +605,10 @@ const AdminHistoryCommitment = () => {
                 {/* Table */}
                 <div className="bg-white rounded-xl shadow-2xs border border-gray-200 overflow-hidden">
                     <div className="px-4 py-3.5 border-b border-gray-200 bg-gray-50/80 flex items-center justify-between">
-                        <h2 className="text-sm sm:text-base font-bold text-gray-800">Records</h2>
+                        <div>
+                            <h2 className="text-sm sm:text-base font-bold text-gray-800">Records</h2>
+                            <p className="text-[11px] text-gray-500">Tip: Click on any employee row to view their individual task details from "Task Wise Record"</p>
+                        </div>
                         <span className="text-xs text-gray-500 font-medium">Showing {filteredRecords.length} records</span>
                     </div>
                     <div className="overflow-auto max-h-[calc(100vh-320px)] relative border-t border-gray-100">
@@ -496,12 +638,19 @@ const AdminHistoryCommitment = () => {
                             <tbody className="bg-white divide-y divide-gray-100">
                                 {filteredRecords.length > 0 ? (
                                     filteredRecords.map((r, idx) => (
-                                        <tr key={r.id} className="hover:bg-indigo-50/40 transition-colors">
-                                            <td className="px-4 py-3 text-gray-500 font-medium text-center sticky left-0 bg-white z-10">{idx + 1}</td>
-                                            <td className="px-4 py-3 text-gray-700 whitespace-nowrap bg-white">{formatValue(r.dateStart)}</td>
-                                            <td className="px-4 py-3 text-gray-700 whitespace-nowrap bg-white">{formatValue(r.dateEnd)}</td>
-                                            <td className="px-4 py-3 font-semibold text-gray-900 whitespace-nowrap sticky left-12 bg-white z-10 border-l border-gray-200">{formatValue(r.name)}</td>
-                                            <td className="px-4 py-3 text-gray-700 whitespace-nowrap bg-white">{formatValue(r.firm)}</td>
+                                        <tr
+                                            key={r.id}
+                                            onClick={() => handleRowClick(r)}
+                                            className="hover:bg-indigo-50/60 cursor-pointer transition-colors group"
+                                            title={`Click to view tasks for ${r.name}`}
+                                        >
+                                            <td className="px-4 py-3 text-gray-500 font-medium text-center sticky left-0 bg-white group-hover:bg-indigo-50/60 z-10">{idx + 1}</td>
+                                            <td className="px-4 py-3 text-gray-700 whitespace-nowrap bg-white group-hover:bg-indigo-50/60">{formatValue(r.dateStart)}</td>
+                                            <td className="px-4 py-3 text-gray-700 whitespace-nowrap bg-white group-hover:bg-indigo-50/60">{formatValue(r.dateEnd)}</td>
+                                            <td className="px-4 py-3 font-semibold text-indigo-700 hover:text-indigo-900 whitespace-nowrap sticky left-12 bg-white group-hover:bg-indigo-50/60 z-10 border-l border-gray-200 flex items-center gap-1.5">
+                                                <span>{formatValue(r.name)}</span>
+                                            </td>
+                                            <td className="px-4 py-3 text-gray-700 whitespace-nowrap bg-white group-hover:bg-indigo-50/60">{formatValue(r.firm)}</td>
                                             <td className="px-4 py-3 text-right text-gray-700">{formatValue(r.target)}</td>
                                             <td className="px-4 py-3 text-right">
                                                 <span className="inline-flex items-center justify-center px-2 py-0.5 rounded text-xs font-semibold bg-green-100 text-green-800 min-w-[3rem]">
@@ -603,6 +752,12 @@ const AdminHistoryCommitment = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Task Details Popup Modal */}
+            <HistoryTaskModal
+                selectedUserDetails={selectedUserDetails}
+                onClose={() => setSelectedUserDetails(null)}
+            />
         </div>
     );
 };
