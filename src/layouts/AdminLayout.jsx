@@ -4,6 +4,7 @@ import { LayoutDashboard, LogOut, LineChart, History, Building2 } from 'lucide-r
 import { useAuth } from '../contexts/AuthContext';
 import { getDisplayableImageUrl } from '../utils/imageUtils';
 import Footer from '../components/Footer';
+import DepartmentCelebrationTicker from '../pages/admin/components/DepartmentCelebrationTicker';
 
 const AdminLayout = () => {
   const { user, logout, updateProfileImage } = useAuth();
@@ -48,18 +49,24 @@ const AdminLayout = () => {
     <div className="min-h-screen flex flex-col bg-gray-50">
       {/* Header */}
       <header className="bg-white border-b border-gray-200 fixed top-0 left-0 right-0 z-30 h-16 sm:h-18 shadow-sm">
-        <div className="px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between max-w-full">
-          <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+        <div className="px-3 sm:px-6 lg:px-8 h-full flex items-center justify-between max-w-full gap-2 sm:gap-4">
+          <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-shrink-0">
             <Link to={`${basePrefix}/dashboard`} className="flex items-center gap-2 sm:gap-3 min-w-0">
               <img src="/logo.png" alt="Logo" className="h-9 w-9 sm:h-11 sm:w-11 object-contain flex-shrink-0" />
-              <span className={`text-xs sm:text-sm text-white px-2 sm:px-3 py-1 rounded whitespace-nowrap uppercase ${
+              <span className={`text-xs sm:text-sm text-white px-2 sm:px-3 py-1 rounded whitespace-nowrap uppercase font-semibold ${
                 user?.role === 'superadmin' ? 'bg-purple-600' : (user?.role === 'admin' ? 'bg-indigo-600' : 'bg-green-600')
                 }`}>
                 {user?.role || 'USER'}
               </span>
             </Link>
           </div>
-          <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+
+          {/* Top Performers Reel Ticker */}
+          <div className="hidden md:flex flex-1 max-w-md lg:max-w-xl xl:max-w-3xl 2xl:max-w-4xl mx-2 min-w-0 justify-center">
+            <DepartmentCelebrationTicker />
+          </div>
+
+          <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-shrink-0">
             {user && (
               <div className="relative">
                 <div

@@ -680,6 +680,52 @@ const AdminDashboard = () => {
     };
   }, [firmFilteredEmployees, columnLabels]);
 
+  // Top Scorer of each Department for the Celebration Reel Ticker
+  const departmentTopPerformers = useMemo(() => {
+    const list = firmFilteredEmployees.length > 0 ? firmFilteredEmployees : categoryFilteredEmployees;
+    if (!list || list.length === 0) return [];
+
+    const deptMap = {};
+    list.forEach(emp => {
+      const dept = (emp.department || "General").trim();
+      if (!deptMap[dept]) deptMap[dept] = [];
+      deptMap[dept].push(emp);
+    });
+
+    const winners = [];
+    Object.entries(deptMap).forEach(([dept, emps]) => {
+      // Find top scorer in this department based on highest actualWorkDone / completion
+      const sorted = [...emps].sort((a, b) => {
+        const aDone = parseFloat(a.actualWorkDone) || 0;
+        const bDone = parseFloat(b.actualWorkDone) || 0;
+        if (bDone !== aDone) return bDone - aDone;
+
+        const aPct = parseFloat(String(a.weeklyWorkDone || "0").replace('%', '').trim()) || 0;
+        const bPct = parseFloat(String(b.weeklyWorkDone || "0").replace('%', '').trim()) || 0;
+        if (bPct !== aPct) return bPct - aPct;
+
+        const aTarget = parseFloat(a.target) || 0;
+        const bTarget = parseFloat(b.target) || 0;
+        return bTarget - aTarget;
+      });
+
+      if (sorted.length > 0) {
+        const top = sorted[0];
+        winners.push({
+          department: dept,
+          name: top.name,
+          image: top.image,
+          actualWorkDone: parseFloat(top.actualWorkDone) || 0,
+          target: parseFloat(top.target) || 0,
+          weeklyWorkDone: top.weeklyWorkDone || "0%",
+          allPending: top.allPendingTillDate || 0
+        });
+      }
+    });
+
+    return winners.sort((a, b) => a.department.localeCompare(b.department));
+  }, [firmFilteredEmployees, categoryFilteredEmployees]);
+
   const topScorersData = useMemo(() => topScorers.map((emp) => {
     const val = emp.donePct ?? emp.score ?? 0;
     return isNaN(val) ? 0 : val;

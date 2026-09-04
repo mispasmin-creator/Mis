@@ -10,6 +10,8 @@ import AdminLayout from './layouts/AdminLayout';
 import NotFound from './pages/NotFound';
 import DepartmentDashboard from './pages/admin/DepartmentDashboard';
 
+import { TopPerformersProvider } from './contexts/TopPerformersContext';
+
 function App() {
   const { user, loading } = useAuth();
 
@@ -25,7 +27,8 @@ function App() {
   const isAdminOrSuper = user && (user.role === 'admin' || user.role === 'superadmin');
 
   return (
-    <Routes>
+    <TopPerformersProvider>
+      <Routes>
       <Route
         path="/login"
         element={
@@ -81,7 +84,8 @@ function App() {
 
       <Route path="*" element={<NotFound />} />
     </Routes>
-  );
+  </TopPerformersProvider>
+);
 }
 
 // Authentication guard component
