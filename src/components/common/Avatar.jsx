@@ -31,7 +31,7 @@ const Avatar = ({ src, name, className = "" }) => {
   if (!src || failed) {
     return (
       <div
-        className={`flex items-center justify-center font-semibold text-white ${className}`}
+        className={`flex items-center justify-center font-semibold text-white aspect-square rounded-full flex-shrink-0 select-none overflow-hidden ${className}`}
         style={{ backgroundColor: getColor(name || "") }}
       >
         {getInitials(name)}
@@ -44,7 +44,7 @@ const Avatar = ({ src, name, className = "" }) => {
       src={src}
       alt={name}
       onError={() => setFailed(true)}
-      className={`object-cover ${className}`}
+      className={`object-cover object-top aspect-square rounded-full flex-shrink-0 overflow-hidden ${className}`}
     />
   );
 };

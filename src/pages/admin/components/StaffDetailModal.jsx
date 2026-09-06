@@ -55,12 +55,14 @@ const StaffDetailModal = ({ employee, onClose }) => {
           </div>
         </div>
 
-        <div className="px-5 -mt-10">
-          <Avatar
-            src={employee.image}
-            name={employee.name}
-            className="w-20 h-20 rounded-full border-4 border-white shadow-md text-xl"
-          />
+        <div className="px-5 -mt-12 relative z-10 flex items-end">
+          <div className="relative rounded-full p-1 bg-white shadow-lg ring-1 ring-black/5 flex-shrink-0">
+            <Avatar
+              src={employee.image}
+              name={employee.name}
+              className="w-20 h-20 rounded-full object-cover object-top aspect-square text-xl shadow-inner"
+            />
+          </div>
         </div>
 
         <div className="px-5 pt-3 pb-5">

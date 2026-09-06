@@ -25,6 +25,7 @@ import DoughnutChart from "../../components/charts/DoughnutChart";
 import StaffDetailModal from "./components/StaffDetailModal";
 import CategoryTabs from "../../components/CategoryTabs";
 import { categorizeByBasis, CATEGORY_KEYS } from "../../utils/categorize";
+import DepartmentTopPerformerComparison from "./components/DepartmentTopPerformerComparison";
 
 const PALETTE = [
   "#6366f1", "#10b981", "#f59e0b", "#ef4444", "#06b6d4",
@@ -54,6 +55,13 @@ const DepartmentDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [employees, setEmployees] = useState([]);
   const [departmentScores, setDepartmentScores] = useState([]);
+  const [historyRecords, setHistoryRecords] = useState([]);
+  const [masterMaps, setMasterMaps] = useState({
+    departmentMap: {},
+    imageMap: {},
+    designationMap: {},
+    firmMap: {},
+  });
 
   const [selectedDepartment, setSelectedDepartment] = useState("");
   const [selectedDesignation, setSelectedDesignation] = useState("");
@@ -85,17 +93,19 @@ const DepartmentDashboard = () => {
           return;
         }
 
-        const [recordsResponse, masterResponse, deptScoreResponse, dataResponse] = await Promise.all([
+        const [recordsResponse, masterResponse, deptScoreResponse, dataResponse, historyResponse] = await Promise.all([
           fetch(`${scriptUrl}?sheet=For Records`),
           fetch(`${scriptUrl}?sheet=Master`),
           fetch(`${scriptUrl}?sheet=Department Score Graph`),
           fetch(`${scriptUrl}?sheet=Data`),
+          fetch(`${scriptUrl}?sheet=Records`),
         ]);
 
         const result = await recordsResponse.json();
         const masterResult = await masterResponse.json();
         const deptScoreResult = await deptScoreResponse.json();
         const dataResult = await dataResponse.json();
+        const historyResult = await historyResponse.json();
 
         if (deptScoreResult.success && Array.isArray(deptScoreResult.data)) {
           const parsedDeptScores = deptScoreResult.data
@@ -170,6 +180,32 @@ const DepartmentDashboard = () => {
               }
             }
           });
+        }
+
+        setMasterMaps({
+          departmentMap,
+          imageMap,
+          designationMap,
+          firmMap,
+        });
+
+        // Parse historical records (sheet=Records)
+        if (historyResult.success && Array.isArray(historyResult.data)) {
+          const parsedHistory = historyResult.data
+            .slice(1)
+            .map((row, idx) => ({
+              id: `hist-${idx}`,
+              dateStart: row[0] || "",
+              dateEnd: row[1] || "",
+              name: row[2] || "",
+              target: parseFloat(row[3]) || 0,
+              actualWorkDone: parseFloat(row[4]) || 0,
+              totalWorkDone: parseFloat(row[7]) || 0,
+              weekPending: parseFloat(row[8]) || 0,
+              allPendingTillDate: parseFloat(row[9]) || 0,
+            }))
+            .filter((r) => r.name && String(r.name).trim() !== "");
+          setHistoryRecords(parsedHistory);
         }
 
         if (result.success && Array.isArray(result.data)) {
@@ -734,6 +770,17 @@ const DepartmentDashboard = () => {
           })}
         </div>
       </div>
+
+      {/* 4. Weekly Top Performer Comparison (Department-wise: Last Week vs Current Week) */}
+      <DepartmentTopPerformerComparison
+        currentEmployees={employeesWithStats}
+        historyRecords={historyRecords}
+        departmentMap={masterMaps.departmentMap}
+        imageMap={masterMaps.imageMap}
+        designationMap={masterMaps.designationMap}
+        firmMap={masterMaps.firmMap}
+        onSelectStaff={(staff) => setSelectedStaff(staff)}
+      />
 
       {/* Charts */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
