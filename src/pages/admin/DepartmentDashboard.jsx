@@ -50,6 +50,71 @@ const INCENTIVE_COLORS = [
   { border: "border-orange-200", bg: "bg-orange-50/60", text: "text-orange-700", ring: "ring-orange-300", dot: "#ea580c" },
 ];
 
+const normalizeDate = (d) => {
+  if (!d) return "";
+  const str = String(d).trim();
+  if (!str) return "";
+
+  const monthMap = {
+    jan: "01", feb: "02", mar: "03", apr: "04", may: "05", jun: "06",
+    jul: "07", aug: "08", sep: "09", oct: "10", nov: "11", dec: "12",
+  };
+
+  const customMatch = str.match(/^(\d{1,2})[-/ ]([a-zA-Z]{3,})[-/ ](\d{4})$/);
+  if (customMatch) {
+    const dd = customMatch[1].padStart(2, "0");
+    const monStr = customMatch[2].substring(0, 3).toLowerCase();
+    const mm = monthMap[monStr] || "01";
+    const yyyy = customMatch[3];
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  const isoMatch = str.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+  if (isoMatch) {
+    const yyyy = isoMatch[1];
+    const mm = isoMatch[2].padStart(2, "0");
+    const dd = isoMatch[3].padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  const dmyMatch = str.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
+  if (dmyMatch) {
+    const dd = dmyMatch[1].padStart(2, "0");
+    const mm = dmyMatch[2].padStart(2, "0");
+    const yyyy = dmyMatch[3];
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  const parsed = new Date(str);
+  if (!isNaN(parsed.getTime())) {
+    const yyyy = parsed.getFullYear();
+    const mm = String(parsed.getMonth() + 1).padStart(2, "0");
+    const dd = String(parsed.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  return str.toLowerCase();
+};
+
+const findInMap = (map, name) => {
+  if (!name || !map) return "";
+  const norm = String(name).trim().toLowerCase();
+  if (map[norm]) return map[norm];
+
+  const nameParts = norm.split(/\s+/).filter(Boolean);
+  for (const [k, v] of Object.entries(map)) {
+    if (!k || !v) continue;
+    const mapKey = k.toLowerCase().trim();
+    if (mapKey === norm || norm.includes(mapKey) || mapKey.includes(norm)) {
+      return v;
+    }
+    if (nameParts.length > 0 && (mapKey === nameParts[0] || mapKey.startsWith(nameParts[0]))) {
+      return v;
+    }
+  }
+  return "";
+};
+
 const DepartmentDashboard = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -208,31 +273,87 @@ const DepartmentDashboard = () => {
           setHistoryRecords(parsedHistory);
         }
 
-        if (result.success && Array.isArray(result.data)) {
-          const parsedData = result.data
-            .slice(2)
-            .filter((row) => row[2] && String(row[2]).trim() !== "")
-            .map((row, index) => {
-              const empName = row[2] || "Unknown";
-              const normalizedName = String(empName).trim().toLowerCase();
-              const rawImageUrl = imageMap[normalizedName];
-              const finalImageUrl = rawImageUrl ? getDisplayableImageUrl(rawImageUrl) : null;
+        // Weekly schedule logic (Same as Top Performers moving animation ticker):
+        // 0 = Sunday, 1 = Monday -> Review meeting period: Show completed review week from Records (e.g. 30-Aug to 05-Sep)
+        // 2 = Tuesday, 3 = Wednesday, ..., 6 = Saturday -> Ongoing active week: Show live work in progress from For Records
+        const currentDay = new Date().getDay();
+        const isReviewPeriod = currentDay === 0 || currentDay === 1;
 
-              return {
-                id: `dept-emp-${index}`,
-                name: empName,
-                designation: designationMap[normalizedName] || "",
-                department: departmentMap[normalizedName] || "Unassigned",
-                firm: firmMap[normalizedName] || "Unassigned",
-                incentiveCategory: incentiveMap[normalizedName] || "Unassigned",
-                phone: phoneMap[normalizedName] || "",
-                image: finalImageUrl,
-                target: parseFloat(row[3]) || 0,
-                actualWorkDone: parseFloat(row[4]) || 0,
-                weekPending: parseFloat(row[8]) || 0,
-                allPendingTillDate: parseFloat(row[9]) || 0,
-              };
-            });
+        let activeDataRows = [];
+
+        if (isReviewPeriod) {
+          // A. Sunday & Monday: Load latest submitted week from Records
+          if (historyResult.success && Array.isArray(historyResult.data) && historyResult.data.length > 1) {
+            const rows = historyResult.data.slice(1).filter((row) => row[2] && String(row[2]).trim() !== "");
+            const uniqueDates = [...new Set(rows.map((r) => r[0]))].filter(Boolean);
+            uniqueDates.sort((a, b) => normalizeDate(b).localeCompare(normalizeDate(a)));
+            const latestDate = uniqueDates[0];
+
+            if (latestDate) {
+              const normLatest = normalizeDate(latestDate);
+              activeDataRows = rows.filter((r) => normalizeDate(r[0]) === normLatest);
+            } else {
+              activeDataRows = rows;
+            }
+          }
+          // Fallback to For Records if Records is empty
+          if (activeDataRows.length === 0 && result.success && Array.isArray(result.data)) {
+            activeDataRows = result.data.slice(2).filter((row) => row[2] && String(row[2]).trim() !== "");
+          }
+        } else {
+          // B. Tuesday to Saturday: Load live running active week from For Records
+          if (result.success && Array.isArray(result.data)) {
+            activeDataRows = result.data.slice(2).filter((row) => row[2] && String(row[2]).trim() !== "");
+          }
+          // Fallback to Records if For Records is empty
+          if (activeDataRows.length === 0 && historyResult.success && Array.isArray(historyResult.data) && historyResult.data.length > 1) {
+            const rows = historyResult.data.slice(1).filter((row) => row[2] && String(row[2]).trim() !== "");
+            const uniqueDates = [...new Set(rows.map((r) => r[0]))].filter(Boolean);
+            uniqueDates.sort((a, b) => normalizeDate(b).localeCompare(normalizeDate(a)));
+            const latestDate = uniqueDates[0];
+            const normLatest = latestDate ? normalizeDate(latestDate) : "";
+            activeDataRows = normLatest ? rows.filter((r) => normalizeDate(r[0]) === normLatest) : rows;
+          }
+        }
+
+        if (activeDataRows.length > 0) {
+          const parsedData = activeDataRows.map((row, index) => {
+            const empName = row[2] ? String(row[2]).trim() : "Unknown";
+            const normalizedName = empName.toLowerCase();
+            const rawImageUrl = findInMap(imageMap, normalizedName);
+            const finalImageUrl = rawImageUrl ? getDisplayableImageUrl(rawImageUrl) : null;
+
+            // Direct columns from sheet row if present (Index 21: Incentive Category, Index 22: Firm Name)
+            const directIncentive = (row[21] && String(row[21]).trim()) || "";
+            const resolvedIncentive = directIncentive || findInMap(incentiveMap, normalizedName) || "MIS Basis";
+
+            const directFirm = (row[22] && String(row[22]).trim()) || "";
+            const resolvedFirm = directFirm || findInMap(firmMap, normalizedName) || "";
+
+            const resolvedDept = findInMap(departmentMap, normalizedName) || (resolvedFirm ? `${resolvedFirm} Operations` : "Operations");
+            const resolvedDesig = findInMap(designationMap, normalizedName) || "";
+            const resolvedPhone = findInMap(phoneMap, normalizedName) || "";
+
+            return {
+              id: `dept-emp-${index}`,
+              dateStart: row[0] || "",
+              dateEnd: row[1] || "",
+              name: empName,
+              designation: resolvedDesig,
+              department: resolvedDept,
+              firm: resolvedFirm,
+              incentiveCategory: resolvedIncentive,
+              phone: resolvedPhone,
+              image: finalImageUrl,
+              target: parseFloat(String(row[3]).replace(/,/g, '')) || 0,
+              actualWorkDone: parseFloat(String(row[4]).replace(/,/g, '')) || 0,
+              workNotDone: row[5] || "0%",
+              workNotDoneOnTime: row[6] || "0%",
+              totalWorkDone: parseFloat(String(row[7]).replace(/,/g, '')) || 0,
+              weekPending: parseFloat(String(row[8]).replace(/,/g, '')) || 0,
+              allPendingTillDate: parseFloat(String(row[9]).replace(/,/g, '')) || 0,
+            };
+          });
 
           const isAdmin = user && (user.role === "admin" || user.role === "superadmin");
           const isHod = user && user.role === "hod";
@@ -399,7 +520,15 @@ const DepartmentDashboard = () => {
     return Object.values(byDept)
       .map((d) => {
         const completionPct = d.target > 0 ? Math.round((d.actual / d.target) * 100) : d.actual > 0 ? 100 : 0;
-        const topPerformer = [...d.employees].sort((a, b) => b.completionPct - a.completionPct)[0];
+        const topPerformer = [...d.employees].sort((a, b) => {
+          if (b.actualWorkDone !== a.actualWorkDone) {
+            return b.actualWorkDone - a.actualWorkDone;
+          }
+          if ((b.totalWorkDone || 0) !== (a.totalWorkDone || 0)) {
+            return (b.totalWorkDone || 0) - (a.totalWorkDone || 0);
+          }
+          return (b.completionPct || 0) - (a.completionPct || 0);
+        })[0];
         return { ...d, completionPct, topPerformer };
       })
       .sort((a, b) => b.staffCount - a.staffCount);
@@ -516,6 +645,24 @@ const DepartmentDashboard = () => {
   const pendingPillColor = (val) =>
     val === 0 ? "bg-green-100 text-green-800" : val <= 3 ? "bg-yellow-100 text-yellow-800" : "bg-red-100 text-red-800";
 
+  const activeWeekInfo = useMemo(() => {
+    const currentDay = new Date().getDay();
+    const isReviewPeriod = currentDay === 0 || currentDay === 1;
+    const firstWithDate = employees.find((e) => e.dateStart);
+    if (firstWithDate && firstWithDate.dateStart) {
+      return {
+        isReviewPeriod,
+        label: firstWithDate.dateEnd ? `${firstWithDate.dateStart} to ${firstWithDate.dateEnd}` : firstWithDate.dateStart,
+        type: isReviewPeriod ? "Review Period" : "Live Active Week",
+      };
+    }
+    return {
+      isReviewPeriod,
+      label: "",
+      type: isReviewPeriod ? "Review Period" : "Live Active Week",
+    };
+  }, [employees]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
@@ -535,6 +682,13 @@ const DepartmentDashboard = () => {
           </h1>
           <p className="text-sm text-gray-500 mt-0.5">Department-wise, firm-wise &amp; category-wise performance overview</p>
         </div>
+        {activeWeekInfo.label && (
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-indigo-50 border border-indigo-200 rounded-lg text-xs font-semibold text-indigo-900 shadow-2xs">
+            <Sparkles className="w-4 h-4 text-indigo-600 flex-shrink-0" />
+            <span className="text-indigo-600 font-bold uppercase tracking-wider text-[11px]">{activeWeekInfo.type}:</span>
+            <span className="text-gray-900 font-bold">{activeWeekInfo.label}</span>
+          </div>
+        )}
       </div>
 
       {/* Category Tabs */}
@@ -555,12 +709,17 @@ const DepartmentDashboard = () => {
       {/* 1. Firm-wise Boxes Section */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 md:p-5">
         <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <Briefcase className="w-5 h-5 text-indigo-600" />
             <h3 className="text-base font-bold text-gray-900">Firm-wise Overview</h3>
             <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
               Total: {firmAgg.length} Firms • {firmAgg.reduce((s, f) => s + f.staffCount, 0)} Staff
             </span>
+            {activeWeekInfo.label && (
+              <span className="text-xs font-medium px-2 py-0.5 rounded bg-gray-100 text-gray-600 border border-gray-200">
+                Week: {activeWeekInfo.label}
+              </span>
+            )}
           </div>
           {selectedFirm && (
             <button
@@ -631,12 +790,17 @@ const DepartmentDashboard = () => {
       {/* 2. Incentive Category-wise Boxes Section */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 md:p-5">
         <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <Sparkles className="w-5 h-5 text-emerald-600" />
             <h3 className="text-base font-bold text-gray-900">Incentive Category-wise Overview</h3>
             <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
               Total: {incentiveAgg.length} Categories • {incentiveAgg.reduce((s, inc) => s + inc.staffCount, 0)} Staff
             </span>
+            {activeWeekInfo.label && (
+              <span className="text-xs font-medium px-2 py-0.5 rounded bg-gray-100 text-gray-600 border border-gray-200">
+                Week: {activeWeekInfo.label}
+              </span>
+            )}
           </div>
           {selectedIncentiveCategory && (
             <button
@@ -707,12 +871,17 @@ const DepartmentDashboard = () => {
       {/* 3. Department Cards */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 md:p-5">
         <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <Building2 className="w-5 h-5 text-purple-600" />
             <h3 className="text-base font-bold text-gray-900">Departments Overview</h3>
             <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200">
               Total: {departmentAgg.length} Depts • {departmentAgg.reduce((s, d) => s + d.staffCount, 0)} Staff
             </span>
+            {activeWeekInfo.label && (
+              <span className="text-xs font-medium px-2 py-0.5 rounded bg-gray-100 text-gray-600 border border-gray-200">
+                Week: {activeWeekInfo.label}
+              </span>
+            )}
           </div>
           {selectedDepartment && (
             <button
@@ -770,9 +939,14 @@ const DepartmentDashboard = () => {
                 </div>
 
                 {dept.topPerformer && (
-                  <div className="mt-3 pt-2 border-t border-gray-100 flex items-center gap-1.5 text-xs text-gray-500 truncate">
-                    <Award className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
-                    <span className="truncate">Top: {dept.topPerformer.name}</span>
+                  <div className="mt-3 pt-2 border-t border-gray-100 flex items-center justify-between gap-1 text-xs text-gray-500 truncate" title={`Top Performer: ${dept.topPerformer.name} (${dept.topPerformer.actualWorkDone} tasks done, ${dept.topPerformer.completionPct}%)`}>
+                    <div className="flex items-center gap-1.5 truncate">
+                      <Award className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
+                      <span className="truncate font-medium text-gray-700">Top: {dept.topPerformer.name}</span>
+                    </div>
+                    <span className="text-[11px] font-bold text-green-700 bg-green-50 px-1.5 py-0.5 rounded border border-green-100 flex-shrink-0">
+                      {dept.topPerformer.actualWorkDone} Done
+                    </span>
                   </div>
                 )}
               </button>
@@ -937,7 +1111,14 @@ const DepartmentDashboard = () => {
       {/* Staff Table */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
         <div className="flex flex-col gap-3 justify-between items-start mb-4 sm:flex-row sm:items-center">
-          <h3 className="text-base font-semibold text-gray-900">Staff Performance</h3>
+          <div className="flex items-center gap-2 flex-wrap">
+            <h3 className="text-base font-semibold text-gray-900">Staff Performance</h3>
+            {activeWeekInfo.label && (
+              <span className="text-xs font-medium px-2 py-0.5 rounded bg-gray-100 text-gray-600 border border-gray-200">
+                Week: {activeWeekInfo.label}
+              </span>
+            )}
+          </div>
           <span className="flex gap-2 items-center px-3 py-1.5 text-xs text-gray-500 bg-gray-50 rounded-md font-medium">
             {filteredStaff.length} staff found
           </span>

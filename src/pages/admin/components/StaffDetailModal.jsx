@@ -116,6 +116,27 @@ const StaffDetailModal = ({ employee, onClose }) => {
               />
             </div>
           </div>
+
+          {(employee.workNotDone || employee.workNotDoneOnTime || employee.totalWorkDone || employee.weekPending !== undefined) && (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-4 pt-3 border-t border-gray-100 text-center text-xs">
+              <div className="bg-gray-50 p-2 rounded-lg border border-gray-100">
+                <span className="text-gray-400 block text-[10px]">Total Done</span>
+                <span className="font-bold text-gray-800">{employee.totalWorkDone ?? actual}</span>
+              </div>
+              <div className="bg-gray-50 p-2 rounded-lg border border-gray-100">
+                <span className="text-gray-400 block text-[10px]">Week Pending</span>
+                <span className="font-bold text-gray-800">{employee.weekPending ?? 0}</span>
+              </div>
+              <div className="bg-gray-50 p-2 rounded-lg border border-gray-100">
+                <span className="text-gray-400 block text-[10px]">% Not Done</span>
+                <span className="font-bold text-gray-800">{employee.workNotDone || "0%"}</span>
+              </div>
+              <div className="bg-gray-50 p-2 rounded-lg border border-gray-100">
+                <span className="text-gray-400 block text-[10px]">% Not On Time</span>
+                <span className="font-bold text-gray-800">{employee.workNotDoneOnTime || "0%"}</span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>,
