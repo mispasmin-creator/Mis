@@ -139,38 +139,40 @@ const DepartmentTopPerformerComparison = ({
   }, [availableWeeks]);
 
   // Resolve active Current Week key:
-  // Default to "live" (Current Live Active Week from For Records)
+  // Default to newest submitted week in Records (e.g. 30-Aug to 05-Sep)
   const activeCurrentWeek = useMemo(() => {
     if (currentWeekKey) {
       const found = availableWeeks.find((w) => w.key === currentWeekKey);
       if (found) return found;
     }
-    // Default to Live Active Week
+    // Default to the latest review week from Records (e.g. 30-Aug to 05-Sep)
+    if (historyOnlyWeeks.length > 0) {
+      return historyOnlyWeeks[0];
+    }
     return availableWeeks[0] || null;
-  }, [availableWeeks, currentWeekKey]);
+  }, [availableWeeks, historyOnlyWeeks, currentWeekKey]);
 
   // Resolve active Previous Week key:
-  // Default to the latest completed week from Records (e.g. 30-Aug to 05-Sep)
+  // Default to 2nd newest week from Records (e.g. 23-Aug to 29-Aug)
   const activePrevWeek = useMemo(() => {
     if (prevWeekKey) {
       const found = availableWeeks.find((w) => w.key === prevWeekKey);
       if (found) return found;
     }
-    // If activeCurrentWeek is 'live', default prev to the 1st history week (historyOnlyWeeks[0])
-    if (historyOnlyWeeks.length > 0) {
-      if (activeCurrentWeek?.key === "live") {
-        return historyOnlyWeeks[0];
-      }
-      // If user selected a history week as current, default prev to the next one
+    // Default to the week prior to activeCurrentWeek
+    if (historyOnlyWeeks.length > 1) {
       const currentIdx = historyOnlyWeeks.findIndex(
         (w) => w.key === activeCurrentWeek?.key
       );
-      if (currentIdx >= 0 && historyOnlyWeeks[currentIdx + 1]) {
+      if (currentIdx === 0 && historyOnlyWeeks[1]) {
+        return historyOnlyWeeks[1];
+      }
+      if (currentIdx > 0 && historyOnlyWeeks[currentIdx + 1]) {
         return historyOnlyWeeks[currentIdx + 1];
       }
-      return historyOnlyWeeks[0];
+      return historyOnlyWeeks[1];
     }
-    return availableWeeks[1] || availableWeeks[0] || null;
+    return historyOnlyWeeks[0] || availableWeeks[0] || null;
   }, [availableWeeks, historyOnlyWeeks, prevWeekKey, activeCurrentWeek]);
 
   // Helper function to extract department top performers for a given week key

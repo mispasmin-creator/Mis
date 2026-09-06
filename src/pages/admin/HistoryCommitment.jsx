@@ -241,17 +241,42 @@ const AdminHistoryCommitment = () => {
         const normRecordDateStart = normalizeDate(record.dateStart);
         const normRecordDateEnd = normalizeDate(record.dateEnd);
 
-        // Header in Task Wise Record is typically at index 1 (Col A: Date Start, Col B: Date End, Col C: Name)
+        // Header in Task Wise Record
         const headerRowIdx = taskWiseData.findIndex(row => 
-            row.some(c => String(c).toLowerCase().includes("date start") || String(c).toLowerCase().includes("system type"))
+            row.some(c => String(c).toLowerCase().includes("date start") || String(c).toLowerCase().includes("system type") || String(c).toLowerCase().includes("fms name"))
         );
-        const rowsToProcess = headerRowIdx >= 0 ? taskWiseData.slice(headerRowIdx + 1) : taskWiseData.slice(2);
+        const headerRow = headerRowIdx >= 0 ? taskWiseData[headerRowIdx] : (taskWiseData[0] || []);
+        const rowsToProcess = headerRowIdx >= 0 ? taskWiseData.slice(headerRowIdx + 1) : taskWiseData.slice(1);
+
+        const findColIdx = (keywords, defaultIdx) => {
+            if (!headerRow || headerRow.length === 0) return defaultIdx;
+            const idx = headerRow.findIndex(cell => {
+                const str = String(cell || "").toLowerCase().trim();
+                return keywords.some(k => str === k || str.includes(k));
+            });
+            return idx >= 0 ? idx : defaultIdx;
+        };
+
+        const colDateStart = findColIdx(["date start", "start date"], 0);
+        const colDateEnd = findColIdx(["date end", "end date"], 1);
+        const colName = findColIdx(["person name", "employee name", "name"], 2);
+        const colFmsName = findColIdx(["fms name", "fms"], 3);
+        const colSystemType = findColIdx(["system type", "type"], 4);
+        const colDept = findColIdx(["department", "dept"], 5);
+        const colTaskName = findColIdx(["task name", "task", "particulars", "task description"], 6);
+        const colTarget = findColIdx(["target", "tgt"], 7);
+        const colActualAch = findColIdx(["actual achievement", "actual done", "actual work done", "actual"], 8);
+        const colExtraDone = findColIdx(["extra done", "extra work done", "extra"], 9);
+        const colTotalAch = findColIdx(["total achievement", "total done", "total work done", "total"], 10);
+        const colWorkNotDone = findColIdx(["work not done", "% work not done", "not done"], 11);
+        const colWorkNotDoneOnTime = findColIdx(["work not done on time", "% work not done on time", "not done on time"], 12);
+        const colAllPending = findColIdx(["all pending", "pending till date", "all pending till date", "pending"], 13);
 
         // Strict Filter: Match Name (Col C), Date Start (Col A), and Date End (Col B)
         const exactDateMatches = rowsToProcess.filter(row => {
-            const rowName = row[2] ? String(row[2]).trim().toLowerCase() : "";
-            const rowStart = normalizeDate(row[0]);
-            const rowEnd = normalizeDate(row[1]);
+            const rowName = row[colName] ? String(row[colName]).trim().toLowerCase() : "";
+            const rowStart = normalizeDate(row[colDateStart]);
+            const rowEnd = normalizeDate(row[colDateEnd]);
 
             const isNameMatch = rowName === recordName;
             const isDateStartMatch = Boolean(normRecordDateStart && rowStart && rowStart === normRecordDateStart);
@@ -261,24 +286,20 @@ const AdminHistoryCommitment = () => {
         });
 
         const tasks = exactDateMatches.map(row => ({
-            dateStart: row[0] || "",
-            dateEnd: row[1] || "",
-            name: row[2] || "",
-            department: row[3] || "",
-            systemType: row[4] || "",
-            taskName: row[4] || row[5] || "",
-            fmsName: row[5] || "",
-            target: row[6] || 0,
-            totalAchievement: row[7] || 0,
-            workNotDone: row[8] || 0,
-            workNotDoneOnTime: row[9] || 0,
-            allPendingTillDate: row[10] || 0,
-            todayTask: row[11] || 0,
-            allWorkShouldBeDoneOnTime: row[12] || 0,
-            extraDone: row[13] || 0,
-            actualAchievement: row[14] || 0,
-            weekPending: row[15] || 0,
-            actualOnTime: row[16] || 0
+            dateStart: row[colDateStart] || "",
+            dateEnd: row[colDateEnd] || "",
+            name: row[colName] || "",
+            fmsName: row[colFmsName] || "",
+            systemType: row[colSystemType] || "",
+            department: row[colDept] || "",
+            taskName: row[colTaskName] || row[colSystemType] || "",
+            target: row[colTarget] || 0,
+            actualAchievement: row[colActualAch] || 0,
+            extraDone: row[colExtraDone] || 0,
+            totalAchievement: row[colTotalAch] || 0,
+            workNotDone: row[colWorkNotDone] || 0,
+            workNotDoneOnTime: row[colWorkNotDoneOnTime] || 0,
+            allPendingTillDate: row[colAllPending] || 0,
         }));
 
         const rawImg = imageMap[recordName];
