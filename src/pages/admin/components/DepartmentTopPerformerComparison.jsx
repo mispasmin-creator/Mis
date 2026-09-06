@@ -120,12 +120,12 @@ const DepartmentTopPerformerComparison = ({
       b.sortKey.localeCompare(a.sortKey)
     );
 
-    // Also include Live Active Sheet option
+    // Include Live Active Week as the first option
     const liveOption = {
       key: "live",
       dateStart: "Live",
       dateEnd: "Active",
-      label: "Live Active Sheet (For Records)",
+      label: "Current Live Week (Active)",
       sortKey: "9999-99-99",
       type: "live",
     };
@@ -139,41 +139,38 @@ const DepartmentTopPerformerComparison = ({
   }, [availableWeeks]);
 
   // Resolve active Current Week key:
-  // Default to newest week in Records (e.g. 30-Aug to 05-Sep) if available, otherwise 'live'
+  // Default to "live" (Current Live Active Week from For Records)
   const activeCurrentWeek = useMemo(() => {
     if (currentWeekKey) {
       const found = availableWeeks.find((w) => w.key === currentWeekKey);
       if (found) return found;
     }
-    // If we have historical weeks, default to the latest week (index 0 of historyOnlyWeeks)
-    if (historyOnlyWeeks.length > 0) {
-      return historyOnlyWeeks[0];
-    }
+    // Default to Live Active Week
     return availableWeeks[0] || null;
-  }, [availableWeeks, historyOnlyWeeks, currentWeekKey]);
+  }, [availableWeeks, currentWeekKey]);
 
   // Resolve active Previous Week key:
-  // Default to 2nd newest week in Records (e.g. 23-Aug to 29-Aug) if available, or index 1
+  // Default to the latest completed week from Records (e.g. 30-Aug to 05-Sep)
   const activePrevWeek = useMemo(() => {
     if (prevWeekKey) {
       const found = availableWeeks.find((w) => w.key === prevWeekKey);
       if (found) return found;
     }
-    // If activeCurrentWeek is the first history week and we have a second one, use index 1
-    if (historyOnlyWeeks.length > 1) {
+    // If activeCurrentWeek is 'live', default prev to the 1st history week (historyOnlyWeeks[0])
+    if (historyOnlyWeeks.length > 0) {
+      if (activeCurrentWeek?.key === "live") {
+        return historyOnlyWeeks[0];
+      }
+      // If user selected a history week as current, default prev to the next one
       const currentIdx = historyOnlyWeeks.findIndex(
         (w) => w.key === activeCurrentWeek?.key
       );
-      if (currentIdx === 0 && historyOnlyWeeks[1]) {
-        return historyOnlyWeeks[1];
-      }
-      if (currentIdx > 0 && historyOnlyWeeks[currentIdx + 1]) {
+      if (currentIdx >= 0 && historyOnlyWeeks[currentIdx + 1]) {
         return historyOnlyWeeks[currentIdx + 1];
       }
-      return historyOnlyWeeks[1];
+      return historyOnlyWeeks[0];
     }
-    // If only 1 history week exists, return it or null
-    return historyOnlyWeeks[0] || null;
+    return availableWeeks[1] || availableWeeks[0] || null;
   }, [availableWeeks, historyOnlyWeeks, prevWeekKey, activeCurrentWeek]);
 
   // Helper function to extract department top performers for a given week key
@@ -246,6 +243,9 @@ const DepartmentTopPerformerComparison = ({
       const sorted = [...list].sort((a, b) => {
         if (b.actualWorkDone !== a.actualWorkDone) {
           return b.actualWorkDone - a.actualWorkDone;
+        }
+        if ((b.totalWorkDone || 0) !== (a.totalWorkDone || 0)) {
+          return (b.totalWorkDone || 0) - (a.totalWorkDone || 0);
         }
         return (b.completionPct || 0) - (a.completionPct || 0);
       });

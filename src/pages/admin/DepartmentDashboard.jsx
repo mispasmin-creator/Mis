@@ -291,6 +291,16 @@ const DepartmentDashboard = () => {
     });
   }, [employees, selectedCategory]);
 
+  const allEmployeesWithStats = useMemo(
+    () =>
+      employees.map((emp) => {
+        const completionPct =
+          emp.target > 0 ? Math.round((emp.actualWorkDone / emp.target) * 100) : emp.actualWorkDone > 0 ? 100 : 0;
+        return { ...emp, completionPct };
+      }),
+    [employees]
+  );
+
   const employeesWithStats = useMemo(
     () =>
       categoryFilteredEmployees.map((emp) => {
@@ -773,7 +783,7 @@ const DepartmentDashboard = () => {
 
       {/* 4. Weekly Top Performer Comparison (Department-wise: Last Week vs Current Week) */}
       <DepartmentTopPerformerComparison
-        currentEmployees={employeesWithStats}
+        currentEmployees={allEmployeesWithStats}
         historyRecords={historyRecords}
         departmentMap={masterMaps.departmentMap}
         imageMap={masterMaps.imageMap}
