@@ -347,9 +347,34 @@ const AdminHistoryCommitment = () => {
         });
     }, [records, selectedCategory]);
 
-    // All unique dates in this category (for Date dropdown)
+    // All unique week date ranges in this category (for Date dropdown)
     const uniqueDates = useMemo(() => {
-        return [...new Set(categoryRecords.map(r => r.dateStart))].filter(Boolean).sort((a, b) => new Date(b) - new Date(a));
+        const weekMap = new Map();
+        categoryRecords.forEach((r) => {
+            const dateStart = String(r.dateStart || "").trim();
+            const dateEnd = String(r.dateEnd || "").trim();
+            if (!dateStart) return;
+
+            if (!weekMap.has(dateStart)) {
+                weekMap.set(dateStart, {
+                    value: dateStart,
+                    dateStart,
+                    dateEnd,
+                    label: dateEnd ? `${dateStart} To ${dateEnd}` : dateStart,
+                    sortKey: normalizeDate(dateStart),
+                });
+            } else {
+                const existing = weekMap.get(dateStart);
+                if (!existing.dateEnd && dateEnd) {
+                    existing.dateEnd = dateEnd;
+                    existing.label = `${dateStart} To ${dateEnd}`;
+                }
+            }
+        });
+
+        return Array.from(weekMap.values()).sort((a, b) =>
+            b.sortKey.localeCompare(a.sortKey)
+        );
     }, [categoryRecords]);
 
     // Available names for Name dropdown (filtered by date if selected)
@@ -560,7 +585,7 @@ const AdminHistoryCommitment = () => {
                                 className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-indigo-500"
                             />
                         </div>
-                        <div className="w-full md:w-56">
+                        <div className="w-full md:w-64">
                             <select
                                 value={dateFilter}
                                 onChange={(e) => setDateFilter(e.target.value)}
@@ -568,7 +593,7 @@ const AdminHistoryCommitment = () => {
                             >
                                 <option value="all">All Dates</option>
                                 {uniqueDates.map(d => (
-                                    <option key={d} value={d}>{d}</option>
+                                    <option key={d.value} value={d.value}>{d.label}</option>
                                 ))}
                             </select>
                         </div>
