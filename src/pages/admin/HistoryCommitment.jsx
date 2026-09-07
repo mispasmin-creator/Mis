@@ -6,6 +6,7 @@ import { categorizeByBasis, CATEGORY_KEYS, CATEGORY_LABELS } from "../../utils/c
 import { extractDateRange, printHistoryReport, downloadHistoryPDF } from "../../utils/historyReportPrint";
 import { getDisplayableImageUrl } from "../../utils/imageUtils";
 import HistoryTaskModal from "./components/HistoryTaskModal";
+import SearchableSelect from "../../components/common/SearchableSelect";
 
 const AdminHistoryCommitment = () => {
     const { user } = useAuth();
@@ -598,16 +599,13 @@ const AdminHistoryCommitment = () => {
                             </select>
                         </div>
                         <div className="w-full md:w-56">
-                            <select
+                            <SearchableSelect
+                                options={uniqueNames}
                                 value={nameFilter}
-                                onChange={(e) => setNameFilter(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-indigo-500 bg-white"
-                            >
-                                <option value="all">All Names</option>
-                                {uniqueNames.map(n => (
-                                    <option key={n} value={n}>{n}</option>
-                                ))}
-                            </select>
+                                onChange={(val) => setNameFilter(val)}
+                                placeholder="All Names"
+                                allLabel="All Names"
+                            />
                         </div>
                         <div className="w-full md:w-56">
                             <select

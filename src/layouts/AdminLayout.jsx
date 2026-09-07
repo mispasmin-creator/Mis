@@ -4,7 +4,6 @@ import { LayoutDashboard, LogOut, LineChart, History, Building2 } from 'lucide-r
 import { useAuth } from '../contexts/AuthContext';
 import { getDisplayableImageUrl } from '../utils/imageUtils';
 import Footer from '../components/Footer';
-import DepartmentCelebrationTicker from '../pages/admin/components/DepartmentCelebrationTicker';
 
 const AdminLayout = () => {
   const { user, logout, updateProfileImage } = useAuth();
@@ -61,10 +60,7 @@ const AdminLayout = () => {
             </Link>
           </div>
 
-          {/* Top Performers Reel Ticker */}
-          <div className="hidden md:flex flex-1 max-w-md lg:max-w-xl xl:max-w-3xl 2xl:max-w-4xl mx-2 min-w-0 justify-center">
-            <DepartmentCelebrationTicker />
-          </div>
+
 
           <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-shrink-0">
             {user && (

@@ -14,6 +14,7 @@ import {
   Briefcase,
   Layers,
   Sparkles,
+  Calendar,
 } from "lucide-react";
 import { getDisplayableImageUrl } from "../../utils/imageUtils";
 import { useAuth } from "../../contexts/AuthContext";
@@ -26,6 +27,7 @@ import StaffDetailModal from "./components/StaffDetailModal";
 import CategoryTabs from "../../components/CategoryTabs";
 import { categorizeByBasis, CATEGORY_KEYS } from "../../utils/categorize";
 import DepartmentTopPerformerComparison from "./components/DepartmentTopPerformerComparison";
+import OverallTopPerformersReport from "./components/OverallTopPerformersReport";
 
 const PALETTE = [
   "#6366f1", "#10b981", "#f59e0b", "#ef4444", "#06b6d4",
@@ -118,7 +120,9 @@ const findInMap = (map, name) => {
 const DepartmentDashboard = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [employees, setEmployees] = useState([]);
+  const [rawLiveRows, setRawLiveRows] = useState([]);
+  const [rawHistoryRows, setRawHistoryRows] = useState([]);
+  const [selectedWeekKey, setSelectedWeekKey] = useState("");
   const [departmentScores, setDepartmentScores] = useState([]);
   const [historyRecords, setHistoryRecords] = useState([]);
   const [masterMaps, setMasterMaps] = useState({
@@ -126,6 +130,9 @@ const DepartmentDashboard = () => {
     imageMap: {},
     designationMap: {},
     firmMap: {},
+    incentiveMap: {},
+    phoneMap: {},
+    reportedByMap: {},
   });
 
   const [selectedDepartment, setSelectedDepartment] = useState("");
@@ -153,7 +160,6 @@ const DepartmentDashboard = () => {
         const scriptUrl = import.meta.env.VITE_APPS_SCRIPT_URL;
         if (!scriptUrl) {
           console.error("VITE_APPS_SCRIPT_URL not set");
-          setEmployees([]);
           setLoading(false);
           return;
         }
@@ -252,132 +258,61 @@ const DepartmentDashboard = () => {
           imageMap,
           designationMap,
           firmMap,
+          incentiveMap,
+          phoneMap,
+          reportedByMap,
         });
 
-        // Parse historical records (sheet=Records)
-        if (historyResult.success && Array.isArray(historyResult.data)) {
-          const parsedHistory = historyResult.data
-            .slice(1)
-            .map((row, idx) => ({
-              id: `hist-${idx}`,
-              dateStart: row[0] || "",
-              dateEnd: row[1] || "",
-              name: row[2] || "",
-              target: parseFloat(row[3]) || 0,
-              actualWorkDone: parseFloat(row[4]) || 0,
-              totalWorkDone: parseFloat(row[7]) || 0,
-              weekPending: parseFloat(row[8]) || 0,
-              allPendingTillDate: parseFloat(row[9]) || 0,
-            }))
-            .filter((r) => r.name && String(r.name).trim() !== "");
+        // Store live rows (sheet=For Records)
+        let liveRows = [];
+        if (result.success && Array.isArray(result.data) && result.data.length > 2) {
+          liveRows = result.data.slice(2).filter((row) => row[2] && String(row[2]).trim() !== "");
+          setRawLiveRows(liveRows);
+        }
+
+        // Store history rows (sheet=Records)
+        let histRows = [];
+        if (historyResult.success && Array.isArray(historyResult.data) && historyResult.data.length > 1) {
+          histRows = historyResult.data.slice(1).filter((row) => row[2] && String(row[2]).trim() !== "");
+          setRawHistoryRows(histRows);
+
+          const parsedHistory = histRows.map((row, idx) => ({
+            id: `hist-${idx}`,
+            dateStart: row[0] || "",
+            dateEnd: row[1] || "",
+            name: row[2] || "",
+            target: parseFloat(String(row[3]).replace(/,/g, '')) || 0,
+            actualWorkDone: parseFloat(String(row[4]).replace(/,/g, '')) || 0,
+            totalWorkDone: parseFloat(String(row[7]).replace(/,/g, '')) || 0,
+            weekPending: parseFloat(String(row[8]).replace(/,/g, '')) || 0,
+            allPendingTillDate: parseFloat(String(row[9]).replace(/,/g, '')) || 0,
+          }));
           setHistoryRecords(parsedHistory);
         }
 
-        // Weekly schedule logic (Same as Top Performers moving animation ticker):
-        // 0 = Sunday, 1 = Monday -> Review meeting period: Show completed review week from Records (e.g. 30-Aug to 05-Sep)
-        // 2 = Tuesday, 3 = Wednesday, ..., 6 = Saturday -> Ongoing active week: Show live work in progress from For Records
+        // Determine default week selection based on schedule
         const currentDay = new Date().getDay();
         const isReviewPeriod = currentDay === 0 || currentDay === 1;
 
-        let activeDataRows = [];
-
-        if (isReviewPeriod) {
-          // A. Sunday & Monday: Load latest submitted week from Records
-          if (historyResult.success && Array.isArray(historyResult.data) && historyResult.data.length > 1) {
-            const rows = historyResult.data.slice(1).filter((row) => row[2] && String(row[2]).trim() !== "");
-            const uniqueDates = [...new Set(rows.map((r) => r[0]))].filter(Boolean);
-            uniqueDates.sort((a, b) => normalizeDate(b).localeCompare(normalizeDate(a)));
-            const latestDate = uniqueDates[0];
-
-            if (latestDate) {
-              const normLatest = normalizeDate(latestDate);
-              activeDataRows = rows.filter((r) => normalizeDate(r[0]) === normLatest);
-            } else {
-              activeDataRows = rows;
-            }
-          }
-          // Fallback to For Records if Records is empty
-          if (activeDataRows.length === 0 && result.success && Array.isArray(result.data)) {
-            activeDataRows = result.data.slice(2).filter((row) => row[2] && String(row[2]).trim() !== "");
+        if (isReviewPeriod && histRows.length > 0) {
+          const uniqueDates = [...new Set(histRows.map((r) => r[0]))].filter(Boolean);
+          uniqueDates.sort((a, b) => normalizeDate(b).localeCompare(normalizeDate(a)));
+          if (uniqueDates[0]) {
+            setSelectedWeekKey(uniqueDates[0]);
+          } else if (liveRows.length > 0) {
+            setSelectedWeekKey("live");
           }
         } else {
-          // B. Tuesday to Saturday: Load live running active week from For Records
-          if (result.success && Array.isArray(result.data)) {
-            activeDataRows = result.data.slice(2).filter((row) => row[2] && String(row[2]).trim() !== "");
-          }
-          // Fallback to Records if For Records is empty
-          if (activeDataRows.length === 0 && historyResult.success && Array.isArray(historyResult.data) && historyResult.data.length > 1) {
-            const rows = historyResult.data.slice(1).filter((row) => row[2] && String(row[2]).trim() !== "");
-            const uniqueDates = [...new Set(rows.map((r) => r[0]))].filter(Boolean);
+          if (liveRows.length > 0) {
+            setSelectedWeekKey("live");
+          } else if (histRows.length > 0) {
+            const uniqueDates = [...new Set(histRows.map((r) => r[0]))].filter(Boolean);
             uniqueDates.sort((a, b) => normalizeDate(b).localeCompare(normalizeDate(a)));
-            const latestDate = uniqueDates[0];
-            const normLatest = latestDate ? normalizeDate(latestDate) : "";
-            activeDataRows = normLatest ? rows.filter((r) => normalizeDate(r[0]) === normLatest) : rows;
+            setSelectedWeekKey(uniqueDates[0] || "");
           }
-        }
-
-        if (activeDataRows.length > 0) {
-          const parsedData = activeDataRows.map((row, index) => {
-            const empName = row[2] ? String(row[2]).trim() : "Unknown";
-            const normalizedName = empName.toLowerCase();
-            const rawImageUrl = findInMap(imageMap, normalizedName);
-            const finalImageUrl = rawImageUrl ? getDisplayableImageUrl(rawImageUrl) : null;
-
-            // Direct columns from sheet row if present (Index 21: Incentive Category, Index 22: Firm Name)
-            const directIncentive = (row[21] && String(row[21]).trim()) || "";
-            const resolvedIncentive = directIncentive || findInMap(incentiveMap, normalizedName) || "MIS Basis";
-
-            const directFirm = (row[22] && String(row[22]).trim()) || "";
-            const resolvedFirm = directFirm || findInMap(firmMap, normalizedName) || "";
-
-            const resolvedDept = findInMap(departmentMap, normalizedName) || (resolvedFirm ? `${resolvedFirm} Operations` : "Operations");
-            const resolvedDesig = findInMap(designationMap, normalizedName) || "";
-            const resolvedPhone = findInMap(phoneMap, normalizedName) || "";
-
-            return {
-              id: `dept-emp-${index}`,
-              dateStart: row[0] || "",
-              dateEnd: row[1] || "",
-              name: empName,
-              designation: resolvedDesig,
-              department: resolvedDept,
-              firm: resolvedFirm,
-              incentiveCategory: resolvedIncentive,
-              phone: resolvedPhone,
-              image: finalImageUrl,
-              target: parseFloat(String(row[3]).replace(/,/g, '')) || 0,
-              actualWorkDone: parseFloat(String(row[4]).replace(/,/g, '')) || 0,
-              workNotDone: row[5] || "0%",
-              workNotDoneOnTime: row[6] || "0%",
-              totalWorkDone: parseFloat(String(row[7]).replace(/,/g, '')) || 0,
-              weekPending: parseFloat(String(row[8]).replace(/,/g, '')) || 0,
-              allPendingTillDate: parseFloat(String(row[9]).replace(/,/g, '')) || 0,
-            };
-          });
-
-          const isAdmin = user && (user.role === "admin" || user.role === "superadmin");
-          const isHod = user && user.role === "hod";
-          const lowerName = (user?.name || "").toLowerCase().trim();
-          const lowerId = (user?.id || "").toLowerCase().trim();
-
-          const finalData = isAdmin
-            ? parsedData
-            : isHod
-            ? parsedData.filter((emp) => {
-                const empLowerName = emp.name.toLowerCase().trim();
-                const empManager = reportedByMap[empLowerName] || "";
-                return empLowerName === lowerName || empManager === lowerName || empManager === lowerId;
-              })
-            : parsedData.filter((emp) => emp.name.toLowerCase().trim() === lowerName);
-
-          setEmployees(finalData);
-        } else {
-          console.error("Failed to load sheet data", result);
-          setEmployees([]);
         }
       } catch (error) {
         console.error("Error fetching department dashboard data:", error);
-        setEmployees([]);
       } finally {
         setLoading(false);
       }
@@ -385,6 +320,146 @@ const DepartmentDashboard = () => {
 
     fetchData();
   }, [user]);
+
+  // Available weeks list from both Live (For Records) and Historical (Records)
+  const availableWeeks = useMemo(() => {
+    const list = [];
+    const seen = new Set();
+
+    // 1. Live week option from For Records
+    if (rawLiveRows && rawLiveRows.length > 0) {
+      const firstRow = rawLiveRows.find((r) => r[0] && r[2]);
+      if (firstRow) {
+        const dStart = String(firstRow[0] || "").trim();
+        const dEnd = String(firstRow[1] || "").trim();
+        const label = dEnd ? `${dStart} to ${dEnd}` : dStart;
+        list.push({
+          key: "live",
+          dateStart: dStart,
+          dateEnd: dEnd,
+          label: label,
+          isLive: true,
+          sortKey: normalizeDate(dStart),
+        });
+        seen.add(normalizeDate(dStart));
+      }
+    }
+
+    // 2. Historical weeks from Records
+    if (rawHistoryRows && rawHistoryRows.length > 0) {
+      const weekMap = new Map();
+      rawHistoryRows.forEach((r) => {
+        const dStart = String(r[0] || "").trim();
+        const dEnd = String(r[1] || "").trim();
+        if (!dStart || !r[2]) return;
+        const norm = normalizeDate(dStart);
+        if (!weekMap.has(dStart)) {
+          weekMap.set(dStart, {
+            key: dStart,
+            dateStart: dStart,
+            dateEnd: dEnd,
+            label: dEnd ? `${dStart} to ${dEnd}` : dStart,
+            isLive: false,
+            sortKey: norm,
+          });
+        } else {
+          const existing = weekMap.get(dStart);
+          if (!existing.dateEnd && dEnd) {
+            existing.dateEnd = dEnd;
+            existing.label = `${dStart} to ${dEnd}`;
+          }
+        }
+      });
+
+      const sortedHistory = Array.from(weekMap.values()).sort((a, b) =>
+        b.sortKey.localeCompare(a.sortKey)
+      );
+
+      sortedHistory.forEach((item) => {
+        list.push(item);
+      });
+    }
+
+    return list;
+  }, [rawLiveRows, rawHistoryRows]);
+
+  // Compute active employees dynamically according to selected week
+  const employees = useMemo(() => {
+    let activeRows = [];
+
+    if (selectedWeekKey === "live" || (!selectedWeekKey && rawLiveRows.length > 0)) {
+      activeRows = rawLiveRows;
+    } else if (selectedWeekKey && rawHistoryRows.length > 0) {
+      const normSelected = normalizeDate(selectedWeekKey);
+      activeRows = rawHistoryRows.filter((r) => normalizeDate(r[0]) === normSelected);
+      // Fallback if no matching by normalizeDate
+      if (activeRows.length === 0) {
+        activeRows = rawHistoryRows.filter((r) => String(r[0]).trim() === String(selectedWeekKey).trim());
+      }
+    }
+
+    // Fallback if empty
+    if (!activeRows || activeRows.length === 0) {
+      activeRows = rawLiveRows.length > 0 ? rawLiveRows : rawHistoryRows;
+    }
+
+    if (!activeRows || activeRows.length === 0) return [];
+
+    const parsedData = activeRows
+      .filter((row) => row[2] && String(row[2]).trim() !== "")
+      .map((row, index) => {
+        const empName = row[2] ? String(row[2]).trim() : "Unknown";
+        const normalizedName = empName.toLowerCase();
+        const rawImageUrl = findInMap(masterMaps.imageMap, normalizedName);
+        const finalImageUrl = rawImageUrl ? getDisplayableImageUrl(rawImageUrl) : null;
+
+        // Direct columns from sheet row if present (Index 21: Incentive Category, Index 22: Firm Name)
+        const directIncentive = (row[21] && String(row[21]).trim()) || "";
+        const resolvedIncentive = directIncentive || findInMap(masterMaps.incentiveMap, normalizedName) || "MIS Basis";
+
+        const directFirm = (row[22] && String(row[22]).trim()) || "";
+        const resolvedFirm = directFirm || findInMap(masterMaps.firmMap, normalizedName) || "";
+
+        const resolvedDept = findInMap(masterMaps.departmentMap, normalizedName) || (resolvedFirm ? `${resolvedFirm} Operations` : "Operations");
+        const resolvedDesig = findInMap(masterMaps.designationMap, normalizedName) || "";
+        const resolvedPhone = findInMap(masterMaps.phoneMap, normalizedName) || "";
+
+        return {
+          id: `dept-emp-${index}`,
+          dateStart: row[0] || "",
+          dateEnd: row[1] || "",
+          name: empName,
+          designation: resolvedDesig,
+          department: resolvedDept,
+          firm: resolvedFirm,
+          incentiveCategory: resolvedIncentive,
+          phone: resolvedPhone,
+          image: finalImageUrl,
+          target: parseFloat(String(row[3]).replace(/,/g, '')) || 0,
+          actualWorkDone: parseFloat(String(row[4]).replace(/,/g, '')) || 0,
+          workNotDone: row[5] || "0%",
+          workNotDoneOnTime: row[6] || "0%",
+          totalWorkDone: parseFloat(String(row[7]).replace(/,/g, '')) || 0,
+          weekPending: parseFloat(String(row[8]).replace(/,/g, '')) || 0,
+          allPendingTillDate: parseFloat(String(row[9]).replace(/,/g, '')) || 0,
+        };
+      });
+
+    const isAdmin = user && (user.role === "admin" || user.role === "superadmin");
+    const isHod = user && user.role === "hod";
+    const lowerName = (user?.name || "").toLowerCase().trim();
+    const lowerId = (user?.id || "").toLowerCase().trim();
+
+    return isAdmin
+      ? parsedData
+      : isHod
+      ? parsedData.filter((emp) => {
+          const empLowerName = emp.name.toLowerCase().trim();
+          const empManager = masterMaps.reportedByMap[empLowerName] || "";
+          return empLowerName === lowerName || empManager === lowerName || empManager === lowerId;
+        })
+      : parsedData.filter((emp) => emp.name.toLowerCase().trim() === lowerName);
+  }, [selectedWeekKey, rawLiveRows, rawHistoryRows, masterMaps, user]);
 
   // Category counts across all employees
   const categoryCounts = useMemo(() => {
@@ -646,22 +721,28 @@ const DepartmentDashboard = () => {
     val === 0 ? "bg-green-100 text-green-800" : val <= 3 ? "bg-yellow-100 text-yellow-800" : "bg-red-100 text-red-800";
 
   const activeWeekInfo = useMemo(() => {
-    const currentDay = new Date().getDay();
-    const isReviewPeriod = currentDay === 0 || currentDay === 1;
+    const currentOption = availableWeeks.find((w) => w.key === selectedWeekKey);
+    if (currentOption) {
+      return {
+        isLive: currentOption.isLive,
+        label: currentOption.label,
+        type: currentOption.isLive ? "Live Active Week" : "Week Record",
+      };
+    }
     const firstWithDate = employees.find((e) => e.dateStart);
     if (firstWithDate && firstWithDate.dateStart) {
       return {
-        isReviewPeriod,
+        isLive: false,
         label: firstWithDate.dateEnd ? `${firstWithDate.dateStart} to ${firstWithDate.dateEnd}` : firstWithDate.dateStart,
-        type: isReviewPeriod ? "Review Period" : "Live Active Week",
+        type: "Week Record",
       };
     }
     return {
-      isReviewPeriod,
+      isLive: false,
       label: "",
-      type: isReviewPeriod ? "Review Period" : "Live Active Week",
+      type: "Week Record",
     };
-  }, [employees]);
+  }, [availableWeeks, selectedWeekKey, employees]);
 
   if (loading) {
     return (
@@ -674,7 +755,7 @@ const DepartmentDashboard = () => {
   return (
     <div className="p-3 space-y-5 md:space-y-6 md:p-4 lg:p-6">
       {/* Header */}
-      <div className="flex flex-col gap-3 justify-between items-start sm:flex-row sm:items-center">
+      <div className="flex flex-col gap-3 justify-between items-start lg:flex-row lg:items-center">
         <div>
           <h1 className="text-xl font-bold text-gray-900 md:text-2xl flex items-center gap-2">
             <Building2 className="w-6 h-6 text-indigo-600" />
@@ -682,13 +763,45 @@ const DepartmentDashboard = () => {
           </h1>
           <p className="text-sm text-gray-500 mt-0.5">Department-wise, firm-wise &amp; category-wise performance overview</p>
         </div>
-        {activeWeekInfo.label && (
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-indigo-50 border border-indigo-200 rounded-lg text-xs font-semibold text-indigo-900 shadow-2xs">
-            <Sparkles className="w-4 h-4 text-indigo-600 flex-shrink-0" />
-            <span className="text-indigo-600 font-bold uppercase tracking-wider text-[11px]">{activeWeekInfo.type}:</span>
-            <span className="text-gray-900 font-bold">{activeWeekInfo.label}</span>
-          </div>
-        )}
+
+        {/* Date Selector Dropdown */}
+        <div className="flex items-center gap-3 flex-wrap">
+          {availableWeeks.length > 0 && (
+            <div className="flex items-center gap-2.5 bg-white border border-indigo-200 hover:border-indigo-400 rounded-xl px-3.5 py-1.5 shadow-xs transition-all">
+              <Calendar className="w-4 h-4 text-indigo-600 flex-shrink-0" />
+              <div className="flex flex-col">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 leading-none">
+                  Select Week / Date
+                </span>
+                <select
+                  value={selectedWeekKey}
+                  onChange={(e) => setSelectedWeekKey(e.target.value)}
+                  className="text-xs sm:text-sm font-semibold text-gray-800 bg-transparent border-none outline-none cursor-pointer focus:ring-0 pr-4 py-0.5"
+                >
+                  {availableWeeks.map((w) => (
+                    <option key={w.key} value={w.key}>
+                      {w.isLive ? `🔴 ${w.label} (Live)` : `📅 ${w.label}`}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
+
+          {activeWeekInfo.label && (
+            <div
+              className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold border ${
+                activeWeekInfo.isLive
+                  ? "bg-rose-50 border-rose-200 text-rose-800"
+                  : "bg-indigo-50 border-indigo-200 text-indigo-900"
+              } shadow-2xs`}
+            >
+              <span className={`w-2 h-2 rounded-full ${activeWeekInfo.isLive ? "bg-rose-500 animate-pulse" : "bg-indigo-600"}`} />
+              <span className="font-bold uppercase tracking-wider text-[11px]">{activeWeekInfo.type}:</span>
+              <span className="font-bold">{activeWeekInfo.label}</span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Category Tabs */}
@@ -705,6 +818,14 @@ const DepartmentDashboard = () => {
         <StatsCard title="Overall Completion" value={`${overallStats.completionPct}%`} icon={TrendingUp} color="green" />
         <StatsCard title="Total Pending" value={overallStats.totalPending} icon={Clock} color="amber" />
       </div>
+
+      {/* Overall Top Performers Leaderboard Report */}
+      <OverallTopPerformersReport
+        employees={employeesWithStats.length > 0 ? employeesWithStats : allEmployeesWithStats}
+        selectedWeekLabel={activeWeekInfo.label}
+        isLiveWeek={activeWeekInfo.isLive}
+        onSelectStaff={(staff) => setSelectedStaff(staff)}
+      />
 
       {/* 1. Firm-wise Boxes Section */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 md:p-5">
@@ -1030,7 +1151,19 @@ const DepartmentDashboard = () => {
           )}
         </div>
 
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7">
+          <select
+            value={selectedWeekKey}
+            onChange={(e) => setSelectedWeekKey(e.target.value)}
+            className="px-3 py-2 text-sm border-2 border-indigo-200 bg-indigo-50/50 text-indigo-900 font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+            {availableWeeks.map((w) => (
+              <option key={w.key} value={w.key}>
+                {w.isLive ? `🔴 ${w.label} (Live)` : `📅 ${w.label}`}
+              </option>
+            ))}
+          </select>
+
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
