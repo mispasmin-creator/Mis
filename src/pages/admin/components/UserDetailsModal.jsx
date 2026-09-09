@@ -523,16 +523,16 @@ const UserDetailsModal = ({
                                         <table className="min-w-full divide-y divide-gray-200 border-separate border-spacing-0">
                                             <thead className="bg-gray-100 sticky top-0 z-20 shadow-xs">
                                                 <tr>
-                                                    <th className="sticky top-0 bg-gray-100 z-20 px-3 py-2.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">FMS Name</th>
-                                                    <th className="sticky top-0 bg-gray-100 z-20 px-3 py-2.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">Task Name</th>
-                                                    <th className="sticky top-0 bg-gray-100 z-20 px-3 py-2.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">Department</th>
-                                                    <th className="sticky top-0 bg-gray-100 z-20 px-3 py-2.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">Target</th>
-                                                    <th className="sticky top-0 bg-gray-100 z-20 px-3 py-2.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">Actual Achievement</th>
-                                                    <th className="sticky top-0 bg-gray-100 z-20 px-3 py-2.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">Extra Done</th>
-                                                    <th className="sticky top-0 bg-gray-100 z-20 px-3 py-2.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">Total Achievement</th>
-                                                    <th className="sticky top-0 bg-gray-100 z-20 px-3 py-2.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">% Work Not Done</th>
-                                                    <th className="sticky top-0 bg-gray-100 z-20 px-3 py-2.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">% Work Not Done on Time</th>
-                                                    <th className="sticky top-0 bg-gray-100 z-20 px-3 py-2.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">All Pending Till Date</th>
+                                                    <th className="sticky top-0 bg-gray-100 z-20 px-3 py-2.5 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">FMS Name</th>
+                                                    <th className="sticky top-0 bg-gray-100 z-20 px-3 py-2.5 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">Task Name</th>
+                                                    <th className="sticky top-0 bg-gray-100 z-20 px-3 py-2.5 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">Department</th>
+                                                    <th className="sticky top-0 bg-gray-100 z-20 px-3 py-2.5 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">Target</th>
+                                                    <th className="sticky top-0 bg-gray-100 z-20 px-3 py-2.5 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">Actual Achievement</th>
+                                                    <th className="sticky top-0 bg-gray-100 z-20 px-3 py-2.5 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">Extra Done</th>
+                                                    <th className="sticky top-0 bg-gray-100 z-20 px-3 py-2.5 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">Total Achievement</th>
+                                                    <th className="sticky top-0 bg-gray-100 z-20 px-3 py-2.5 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">% Work Not Done</th>
+                                                    <th className="sticky top-0 bg-gray-100 z-20 px-3 py-2.5 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">% Work Not Done on Time</th>
+                                                    <th className="sticky top-0 bg-gray-100 z-20 px-3 py-2.5 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">All Pending Till Date</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="bg-white divide-y divide-gray-200">
@@ -543,20 +543,20 @@ const UserDetailsModal = ({
                                                             onClick={(e) => handleDrillDown(task, "Total Achievement", task.totalAchievement, e)}
                                                             className="hover:bg-indigo-50 cursor-pointer transition-colors"
                                                         >
-                                                            <td className="px-3 py-2 text-xs text-gray-900 border-b border-gray-100">{task.fmsName}</td>
-                                                            <td className="px-3 py-2 text-xs text-gray-900 border-b border-gray-100">{task.taskName}</td>
-                                                            <td className="px-3 py-2 text-xs text-gray-900 border-b border-gray-100">{task.department}</td>
-                                                            <td className="px-3 py-2 text-xs text-gray-900 font-medium border-b border-gray-100">{task.target}</td>
-                                                            <td className="px-3 py-2 text-xs text-gray-900 font-medium border-b border-gray-100">{task.actualAchievement}</td>
-                                                            <td className="px-3 py-2 text-xs text-gray-900 font-medium border-b border-gray-100">{task.extraDone}</td>
-                                                            <td className="px-3 py-2 text-xs font-medium border-b border-gray-100">
+                                                            <td className="px-3 py-2 text-xs text-gray-900 border-b border-gray-100 text-center">{task.fmsName}</td>
+                                                            <td className="px-3 py-2 text-xs text-gray-900 border-b border-gray-100 text-center">{task.taskName}</td>
+                                                            <td className="px-3 py-2 text-xs text-gray-900 border-b border-gray-100 text-center">{task.department}</td>
+                                                            <td className="px-3 py-2 text-xs text-gray-900 font-medium border-b border-gray-100 text-center">{task.target}</td>
+                                                            <td className="px-3 py-2 text-xs text-gray-900 font-medium border-b border-gray-100 text-center">{task.actualAchievement}</td>
+                                                            <td className="px-3 py-2 text-xs text-gray-900 font-medium border-b border-gray-100 text-center">{task.extraDone}</td>
+                                                            <td className="px-3 py-2 text-xs font-medium border-b border-gray-100 text-center">
                                                                 <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${parseFloat(task.totalAchievement) < parseFloat(task.target) ? "bg-red-100 text-red-800" : parseFloat(task.totalAchievement) === parseFloat(task.target) ? "bg-green-100 text-green-800" : "bg-indigo-100 text-indigo-800"}`}>
                                                                     {task.totalAchievement}
                                                                 </span>
                                                             </td>
-                                                            <td className="px-3 py-2 text-xs text-gray-900 border-b border-gray-100">{formatDecimal(task.workNotDone)}</td>
-                                                            <td className="px-3 py-2 text-xs text-gray-900 border-b border-gray-100">{formatDecimal(task.workNotDoneOnTime)}</td>
-                                                            <td className="px-3 py-2 text-xs text-gray-900 border-b border-gray-100">{task.allPendingTillDate}</td>
+                                                            <td className="px-3 py-2 text-xs text-gray-900 border-b border-gray-100 text-center">{formatDecimal(task.workNotDone)}</td>
+                                                            <td className="px-3 py-2 text-xs text-gray-900 border-b border-gray-100 text-center">{formatDecimal(task.workNotDoneOnTime)}</td>
+                                                            <td className="px-3 py-2 text-xs text-gray-900 border-b border-gray-100 text-center">{task.allPendingTillDate}</td>
                                                         </tr>
                                                     ))
                                                 ) : (

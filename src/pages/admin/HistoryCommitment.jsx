@@ -243,35 +243,64 @@ const AdminHistoryCommitment = () => {
         const normRecordDateEnd = normalizeDate(record.dateEnd);
 
         // Header in Task Wise Record
+        const headerKeywords = ["task name", "target", "date start", "fms name", "system type", "total achievement", "actual achievement", "person name", "department"];
         const headerRowIdx = taskWiseData.findIndex(row => 
-            row.some(c => String(c).toLowerCase().includes("date start") || String(c).toLowerCase().includes("system type") || String(c).toLowerCase().includes("fms name"))
+            Array.isArray(row) && row.some(cell => {
+                const str = String(cell || "").toLowerCase().trim();
+                return headerKeywords.some(hk => str === hk || str.includes(hk));
+            })
         );
         const headerRow = headerRowIdx >= 0 ? taskWiseData[headerRowIdx] : (taskWiseData[0] || []);
         const rowsToProcess = headerRowIdx >= 0 ? taskWiseData.slice(headerRowIdx + 1) : taskWiseData.slice(1);
 
-        const findColIdx = (keywords, defaultIdx) => {
-            if (!headerRow || headerRow.length === 0) return defaultIdx;
-            const idx = headerRow.findIndex(cell => {
-                const str = String(cell || "").toLowerCase().trim();
-                return keywords.some(k => str === k || str.includes(k));
-            });
-            return idx >= 0 ? idx : defaultIdx;
+        const cleanHeader = (headerRow || []).map(cell => String(cell || "").trim().toLowerCase());
+
+        // Find column index matching exact alias names first, then normalized, then substring
+        const findColIdx = (aliases, defaultIdx) => {
+            if (!cleanHeader || cleanHeader.length === 0) return defaultIdx;
+
+            // 1. Exact match first
+            for (const alias of aliases) {
+                const a = alias.toLowerCase().trim();
+                const idx = cleanHeader.findIndex(h => h === a);
+                if (idx !== -1) return idx;
+            }
+
+            // 2. Normalized match (strip %, hyphens, underscores and extra spaces)
+            for (const alias of aliases) {
+                const a = alias.toLowerCase().replace(/[%_\-\s]/g, "");
+                const idx = cleanHeader.findIndex(h => h.replace(/[%_\-\s]/g, "") === a);
+                if (idx !== -1) return idx;
+            }
+
+            // 3. Substring match
+            for (const alias of aliases) {
+                const a = alias.toLowerCase().trim();
+                const idx = cleanHeader.findIndex(h => h.includes(a));
+                if (idx !== -1) return idx;
+            }
+
+            return defaultIdx;
         };
 
-        const colDateStart = findColIdx(["date start", "start date"], 0);
-        const colDateEnd = findColIdx(["date end", "end date"], 1);
-        const colName = findColIdx(["person name", "employee name", "name"], 2);
-        const colFmsName = findColIdx(["fms name", "fms"], 3);
-        const colSystemType = findColIdx(["system type", "type"], 4);
-        const colDept = findColIdx(["department", "dept"], 5);
-        const colTaskName = findColIdx(["task name", "task", "particulars", "task description"], 6);
-        const colTarget = findColIdx(["target", "tgt"], 7);
-        const colActualAch = findColIdx(["actual achievement", "actual done", "actual work done", "actual"], 8);
-        const colExtraDone = findColIdx(["extra done", "extra work done", "extra"], 9);
-        const colTotalAch = findColIdx(["total achievement", "total done", "total work done", "total"], 10);
-        const colWorkNotDone = findColIdx(["work not done", "% work not done", "not done"], 11);
-        const colWorkNotDoneOnTime = findColIdx(["work not done on time", "% work not done on time", "not done on time"], 12);
-        const colAllPending = findColIdx(["all pending", "pending till date", "all pending till date", "pending"], 13);
+        const colDateStart = findColIdx(["date start", "start date", "from date", "date"], 0); // Col A
+        const colDateEnd = findColIdx(["date end", "end date", "to date"], 1); // Col B
+        const colName = findColIdx(["person name", "employee name", "emp name", "staff name", "name", "staff"], 2); // Col C
+        const colFmsName = findColIdx(["fms name", "fms"], 3); // Col D
+        const colSystemType = findColIdx(["system type", "type"], 4); // Col E
+        const colDept = findColIdx(["department", "dept"], 5); // Col F
+        const colTaskName = findColIdx(["task name", "particulars", "task description", "task"], 6); // Col G
+        const colTarget = findColIdx(["target", "tgt"], 7); // Col H
+        const colTotalAch = findColIdx(["total achievement", "total work done", "total done", "total ach", "total"], 8); // Col I
+        const colWorkNotDone = findColIdx(["% work done", "% work not done", "work done %", "work not done %", "work not done", "work done", "% work"], 9); // Col J
+        const colWorkNotDoneOnTime = findColIdx(["work done on time %", "% work done on time", "work not done on time %", "% work not done on time", "work done on time", "work not done on time", "on time %", "on-time %"], 10); // Col K
+        const colAllPending = findColIdx(["all pending till date", "all pending", "pending till date", "pending"], 11); // Col L
+        const colTodayTask = findColIdx(["today task", "today"], 12); // Col M
+        const colAllWorkShouldBeDoneOnTime = findColIdx(["all work should be done on time", "work should be done on time", "should be done on time"], 13); // Col N
+        const colExtraDone = findColIdx(["extra done", "extra work done", "extra"], 14); // Col O
+        const colActualAch = findColIdx(["actual achievement", "actual work done", "actual done", "actual ach"], 15); // Col P
+        const colWeekPending = findColIdx(["week pending task", "week pending", "pending task"], 16); // Col Q
+        const colActualOnTime = findColIdx(["actual on time", "actual on-time"], 17); // Col R
 
         // Strict Filter: Match Name (Col C), Date Start (Col A), and Date End (Col B)
         const exactDateMatches = rowsToProcess.filter(row => {
@@ -294,13 +323,17 @@ const AdminHistoryCommitment = () => {
             systemType: row[colSystemType] || "",
             department: row[colDept] || "",
             taskName: row[colTaskName] || row[colSystemType] || "",
-            target: row[colTarget] || 0,
-            actualAchievement: row[colActualAch] || 0,
-            extraDone: row[colExtraDone] || 0,
-            totalAchievement: row[colTotalAch] || 0,
-            workNotDone: row[colWorkNotDone] || 0,
-            workNotDoneOnTime: row[colWorkNotDoneOnTime] || 0,
-            allPendingTillDate: row[colAllPending] || 0,
+            target: row[colTarget] ?? 0,
+            actualAchievement: row[colActualAch] ?? 0,
+            extraDone: row[colExtraDone] ?? 0,
+            totalAchievement: row[colTotalAch] ?? 0,
+            workNotDone: row[colWorkNotDone] ?? 0,
+            workNotDoneOnTime: row[colWorkNotDoneOnTime] ?? 0,
+            allPendingTillDate: row[colAllPending] ?? 0,
+            todayTask: row[colTodayTask] ?? 0,
+            allWorkShouldBeDoneOnTime: row[colAllWorkShouldBeDoneOnTime] ?? 0,
+            weekPendingTask: row[colWeekPending] ?? 0,
+            actualOnTime: row[colActualOnTime] ?? 0,
         }));
 
         const rawImg = imageMap[recordName];
