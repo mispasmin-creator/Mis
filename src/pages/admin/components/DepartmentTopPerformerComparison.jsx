@@ -205,7 +205,7 @@ const DepartmentTopPerformerComparison = ({
         if (match && r.name) {
           const normName = r.name.toLowerCase().trim();
           const dept =
-            r.department ||
+            (r.department && String(r.department).trim()) ||
             departmentMap[normName] ||
             "General";
 
@@ -251,7 +251,7 @@ const DepartmentTopPerformerComparison = ({
         }
         return (b.completionPct || 0) - (a.completionPct || 0);
       });
-      if (sorted.length > 0) {
+      if (sorted.length > 0 && sorted[0].actualWorkDone > 0) {
         winners[dept] = {
           winner: sorted[0],
           totalStaff: list.length,

@@ -413,14 +413,18 @@ const DepartmentDashboard = () => {
         const rawImageUrl = findInMap(masterMaps.imageMap, normalizedName);
         const finalImageUrl = rawImageUrl ? getDisplayableImageUrl(rawImageUrl) : null;
 
-        // Direct columns from sheet row if present (Index 21: Incentive Category, Index 22: Firm Name)
-        const directIncentive = (row[21] && String(row[21]).trim()) || "";
-        const resolvedIncentive = directIncentive || findInMap(masterMaps.incentiveMap, normalizedName) || "MIS Basis";
+        // Direct columns from sheet row:
+        // Column 10 (Index 10): MIS Category / Incentive Category
+        // Column 11 (Index 11): Department
+        // Index 21 / 22: fallback if alternate sheet layout
+        const sheetIncentive = (row[10] && String(row[10]).trim()) || (row[21] && String(row[21]).trim()) || "";
+        const resolvedIncentive = sheetIncentive || findInMap(masterMaps.incentiveMap, normalizedName) || "";
 
         const directFirm = (row[22] && String(row[22]).trim()) || "";
         const resolvedFirm = directFirm || findInMap(masterMaps.firmMap, normalizedName) || "";
 
-        const resolvedDept = findInMap(masterMaps.departmentMap, normalizedName) || (resolvedFirm ? `${resolvedFirm} Operations` : "Operations");
+        const sheetDept = (row[11] && String(row[11]).trim()) || "";
+        const resolvedDept = sheetDept || findInMap(masterMaps.departmentMap, normalizedName) || "";
         const resolvedDesig = findInMap(masterMaps.designationMap, normalizedName) || "";
         const resolvedPhone = findInMap(masterMaps.phoneMap, normalizedName) || "";
 
@@ -469,6 +473,7 @@ const DepartmentDashboard = () => {
       [CATEGORY_KEYS.OTHER]: 0,
     };
     employees.forEach((emp) => {
+      if (!emp.incentiveCategory) return;
       const cat = categorizeByBasis(emp.incentiveCategory);
       if (counts[cat] !== undefined) {
         counts[cat]++;
@@ -482,6 +487,7 @@ const DepartmentDashboard = () => {
   // Filter employees by the selected Category tab
   const categoryFilteredEmployees = useMemo(() => {
     return employees.filter((emp) => {
+      if (!emp.incentiveCategory) return false;
       const cat = categorizeByBasis(emp.incentiveCategory);
       return cat === selectedCategory;
     });
@@ -489,11 +495,13 @@ const DepartmentDashboard = () => {
 
   const allEmployeesWithStats = useMemo(
     () =>
-      employees.map((emp) => {
-        const completionPct =
-          emp.target > 0 ? Math.round((emp.actualWorkDone / emp.target) * 100) : emp.actualWorkDone > 0 ? 100 : 0;
-        return { ...emp, completionPct };
-      }),
+      employees
+        .filter((emp) => emp.incentiveCategory)
+        .map((emp) => {
+          const completionPct =
+            emp.target > 0 ? Math.round((emp.actualWorkDone / emp.target) * 100) : emp.actualWorkDone > 0 ? 100 : 0;
+          return { ...emp, completionPct };
+        }),
     [employees]
   );
 

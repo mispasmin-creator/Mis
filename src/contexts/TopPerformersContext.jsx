@@ -155,7 +155,7 @@ export const TopPerformersProvider = ({ children }) => {
           return {
             id: `emp-${index}`,
             name: empName,
-            department: departmentMap[normalized] || 'General',
+            department: (row[11] && String(row[11]).trim()) || departmentMap[normalized] || 'General',
             designation: designationMap[normalized] || '',
             image: finalImg,
             actualWorkDone: actualDone,
@@ -181,7 +181,7 @@ export const TopPerformersProvider = ({ children }) => {
             }
             return (b.totalWorkDone || 0) - (a.totalWorkDone || 0);
           });
-          if (sorted.length > 0) {
+          if (sorted.length > 0 && sorted[0].actualWorkDone > 0) {
             winners.push(sorted[0]);
           }
         });

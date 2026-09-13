@@ -81,11 +81,11 @@ const OverallTopPerformersReport = ({
           : emp.actualWorkDone > 0
           ? 100
           : 0;
-      return {
-        ...emp,
-        completionPct,
-      };
-    });
+        return {
+          ...emp,
+          completionPct,
+        };
+      });
 
     return uniqueList.sort((a, b) => {
       // 1. Actual work done (highest first)
