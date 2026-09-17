@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { getDisplayableImageUrl } from '../utils/imageUtils';
+import { fetchMultipleSheets } from '../services/sheetService';
 
 const TopPerformersContext = createContext({
   topPerformers: [],
@@ -57,24 +58,23 @@ export const TopPerformersProvider = ({ children }) => {
   const [topPerformers, setTopPerformers] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchPerformers = async () => {
+  const fetchPerformers = async (forceRefresh = false) => {
     try {
       setLoading(true);
-      const scriptUrl = import.meta.env.VITE_APPS_SCRIPT_URL;
-      if (!scriptUrl) {
-        setLoading(false);
-        return;
+
+      const currentDay = new Date().getDay();
+      const isReviewPeriod = currentDay === 0 || currentDay === 1;
+
+      // Only request 'Records' during review period (Sunday & Monday)
+      const sheetNames = ['Master', 'For Records'];
+      if (isReviewPeriod) {
+        sheetNames.push('Records');
       }
 
-      const [recordsRes, masterRes, forRecordsRes] = await Promise.all([
-        fetch(`${scriptUrl}?sheet=Records`),
-        fetch(`${scriptUrl}?sheet=Master`),
-        fetch(`${scriptUrl}?sheet=For Records`)
-      ]);
-
-      const recordsResult = await recordsRes.json();
-      const masterResult = await masterRes.json();
-      const forRecordsResult = await forRecordsRes.json();
+      const sheets = await fetchMultipleSheets(sheetNames, { forceRefresh });
+      const masterResult = sheets['Master'] || { success: false, data: [] };
+      const forRecordsResult = sheets['For Records'] || { success: false, data: [] };
+      const recordsResult = sheets['Records'] || { success: false, data: [] };
 
       // Master maps
       const imageMap = {};
@@ -98,9 +98,6 @@ export const TopPerformersProvider = ({ children }) => {
       // Weekly schedule logic:
       // 0 = Sunday, 1 = Monday -> Review meeting period: Show completed review week from Records (e.g. 30-Aug to 05-Sep)
       // 2 = Tuesday, 3 = Wednesday, ..., 6 = Saturday -> Ongoing active week: Show live work in progress from For Records (e.g. 6-Sep to 12-Sep)
-      const currentDay = new Date().getDay();
-      const isReviewPeriod = currentDay === 0 || currentDay === 1;
-
       let dataRows = [];
 
       if (isReviewPeriod) {

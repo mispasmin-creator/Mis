@@ -16,6 +16,7 @@ import DepartmentWorkloadChart from "../../components/charts/DepartmentWorkloadC
 import { useAuth } from "../../contexts/AuthContext";
 import CategoryTabs from "../../components/CategoryTabs";
 import { categorizeByBasis, CATEGORY_KEYS } from "../../utils/categorize";
+import { fetchMultipleSheets, clearSheetCache } from "../../services/sheetService";
 
 const getCurrentWeek = () => {
   const today = new Date();
@@ -226,267 +227,231 @@ const AdminDashboard = () => {
     handleEmployeeSelect(employeeId);
   };
 
-  // Fetch Data from Google Sheet
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const scriptUrl = import.meta.env.VITE_APPS_SCRIPT_URL;
-        if (!scriptUrl) {
-          console.error("VITE_APPS_SCRIPT_URL not set");
-          setSheetEmployees([]);
-          setLoading(false);
-          return;
-        }
+  const [fetchError, setFetchError] = useState(null);
 
-        // Fetch sheets
-        const [recordsResponse, archivedResponse, masterResponse, dataResponse, deptScoreResponse] = await Promise.all([
-          fetch(`${scriptUrl}?sheet=For Records`),
-          fetch(`${scriptUrl}?sheet=Archived`),
-          fetch(`${scriptUrl}?sheet=Master`),
-          fetch(`${scriptUrl}?sheet=Data`),
-          fetch(`${scriptUrl}?sheet=Department Score Graph`)
-        ]);
+  // Fetch Data from Google Sheet using centralized service
+  const fetchData = useCallback(async (forceRefresh = false) => {
+    try {
+      setLoading(true);
+      setFetchError(null);
 
-        const result = await recordsResponse.json();
-        const archivedResult = await archivedResponse.json();
-        const masterResult = await masterResponse.json();
-        const dataResult = await dataResponse.json();
-        const deptScoreResult = await deptScoreResponse.json();
+      // Fetch sheets using deduplicated, cached service (excluding non-existent 'Archived')
+      const sheetsData = await fetchMultipleSheets(
+        ['For Records', 'Master', 'Data', 'Department Score Graph'],
+        { forceRefresh }
+      );
 
-        // Store Data sheet rows (skip header row)
-        const incentiveMap = {};
-        const firmMap = {};
+      const result = sheetsData['For Records'] || { success: false, data: [] };
+      const masterResult = sheetsData['Master'] || { success: false, data: [] };
+      const dataResult = sheetsData['Data'] || { success: false, data: [] };
+      const deptScoreResult = sheetsData['Department Score Graph'] || { success: false, data: [] };
 
-        if (dataResult.success && Array.isArray(dataResult.data)) {
-          setDataSheetRows(dataResult.data.slice(1));
-          const headerRow = dataResult.data[0] || [];
+      // Store Data sheet rows (skip header row)
+      const incentiveMap = {};
+      const firmMap = {};
 
-          // Column V (index 21) or header search for Incentive Category
-          let incentiveColIdx = headerRow.findIndex(h => h && String(h).trim().toLowerCase() === "incentive category");
-          if (incentiveColIdx === -1) incentiveColIdx = 21;
+      if (dataResult.success && Array.isArray(dataResult.data)) {
+        setDataSheetRows(dataResult.data.slice(1));
+        const headerRow = dataResult.data[0] || [];
 
-          // Column W (index 22) or header search for Firm Name
-          let firmColIdx = headerRow.findIndex(h => h && String(h).trim().toLowerCase() === "firm name");
-          if (firmColIdx === -1) firmColIdx = 22;
+        // Column V (index 21) or header search for Incentive Category
+        let incentiveColIdx = headerRow.findIndex(h => h && String(h).trim().toLowerCase() === "incentive category");
+        if (incentiveColIdx === -1) incentiveColIdx = 21;
 
-          // Header row date range columns
-          const globalFromDate = headerRow[23] ? String(headerRow[23]).trim() : (headerRow[22] ? String(headerRow[22]).trim() : "");
-          const globalToDate = headerRow[24] ? String(headerRow[24]).trim() : (headerRow[23] ? String(headerRow[23]).trim() : "");
-          setDataSheetDateRange({ fromDate: globalFromDate, toDate: globalToDate });
-          console.log("[Data Sheet] Global Date Range from header →", globalFromDate, "To:", globalToDate);
-          
-          // Live dynamic date range (Week Start Sunday to Today)
-          setReportDateRange(getLiveReportDateRange());
+        // Column W (index 22) or header search for Firm Name
+        let firmColIdx = headerRow.findIndex(h => h && String(h).trim().toLowerCase() === "firm name");
+        if (firmColIdx === -1) firmColIdx = 22;
 
-          // Populate incentiveMap and firmMap from Data sheet rows (Person Name is at Column index 4)
-          dataResult.data.slice(1).forEach(row => {
-            const pName = row[4] ? String(row[4]).trim().toLowerCase() : "";
-            const cat = row[incentiveColIdx] ? String(row[incentiveColIdx]).trim() : "";
-            const firm = row[firmColIdx] ? String(row[firmColIdx]).trim() : "";
-            if (pName && cat && !incentiveMap[pName]) {
-              incentiveMap[pName] = cat;
+        // Header row date range columns
+        const globalFromDate = headerRow[23] ? String(headerRow[23]).trim() : (headerRow[22] ? String(headerRow[22]).trim() : "");
+        const globalToDate = headerRow[24] ? String(headerRow[24]).trim() : (headerRow[23] ? String(headerRow[23]).trim() : "");
+        setDataSheetDateRange({ fromDate: globalFromDate, toDate: globalToDate });
+        console.log("[Data Sheet] Global Date Range from header →", globalFromDate, "To:", globalToDate);
+        
+        // Live dynamic date range (Week Start Sunday to Today)
+        setReportDateRange(getLiveReportDateRange());
+
+        // Populate incentiveMap and firmMap from Data sheet rows (Person Name is at Column index 4)
+        dataResult.data.slice(1).forEach(row => {
+          const pName = row[4] ? String(row[4]).trim().toLowerCase() : "";
+          const cat = row[incentiveColIdx] ? String(row[incentiveColIdx]).trim() : "";
+          const firm = row[firmColIdx] ? String(row[firmColIdx]).trim() : "";
+          if (pName && cat && !incentiveMap[pName]) {
+            incentiveMap[pName] = cat;
+          }
+          if (pName && firm && !firmMap[pName]) {
+            firmMap[pName] = firm;
+          }
+        });
+      }
+
+      // Store Department Scores
+      if (deptScoreResult.success && Array.isArray(deptScoreResult.data)) {
+        // Column A: Name (index 0), B: Work Not Done % (index 1), C: Not Done On Time % (index 2), D: Pending (index 3)
+        const parsedDeptScores = deptScoreResult.data.slice(1)
+          .filter(row => row[0]) // Filter out empty names
+          .map(row => ({
+            name: row[0],
+            workNotDonePct: parseFloat(row[1]) || 0,
+            notDoneOnTimePct: parseFloat(row[2]) || 0,
+            pendingWorks: parseInt(row[3]) || 0
+          }));
+        setDepartmentScores(parsedDeptScores);
+      }
+
+      // Build image and designation maps from Master sheet (Column A: Name, Column C: Department, Column D: Designation, Column E: Image, Column J: Reported By)
+      const imageMap = {};
+      const designationMap = {};
+      const departmentMap = {};
+      const phoneMap = {};
+      const repByMap = {};
+      if (masterResult.success && Array.isArray(masterResult.data)) {
+        const masterHeader = masterResult.data[0] || [];
+        let masterIncentiveIdx = masterHeader.findIndex(h => h && String(h).trim().toLowerCase() === "incentive category");
+        if (masterIncentiveIdx === -1) masterIncentiveIdx = 10;
+        let masterFirmIdx = masterHeader.findIndex(h => h && String(h).trim().toLowerCase() === "firm name");
+        if (masterFirmIdx === -1) masterFirmIdx = 8;
+
+        masterResult.data.slice(1).forEach(row => {
+          const name = row[0] ? String(row[0]).trim().toLowerCase() : "";
+          const department = row[2] ? String(row[2]).trim() : "";
+          const designation = row[3] ? String(row[3]).trim() : "";
+          const imageUrl = row[4];
+          const phone = row[1] ? String(row[1]).trim() : ""; // Column B (index 1)
+          const reportedBy = row[9] ? String(row[9]).trim().toLowerCase() : "";
+          const firmName = row[masterFirmIdx] ? String(row[masterFirmIdx]).trim() : "";
+          const masterIncentive = row[masterIncentiveIdx] ? String(row[masterIncentiveIdx]).trim() : "";
+
+          if (name) {
+            if (imageUrl) imageMap[name] = imageUrl;
+            if (designation) designationMap[name] = designation;
+            if (department) departmentMap[name] = department;
+            if (phone) phoneMap[name] = phone;
+            if (reportedBy) repByMap[name] = reportedBy;
+            if (firmName && !firmMap[name]) firmMap[name] = firmName;
+            if (masterIncentive && !incentiveMap[name]) {
+              incentiveMap[name] = masterIncentive;
             }
-            if (pName && firm && !firmMap[pName]) {
-              firmMap[pName] = firm;
-            }
-          });
-        }
+          }
+        });
+      }
 
-        // Store Department Scores
-        if (deptScoreResult.success && Array.isArray(deptScoreResult.data)) {
-          // Column A: Name (index 0), B: Work Not Done % (index 1), C: Not Done On Time % (index 2), D: Pending (index 3)
-          const parsedDeptScores = deptScoreResult.data.slice(1)
-            .filter(row => row[0]) // Filter out empty names
-            .map(row => ({
-              name: row[0],
-              workNotDonePct: parseFloat(row[1]) || 0,
-              notDoneOnTimePct: parseFloat(row[2]) || 0,
-              pendingWorks: parseInt(row[3]) || 0
-            }));
-          setDepartmentScores(parsedDeptScores);
-        }
+      setArchivedMap({});
 
-        // Build image and designation maps from Master sheet (Column A: Name, Column C: Department, Column D: Designation, Column E: Image, Column J: Reported By)
-        const imageMap = {};
-        const designationMap = {};
-        const departmentMap = {};
-        const phoneMap = {};
-        const reportedByMap = {};
-        if (masterResult.success && Array.isArray(masterResult.data)) {
-          const masterHeader = masterResult.data[0] || [];
-          let masterIncentiveIdx = masterHeader.findIndex(h => h && String(h).trim().toLowerCase() === "incentive category");
-          if (masterIncentiveIdx === -1) masterIncentiveIdx = 10;
-          let masterFirmIdx = masterHeader.findIndex(h => h && String(h).trim().toLowerCase() === "firm name");
-          if (masterFirmIdx === -1) masterFirmIdx = 8;
+      if (result.success && Array.isArray(result.data)) {
+        const headers = result.data[0];
 
-          masterResult.data.slice(1).forEach(row => {
-            const name = row[0] ? String(row[0]).trim().toLowerCase() : "";
-            const department = row[2] ? String(row[2]).trim() : "";
-            const designation = row[3] ? String(row[3]).trim() : "";
-            const imageUrl = row[4];
-            const phone = row[1] ? String(row[1]).trim() : ""; // Column B (index 1)
-            const reportedBy = row[9] ? String(row[9]).trim().toLowerCase() : "";
-            const firmName = row[masterFirmIdx] ? String(row[masterFirmIdx]).trim() : "";
-            const masterIncentive = row[masterIncentiveIdx] ? String(row[masterIncentiveIdx]).trim() : "";
+        // Live dynamic date range (Week Start Sunday to Today)
+        setReportDateRange(getLiveReportDateRange());
 
-            if (name) {
-              if (imageUrl) imageMap[name] = imageUrl;
-              if (designation) designationMap[name] = designation;
-              if (department) departmentMap[name] = department;
-              if (phone) phoneMap[name] = phone;
-              if (reportedBy) reportedByMap[name] = reportedBy;
-              if (firmName && !firmMap[name]) firmMap[name] = firmName;
-              if (masterIncentive && !incentiveMap[name]) {
-                incentiveMap[name] = masterIncentive;
-              }
-            }
-          });
-        }
-
-        // Update Dynamic Headers from Archived Sheet
-        if (archivedResult.success && archivedResult.data && archivedResult.data[0]) {
-          const arcHeaders = archivedResult.data[0];
+        if (headers) {
           setColumnLabels(prev => ({
             ...prev,
-            nextWeekPlannedNotDone: arcHeaders[3] || prev.nextWeekPlannedNotDone || "Next Week Planned Work Not Done",
-            nextWeekPlannedNotDoneOnTime: arcHeaders[4] || prev.nextWeekPlannedNotDoneOnTime || "Next Week Planned Work Not Done On Time",
-            nextWeekCommitment: arcHeaders[5] || prev.nextWeekCommitment || "Next Week Commitment"
+            name: headers[2] || prev.name,
+            designation: headers[3] || prev.designation,
+            target: headers[3] || prev.target,
+            actualWork: headers[4] || prev.actualWork,
+            weeklyDone: "% Weekly Not Done",
+            weeklyOnTime: "Weekly On Time Not Done %",
+            totalWork: headers[7] || prev.totalWork,
+            weekPending: headers[8] || prev.weekPending,
+            allPending: headers[9] || prev.allPending
           }));
         }
 
-        // Build archived map by NAME (latest entry wins)
-        const newArchivedMap = {};
-        const currentWeek = getCurrentWeek();
+        const parsedData = result.data.slice(2)
+          .filter(row => row[2] && String(row[2]).trim() !== "")
+          .map((row, index) => {
+            const randomId = `emp-${100 + index}`;
+            const empName = row[2] || "Unknown";
+            const normalizedName = String(empName).trim().toLowerCase();
 
-        if (archivedResult.data && Array.isArray(archivedResult.data)) {
-          archivedResult.data.slice(1).forEach((row, idx) => {
-            const name = row[0];
-            const rowStart = row[1];
-            const rowEnd = row[2];
+            const rawImageUrl = imageMap[normalizedName];
+            let finalImageUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(empName)}&background=0D8ABC&color=fff&size=128`;
 
-            if (!name) return;
-
-            const normalizeDate = (d) => {
-              if (!d) return "";
-              const dateObj = new Date(d);
-              if (isNaN(dateObj)) return d;
-              return dateObj.toISOString().split("T")[0];
-            };
-
-            const normRowStart = normalizeDate(rowStart);
-
-            if (normRowStart < currentWeek.start || normRowStart > currentWeek.end) {
-              return;
+            if (rawImageUrl) {
+              const processedUrl = getDisplayableImageUrl(rawImageUrl);
+              if (processedUrl) finalImageUrl = processedUrl;
             }
 
-            newArchivedMap[name] = {
-              rowIndex: idx + 2,
-              start: normRowStart,
-              end: normalizeDate(rowEnd),
-              values: {
-                nextWeekPlannedNotDone: row[3]?.toString() || "",
-                nextWeekPlannedNotDoneOnTime: row[4]?.toString() || "",
-                nextWeekCommitment: row[5]?.toString() || ""
-              }
+            return {
+              id: randomId,
+              name: empName,
+              startDate: row[10] || "", // Column K (index 10)
+              endDate: row[11] || "",   // Column L (index 11)
+              designation: designationMap[normalizedName] || "",
+              department: departmentMap[normalizedName] || "",
+              firm: firmMap[normalizedName] || "",
+              incentiveCategory: incentiveMap[normalizedName] || "",
+              image: finalImageUrl,
+
+              score: row[5] || 0,       // Column F (index 5) - Weekly Work Done %
+              target: row[3] || 0,
+              actualWorkDone: row[4] || 0,
+              weeklyWorkDone: row[5] || "0%",
+              weeklyWorkDoneOnTime: row[6] || "0%",
+              totalWorkDone: row[7] || 0,
+              weekPending: row[8] || 0,
+              allPendingTillDate: row[9] || 0,
+
+              plannedWorkNotDone: row[12] || 0,
+              plannedWorkNotDoneOnTime: row[13] || 0,
+              commitment: row[14] || 0,
+
+              nextWeekPlannedWorkNotDone: row[16] || 0,
+              nextWeekPlannedWorkNotDoneOnTime: row[17] || 0,
+              nextWeekCommitment: row[18] || 0
             };
           });
-        }
 
-        setArchivedMap(newArchivedMap);
-
-        if (result.success && Array.isArray(result.data)) {
-          const headers = result.data[0];
-
-          // Live dynamic date range (Week Start Sunday to Today)
-          setReportDateRange(getLiveReportDateRange());
-
-          if (headers) {
-            setColumnLabels(prev => ({
-              ...prev,
-              name: headers[2] || prev.name,
-              designation: headers[3] || prev.designation,
-              target: headers[3] || prev.target,
-              actualWork: headers[4] || prev.actualWork,
-              weeklyDone: "% Weekly Not Done",
-              weeklyOnTime: "Weekly On Time Not Done %",
-              totalWork: headers[7] || prev.totalWork,
-              weekPending: headers[8] || prev.weekPending,
-              allPending: headers[9] || prev.allPending
-            }));
-          }
-
-          const parsedData = result.data.slice(2)
-            .filter(row => row[2] && String(row[2]).trim() !== "")
-            .map((row, index) => {
-              const randomId = `emp-${100 + index}`;
-              const empName = row[2] || "Unknown";
-              const normalizedName = String(empName).trim().toLowerCase();
-              const archivedData = newArchivedMap[empName] ? newArchivedMap[empName].values : {};
-
-              const rawImageUrl = imageMap[normalizedName];
-              let finalImageUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(empName)}&background=0D8ABC&color=fff&size=128`;
-
-              if (rawImageUrl) {
-                const processedUrl = getDisplayableImageUrl(rawImageUrl);
-                if (processedUrl) finalImageUrl = processedUrl;
-              }
-
-              return {
-                id: randomId,
-                name: empName,
-                startDate: row[10] || "", // Column K (index 10)
-                endDate: row[11] || "",   // Column L (index 11)
-                designation: designationMap[normalizedName] || "",
-                department: departmentMap[normalizedName] || "",
-                firm: firmMap[normalizedName] || "",
-                incentiveCategory: incentiveMap[normalizedName] || "",
-                image: finalImageUrl,
-
-                score: row[5] || 0,       // Column F (index 5) - Weekly Work Done %
-                target: row[3] || 0,
-                actualWorkDone: row[4] || 0,
-                weeklyWorkDone: row[5] || "0%",
-                weeklyWorkDoneOnTime: row[6] || "0%",
-                totalWorkDone: row[7] || 0,
-                weekPending: row[8] || 0,
-                allPendingTillDate: row[9] || 0,
-
-                plannedWorkNotDone: row[12] || 0,
-                plannedWorkNotDoneOnTime: row[13] || 0,
-                commitment: row[14] || 0,
-
-                nextWeekPlannedWorkNotDone: row[16] || 0,
-                nextWeekPlannedWorkNotDoneOnTime: row[17] || 0,
-                nextWeekCommitment: row[18] || 0
-              };
-            });
-
-          setRawParsedData(parsedData);
-          setReportedByMap(reportedByMap);
-        } else {
-          console.error("Failed to load sheet data", result);
-          setRawParsedData([]);
-        }
-      } catch (error) {
-        console.error("Error fetching sheet data:", error);
+        setRawParsedData(parsedData);
+        setReportedByMap(repByMap);
+      } else {
+        console.error("Failed to load sheet data", result);
+        setFetchError(result.error || "Failed to load sheet data from Google Spreadsheet");
         setRawParsedData([]);
-      } finally {
-        setLoading(false);
       }
-    };
-
-    fetchData();
+    } catch (error) {
+      console.error("Error fetching sheet data:", error);
+      setFetchError(error.message || "Network error loading sheet data");
+      setRawParsedData([]);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  // Re-filter data by role whenever the raw data or the logged-in user changes
-  // (user is loaded asynchronously from localStorage/Master sheet in AuthContext,
-  // so it may still be null on the first render of the fetch effect above).
   useEffect(() => {
-    const isAdmin = user && (user.role === 'admin' || user.role === 'superadmin');
-    const isHod = user && user.role === 'hod';
+    fetchData(false);
+  }, [fetchData]);
+
+  // Re-filter data by role whenever the raw data or the logged-in user changes
+  useEffect(() => {
+    if (!rawParsedData || rawParsedData.length === 0) {
+      setSheetEmployees([]);
+      return;
+    }
+
+    const roleLower = String(user?.role || "").toLowerCase().trim();
+    const idLower = String(user?.id || "").toLowerCase().trim();
+    const isAdmin = roleLower === 'admin' || roleLower === 'superadmin' || idLower === 'admin';
+    const isHod = roleLower === 'hod';
     const lowerName = (user?.name || "").toLowerCase().trim();
-    const lowerId = (user?.id || "").toLowerCase().trim();
+
+    // If user object is not yet loaded from localStorage, check localStorage directly
+    if (!user) {
+      try {
+        const stored = JSON.parse(localStorage.getItem('mis_user') || '{}');
+        const storedRole = String(stored.role || '').toLowerCase();
+        const storedId = String(stored.id || '').toLowerCase();
+        if (storedRole === 'admin' || storedRole === 'superadmin' || storedId === 'admin') {
+          setSheetEmployees(rawParsedData);
+          return;
+        }
+      } catch (e) {}
+      // Default to showing raw data so dashboard is not prematurely blank
+      setSheetEmployees(rawParsedData);
+      return;
+    }
 
     // Filter data based on user permission level (Admin/Superadmin sees all, HOD sees self + reportees, Ordinary User sees self only)
     const finalData = isAdmin
@@ -495,7 +460,7 @@ const AdminDashboard = () => {
       ? rawParsedData.filter(emp => {
           const empLowerName = emp.name.toLowerCase().trim();
           const empManager = reportedByMap[empLowerName] || "";
-          return empLowerName === lowerName || empManager === lowerName || empManager === lowerId;
+          return empLowerName === lowerName || empManager === lowerName || empManager === idLower;
         })
       : rawParsedData.filter(emp => {
           const empLowerName = emp.name.toLowerCase().trim();
@@ -1330,10 +1295,12 @@ Passary Refractories.`;
         if (!result.success) throw new Error(result.error || "Failed to save row");
       }
 
+      clearSheetCache('For Records');
       alert("Saved successfully ✅");
       setSelectedEmployees([]);
       setEditableData({});
       setSelectAll(false);
+      fetchData(true);
     } catch (error) {
       console.error("Main Submit Error:", error);
       alert(`Error: ${error.message}`);
@@ -1358,7 +1325,29 @@ Passary Refractories.`;
         departmentScores={departmentScores}
         dataSheetRows={dataSheetRows}
         reportDateRange={reportDateRange}
+        onRefresh={() => fetchData(true)}
+        loading={loading}
       />
+
+      {/* Error / Retry Banner */}
+      {fetchError && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-red-800">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5 text-red-600 flex-shrink-0" />
+            <div>
+              <p className="text-sm font-semibold">Data loading failed</p>
+              <p className="text-xs text-red-600">{fetchError}</p>
+            </div>
+          </div>
+          <button
+            onClick={() => fetchData(true)}
+            className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded-md shadow-sm transition-colors cursor-pointer flex items-center gap-1.5"
+          >
+            <Loader2 className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
+            Retry Fetch
+          </button>
+        </div>
+      )}
 
       {/* Category Tabs: MIS Category Report | Non MIS Category Report | Other Category Report */}
       <CategoryTabs

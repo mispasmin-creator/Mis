@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Search, Clock, X, Loader2 } from 'lucide-react';
+import { fetchMultipleSheets } from '../../services/sheetService';
 
 const parseSheetRef = (ref) => {
   if (!ref) return null;
@@ -75,19 +76,9 @@ const AdminPendingTasks = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const scriptUrl = import.meta.env.VITE_APPS_SCRIPT_URL;
-        if (!scriptUrl) {
-          console.error("VITE_APPS_SCRIPT_URL not set");
-          setTasks([]);
-          return;
-        }
-
-        const [res, masterRes] = await Promise.all([
-          fetch(`${scriptUrl}?sheet=Data`),
-          fetch(`${scriptUrl}?sheet=Master`),
-        ]);
-        const result = await res.json();
-        const masterResult = await masterRes.json();
+        const sheets = await fetchMultipleSheets(['Data', 'Master']);
+        const result = sheets['Data'] || { success: false, data: [] };
+        const masterResult = sheets['Master'] || { success: false, data: [] };
 
         const firmMap = {};
         if (masterResult.success && Array.isArray(masterResult.data)) {

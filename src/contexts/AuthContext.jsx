@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getDisplayableImageUrl } from '../utils/imageUtils';
+import { fetchSheet } from '../services/sheetService';
 
 const AuthContext = createContext(undefined);
 
@@ -24,13 +25,10 @@ export function AuthProvider({ children }) {
 
   const preloadUsers = async () => {
     try {
-      const scriptUrl = import.meta.env.VITE_APPS_SCRIPT_URL;
-      if (scriptUrl) {
-        const response = await fetch(`${scriptUrl}?sheet=Master`);
-        const result = await response.json();
-        if (result.success && Array.isArray(result.data)) {
-          setUserCache(result.data);
-          console.log("Users pre-loaded for fast login");
+      const result = await fetchSheet('Master');
+      if (result.success && Array.isArray(result.data)) {
+        setUserCache(result.data);
+        console.log("Users pre-loaded for fast login");
 
           // Dynamic sync: Update current user's image from Master sheet based on name match (Column A)
           setUser(prevUser => {
@@ -79,7 +77,6 @@ export function AuthProvider({ children }) {
             return prevUser;
           });
         }
-      }
     } catch (err) {
       console.warn("User pre-load failed:", err);
     }
@@ -94,15 +91,7 @@ export function AuthProvider({ children }) {
 
       // If cache missed or failed, fetch now
       if (!usersData) {
-        const scriptUrl = import.meta.env.VITE_APPS_SCRIPT_URL;
-        if (!scriptUrl) {
-          console.error("VITE_APPS_SCRIPT_URL is not defined in .env");
-          setLoading(false);
-          return false;
-        }
-        // Fetch users (Master tab)
-        const response = await fetch(`${scriptUrl}?sheet=Master`);
-        const result = await response.json();
+        const result = await fetchSheet('Master');
         if (result.success && Array.isArray(result.data)) {
           usersData = result.data;
           setUserCache(usersData); // Cache for next time

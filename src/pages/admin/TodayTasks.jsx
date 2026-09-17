@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Search, X, Loader2, Filter, Calendar, Clock, ChevronDown } from "lucide-react";
 import { getDisplayableImageUrl } from '../../utils/imageUtils';
+import { fetchMultipleSheets } from '../../services/sheetService';
 
 const AdminTodayTasks = () => {
   const [loading, setLoading] = useState(true);
@@ -40,22 +41,10 @@ const AdminTodayTasks = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const scriptUrl = import.meta.env.VITE_APPS_SCRIPT_URL;
-        if (!scriptUrl) {
-          console.error("VITE_APPS_SCRIPT_URL not set");
-          setLoading(false);
-          return;
-        }
-
-        const [masterResponse, dataResponse, recordsResponse] = await Promise.all([
-          fetch(`${scriptUrl}?sheet=Master`),
-          fetch(`${scriptUrl}?sheet=Data`),
-          fetch(`${scriptUrl}?sheet=For Records`)
-        ]);
-
-        const masterResult = await masterResponse.json();
-        const dataResult = await dataResponse.json();
-        const recordsResult = await recordsResponse.json();
+        const sheets = await fetchMultipleSheets(['Master', 'Data', 'For Records']);
+        const masterResult = sheets['Master'] || { success: false, data: [] };
+        const dataResult = sheets['Data'] || { success: false, data: [] };
+        const recordsResult = sheets['For Records'] || { success: false, data: [] };
 
         const imageMap = {};
         const firmMap = {};

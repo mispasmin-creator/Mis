@@ -7,6 +7,7 @@ import { extractDateRange, printHistoryReport, downloadHistoryPDF } from "../../
 import { getDisplayableImageUrl } from "../../utils/imageUtils";
 import HistoryTaskModal from "./components/HistoryTaskModal";
 import SearchableSelect from "../../components/common/SearchableSelect";
+import { fetchMultipleSheets } from "../../services/sheetService";
 
 const AdminHistoryCommitment = () => {
     const { user } = useAuth();
@@ -29,24 +30,16 @@ const AdminHistoryCommitment = () => {
         const fetchRecords = async () => {
             try {
                 setLoading(true);
-                const scriptUrl = import.meta.env.VITE_APPS_SCRIPT_URL;
-                if (!scriptUrl) {
-                    console.error("VITE_APPS_SCRIPT_URL not set");
-                    setLoading(false);
-                    return;
-                }
-
-                // Fetch Records, Master, Data, and Task Wise Record sheets in parallel
-                const [recordsResponse, masterResponse, dataResponse, taskWiseResponse] = await Promise.all([
-                    fetch(`${scriptUrl}?sheet=Records`),
-                    fetch(`${scriptUrl}?sheet=Master`),
-                    fetch(`${scriptUrl}?sheet=Data`),
-                    fetch(`${scriptUrl}?sheet=Task Wise Record`)
+                const sheets = await fetchMultipleSheets([
+                    'Records',
+                    'Master',
+                    'Data',
+                    'Task Wise Record'
                 ]);
-                const result = await recordsResponse.json();
-                const masterResult = await masterResponse.json();
-                const dataResult = await dataResponse.json();
-                const taskWiseResult = await taskWiseResponse.json();
+                const result = sheets['Records'] || { success: false, data: [] };
+                const masterResult = sheets['Master'] || { success: false, data: [] };
+                const dataResult = sheets['Data'] || { success: false, data: [] };
+                const taskWiseResult = sheets['Task Wise Record'] || { success: false, data: [] };
 
                 const reportedByMap = {};
                 const firmMap = {};

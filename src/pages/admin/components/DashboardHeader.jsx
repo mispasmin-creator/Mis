@@ -1,5 +1,5 @@
 import React from "react";
-import { Download, Calendar } from "lucide-react";
+import { Download, Calendar, RotateCw } from "lucide-react";
 import { generateDashboardPDF } from "../../../utils/pdfGenerator";
 import DailyReportButton from "./DailyReportButton";
 
@@ -15,8 +15,11 @@ const DashboardHeader = ({
     departmentScores = [],
     dataSheetRows = [],
     reportDateRange = { startDate: "", endDate: "" },
+    onRefresh,
+    loading = false,
 }) => {
-    const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
+    const roleLower = String(user?.role || '').toLowerCase();
+    const isAdmin = roleLower === 'admin' || roleLower === 'superadmin' || String(user?.id || '').toLowerCase() === 'admin';
 
     return (
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 w-full">
@@ -47,6 +50,17 @@ const DashboardHeader = ({
                     </div>
                 )}
 
+                {onRefresh && (
+                    <button
+                        onClick={onRefresh}
+                        disabled={loading}
+                        title="Refresh data from Google Sheets"
+                        className="inline-flex items-center justify-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors cursor-pointer disabled:opacity-50"
+                    >
+                        <RotateCw className={`h-4 w-4 mr-1.5 ${loading ? 'animate-spin text-indigo-600' : 'text-gray-500'}`} />
+                        <span>{loading ? "Refreshing..." : "Refresh"}</span>
+                    </button>
+                )}
                 <DailyReportButton dataSheetRows={dataSheetRows} />
                 <button
                     onClick={() => {

@@ -28,6 +28,7 @@ import CategoryTabs from "../../components/CategoryTabs";
 import { categorizeByBasis, CATEGORY_KEYS } from "../../utils/categorize";
 import DepartmentTopPerformerComparison from "./components/DepartmentTopPerformerComparison";
 import OverallTopPerformersReport from "./components/OverallTopPerformersReport";
+import { fetchMultipleSheets } from "../../services/sheetService";
 
 const PALETTE = [
   "#6366f1", "#10b981", "#f59e0b", "#ef4444", "#06b6d4",
@@ -157,26 +158,19 @@ const DepartmentDashboard = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const scriptUrl = import.meta.env.VITE_APPS_SCRIPT_URL;
-        if (!scriptUrl) {
-          console.error("VITE_APPS_SCRIPT_URL not set");
-          setLoading(false);
-          return;
-        }
-
-        const [recordsResponse, masterResponse, deptScoreResponse, dataResponse, historyResponse] = await Promise.all([
-          fetch(`${scriptUrl}?sheet=For Records`),
-          fetch(`${scriptUrl}?sheet=Master`),
-          fetch(`${scriptUrl}?sheet=Department Score Graph`),
-          fetch(`${scriptUrl}?sheet=Data`),
-          fetch(`${scriptUrl}?sheet=Records`),
+        const sheets = await fetchMultipleSheets([
+          'For Records',
+          'Master',
+          'Department Score Graph',
+          'Data',
+          'Records'
         ]);
 
-        const result = await recordsResponse.json();
-        const masterResult = await masterResponse.json();
-        const deptScoreResult = await deptScoreResponse.json();
-        const dataResult = await dataResponse.json();
-        const historyResult = await historyResponse.json();
+        const result = sheets['For Records'] || { success: false, data: [] };
+        const masterResult = sheets['Master'] || { success: false, data: [] };
+        const deptScoreResult = sheets['Department Score Graph'] || { success: false, data: [] };
+        const dataResult = sheets['Data'] || { success: false, data: [] };
+        const historyResult = sheets['Records'] || { success: false, data: [] };
 
         if (deptScoreResult.success && Array.isArray(deptScoreResult.data)) {
           const parsedDeptScores = deptScoreResult.data
