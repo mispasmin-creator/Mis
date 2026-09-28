@@ -27,16 +27,19 @@ const AdminHistoryCommitment = () => {
     const [departmentMap, setDepartmentMap] = useState({});
 
     useEffect(() => {
-        const fetchRecords = async () => {
+        // `silent` skips the loading spinner — used for the background
+        // revalidate/poll below so a stale cache doesn't visibly flash
+        // before fresh data lands.
+        const fetchRecords = async (forceRefresh = false, silent = false) => {
             try {
-                setLoading(true);
+                if (!silent) setLoading(true);
                 const sheets = await fetchMultipleSheets([
                     'Records',
                     'Master',
                     'Data',
                     'Task Wise Record',
                     'For Records'
-                ]);
+                ], { forceRefresh });
                 const result = sheets['Records'] || { success: false, data: [] };
                 const masterResult = sheets['Master'] || { success: false, data: [] };
                 const dataResult = sheets['Data'] || { success: false, data: [] };
@@ -223,11 +226,31 @@ const AdminHistoryCommitment = () => {
             } catch (error) {
                 console.error("Error fetching Records & Master sheet:", error);
             } finally {
-                setLoading(false);
+                if (!silent) setLoading(false);
             }
         };
 
-        fetchRecords();
+        // 1. Instant paint from cache (or network if cache is empty/expired).
+        fetchRecords(false, false);
+
+        // 2. Silent background revalidate shortly after mount, so anyone
+        // edited into the sheet just before this page was opened isn't
+        // missing until the 5-minute sheet cache naturally expires.
+        const revalidateTimer = setTimeout(() => {
+            fetchRecords(true, true);
+        }, 1200);
+
+        // 3. Keep polling silently every 5 minutes for as long as this page
+        // stays open, so a new employee added to the sheet shows up here
+        // without the user needing to reload the tab.
+        const pollInterval = setInterval(() => {
+            fetchRecords(true, true);
+        }, 5 * 60 * 1000);
+
+        return () => {
+            clearTimeout(revalidateTimer);
+            clearInterval(pollInterval);
+        };
     }, [user]);
 
     // Helper to normalize various date formats (e.g. 23-Aug-2026, 2026-08-23, 23/08/2026) to YYYY-MM-DD

@@ -437,7 +437,17 @@ const AdminDashboard = () => {
       fetchData(true, true);
     }, 1200);
 
-    return () => clearTimeout(revalidateTimer);
+    // 3. Keep polling silently every 5 minutes for as long as this page
+    // stays open, so a new employee added to the sheet shows up here without
+    // the user needing to reload the tab.
+    const pollInterval = setInterval(() => {
+      fetchData(true, true);
+    }, 5 * 60 * 1000);
+
+    return () => {
+      clearTimeout(revalidateTimer);
+      clearInterval(pollInterval);
+    };
   }, [fetchData]);
 
   // Re-filter data by role whenever the raw data or the logged-in user changes

@@ -353,7 +353,17 @@ const DepartmentDashboard = () => {
       fetchData(true, true);
     }, 1200);
 
-    return () => clearTimeout(revalidateTimer);
+    // Keep polling silently every 5 minutes for as long as this page stays
+    // open, so a new employee added to the sheet shows up here without the
+    // user needing to reload the tab.
+    const pollInterval = setInterval(() => {
+      fetchData(true, true);
+    }, 5 * 60 * 1000);
+
+    return () => {
+      clearTimeout(revalidateTimer);
+      clearInterval(pollInterval);
+    };
   }, [user]);
 
   // Available weeks list from both Live (For Records) and Historical (Records)
@@ -430,6 +440,29 @@ const DepartmentDashboard = () => {
       // Fallback if no matching by normalizeDate
       if (activeRows.length === 0) {
         activeRows = rawHistoryRows.filter((r) => String(r[0]).trim() === String(selectedWeekKey).trim());
+      }
+
+      // "Records" is a periodic archive/backup of "For Records" and can fall
+      // behind — someone added to the live sheet after the last archive run
+      // won't be in "Records" yet for that same week. If the picked
+      // historical week is actually the same calendar week the live sheet is
+      // currently showing (both can appear as separate, identical-looking
+      // dropdown options), patch in anyone present in "For Records" but
+      // missing here, so the two options don't silently disagree.
+      if (rawLiveRows.length > 0) {
+        const liveWeekStart = String(rawLiveRows[0]?.[0] || "").trim();
+        if (liveWeekStart && normalizeDate(liveWeekStart) === normSelected) {
+          const namesInActiveRows = new Set(
+            activeRows.map((r) => (r[2] ? String(r[2]).trim().toLowerCase() : "")).filter(Boolean)
+          );
+          const missingLiveRows = rawLiveRows.filter((r) => {
+            const n = r[2] ? String(r[2]).trim().toLowerCase() : "";
+            return n && !namesInActiveRows.has(n);
+          });
+          if (missingLiveRows.length > 0) {
+            activeRows = [...activeRows, ...missingLiveRows];
+          }
+        }
       }
     }
 
