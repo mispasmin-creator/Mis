@@ -156,16 +156,18 @@ const DepartmentDashboard = () => {
   }, [selectedStaff]);
 
   useEffect(() => {
-    const fetchData = async () => {
+    // `silent` skips the loading spinner — used for the background revalidate
+    // below so a stale cache doesn't visibly flash before fresh data lands.
+    const fetchData = async (forceRefresh = false, silent = false) => {
       try {
-        setLoading(true);
+        if (!silent) setLoading(true);
         const sheets = await fetchMultipleSheets([
           'For Records',
           'Master',
           'Department Score Graph',
           'Data',
           'Records'
-        ]);
+        ], { forceRefresh });
 
         const result = sheets['For Records'] || { success: false, data: [] };
         const masterResult = sheets['Master'] || { success: false, data: [] };
@@ -312,35 +314,46 @@ const DepartmentDashboard = () => {
           setHistoryRecords(parsedHistory);
         }
 
-        // Determine default week selection based on schedule
-        const currentDay = new Date().getDay();
-        const isReviewPeriod = currentDay === 0 || currentDay === 1;
-
-        if (isReviewPeriod && histRows.length > 0) {
+        // Default week selection: always prefer the live "For Records" sheet
+        // when it has data. "Records" is a periodic archive/backup of "For
+        // Records" and can fall behind — e.g. a person added to the live
+        // sheet after the last archive run won't be in "Records" yet for
+        // that same week, understating headcount/totals if it were shown by
+        // default (previously this defaulted to "Records" on Sun/Mon, which
+        // caused exactly that mismatch). "Records" stays picklable from the
+        // week dropdown for anyone who wants a past closed week.
+        // Uses the functional setState form (prev => prev || ...) so the
+        // background silent revalidate below never clobbers a week the user
+        // has since picked from the dropdown — the default is only applied
+        // once, while selectedWeekKey is still empty.
+        if (liveRows.length > 0) {
+          setSelectedWeekKey((prev) => prev || "live");
+        } else if (histRows.length > 0) {
           const uniqueDates = [...new Set(histRows.map((r) => r[0]))].filter(Boolean);
           uniqueDates.sort((a, b) => normalizeDate(b).localeCompare(normalizeDate(a)));
-          if (uniqueDates[0]) {
-            setSelectedWeekKey(uniqueDates[0]);
-          } else if (liveRows.length > 0) {
-            setSelectedWeekKey("live");
-          }
-        } else {
-          if (liveRows.length > 0) {
-            setSelectedWeekKey("live");
-          } else if (histRows.length > 0) {
-            const uniqueDates = [...new Set(histRows.map((r) => r[0]))].filter(Boolean);
-            uniqueDates.sort((a, b) => normalizeDate(b).localeCompare(normalizeDate(a)));
-            setSelectedWeekKey(uniqueDates[0] || "");
-          }
+          setSelectedWeekKey((prev) => prev || uniqueDates[0] || "");
         }
       } catch (error) {
         console.error("Error fetching department dashboard data:", error);
       } finally {
-        setLoading(false);
+        if (!silent) setLoading(false);
       }
     };
 
-    fetchData();
+    // 1. Instant paint from cache (or network if cache is empty/expired).
+    fetchData(false, false);
+
+    // 2. Silent background revalidate: the sheet cache lives for 5 minutes
+    // (see sheetService.js), so anyone editing the sheet just before this
+    // page was opened would otherwise show up as "missing" until the cache
+    // naturally expires. Bypassing the cache here shortly after mount keeps
+    // the view accurate without a visible reload or a manual refresh button
+    // (this page doesn't have one).
+    const revalidateTimer = setTimeout(() => {
+      fetchData(true, true);
+    }, 1200);
+
+    return () => clearTimeout(revalidateTimer);
   }, [user]);
 
   // Available weeks list from both Live (For Records) and Historical (Records)
@@ -435,18 +448,17 @@ const DepartmentDashboard = () => {
         const rawImageUrl = findInMap(masterMaps.imageMap, normalizedName);
         const finalImageUrl = rawImageUrl ? getDisplayableImageUrl(rawImageUrl) : null;
 
-        // Direct columns from sheet row:
-        // Column 10 (Index 10): MIS Category / Incentive Category
-        // Column 11 (Index 11): Department
-        // Index 21 / 22: fallback if alternate sheet layout
-        const sheetIncentive = (row[10] && String(row[10]).trim()) || (row[21] && String(row[21]).trim()) || "";
-        const resolvedIncentive = sheetIncentive || findInMap(masterMaps.incentiveMap, normalizedName) || "";
-
-        const directFirm = (row[22] && String(row[22]).trim()) || "";
-        const resolvedFirm = directFirm || findInMap(masterMaps.firmMap, normalizedName) || "";
-
-        const sheetDept = (row[11] && String(row[11]).trim()) || "";
-        const resolvedDept = sheetDept || findInMap(masterMaps.departmentMap, normalizedName) || "";
+        // Incentive Category / Department / Firm always come from the Master
+        // (and Data sheet as fallback) name-based maps, never from a fixed
+        // column index on the weekly row. "For Records" and "Records" use
+        // different column layouts, and index 10/11/21/22 land on different
+        // fields in each (e.g. "For Records" has next-cycle Start/End Date at
+        // 10/11, not category/department) — reading them directly as a
+        // shortcut silently mis-categorized every live-week employee as
+        // "Other" and showed a date string as their department.
+        const resolvedIncentive = findInMap(masterMaps.incentiveMap, normalizedName) || "";
+        const resolvedFirm = findInMap(masterMaps.firmMap, normalizedName) || "";
+        const resolvedDept = findInMap(masterMaps.departmentMap, normalizedName) || "";
         const resolvedDesig = findInMap(masterMaps.designationMap, normalizedName) || "";
         const resolvedPhone = findInMap(masterMaps.phoneMap, normalizedName) || "";
         // Data sheet Columns K (Target) & U (Actual On Time): target-weighted % of

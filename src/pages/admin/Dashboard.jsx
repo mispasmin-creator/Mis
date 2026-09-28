@@ -229,10 +229,12 @@ const AdminDashboard = () => {
 
   const [fetchError, setFetchError] = useState(null);
 
-  // Fetch Data from Google Sheet using centralized service
-  const fetchData = useCallback(async (forceRefresh = false) => {
+  // Fetch Data from Google Sheet using centralized service.
+  // `silent` skips the loading spinner — used for the background revalidate
+  // below so a stale cache doesn't visibly flash before fresh data lands.
+  const fetchData = useCallback(async (forceRefresh = false, silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       setFetchError(null);
 
       // Fetch sheets using deduplicated, cached service (excluding non-existent 'Archived')
@@ -413,15 +415,29 @@ const AdminDashboard = () => {
       }
     } catch (error) {
       console.error("Error fetching sheet data:", error);
-      setFetchError(error.message || "Network error loading sheet data");
-      setRawParsedData([]);
+      if (!silent) {
+        setFetchError(error.message || "Network error loading sheet data");
+        setRawParsedData([]);
+      }
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
+    // 1. Instant paint from cache (or network if cache is empty/expired).
     fetchData(false);
+
+    // 2. Silent background revalidate: the sheet cache lives for 5 minutes
+    // (see sheetService.js), so anyone editing the sheet just before this
+    // page was opened would otherwise show up as "missing" until a manual
+    // Refresh. Bypassing the cache here shortly after mount keeps the view
+    // accurate without a visible reload or requiring the user to notice.
+    const revalidateTimer = setTimeout(() => {
+      fetchData(true, true);
+    }, 1200);
+
+    return () => clearTimeout(revalidateTimer);
   }, [fetchData]);
 
   // Re-filter data by role whenever the raw data or the logged-in user changes

@@ -34,12 +34,14 @@ const AdminHistoryCommitment = () => {
                     'Records',
                     'Master',
                     'Data',
-                    'Task Wise Record'
+                    'Task Wise Record',
+                    'For Records'
                 ]);
                 const result = sheets['Records'] || { success: false, data: [] };
                 const masterResult = sheets['Master'] || { success: false, data: [] };
                 const dataResult = sheets['Data'] || { success: false, data: [] };
                 const taskWiseResult = sheets['Task Wise Record'] || { success: false, data: [] };
+                const forRecordsResult = sheets['For Records'] || { success: false, data: [] };
 
                 const reportedByMap = {};
                 const firmMap = {};
@@ -145,6 +147,57 @@ const AdminHistoryCommitment = () => {
                             nextWeekCommitment: row[16] || "" // Column Q (index 16)
                         };
                     }).filter(r => r.name.trim() !== "");
+
+                    // The "Records" sheet is a periodic archive/backup of "For Records" and can
+                    // fall behind — e.g. people added to the live sheet after the last archive
+                    // run won't be in "Records" yet for that same week. Patch that gap: for the
+                    // live sheet's current week, add anyone present in "For Records" but missing
+                    // from the "Records" rows for that same week, so counts here match the
+                    // Admin Dashboard (which reads "For Records" directly).
+                    if (forRecordsResult.success && Array.isArray(forRecordsResult.data) && forRecordsResult.data.length > 2) {
+                        const liveRows = forRecordsResult.data.slice(2).filter(row => row[2] && String(row[2]).trim() !== "");
+                        const liveWeekStart = String(liveRows[0]?.[0] || "").trim();
+
+                        if (liveWeekStart) {
+                            const namesAlreadyInThatWeek = new Set(
+                                parsed
+                                    .filter(r => String(r.dateStart).trim() === liveWeekStart)
+                                    .map(r => r.name.trim().toLowerCase())
+                            );
+
+                            liveRows.forEach((row, idx) => {
+                                const empName = row[2] || "";
+                                const normalizedName = String(empName).trim().toLowerCase();
+                                if (!normalizedName || namesAlreadyInThatWeek.has(normalizedName)) return;
+                                namesAlreadyInThatWeek.add(normalizedName);
+
+                                const resolvedIncentive = incentiveMap[normalizedName] || "";
+                                parsed.push({
+                                    id: `live-${idx}`,
+                                    dateStart: row[0] || "",
+                                    dateEnd: row[1] || "",
+                                    name: empName,
+                                    firm: firmMap[normalizedName] || "",
+                                    incentiveCategory: resolvedIncentive,
+                                    category: categorizeByBasis(resolvedIncentive),
+                                    target: row[3] || "",
+                                    actualWorkDone: row[4] || "",
+                                    workNotDone: row[5] || "",
+                                    workNotDoneOnTime: row[6] || "",
+                                    totalWorkDone: row[7] || "",
+                                    weekPending: row[8] || "",
+                                    allPendingTillDate: row[9] || "",
+                                    lastWeekPlannedNotDone: "",
+                                    lastWeekPlannedNotDoneOnTime: "",
+                                    lastWeekCommitment: "",
+                                    linkWithName: "",
+                                    nextWeekPlannedNotDone: "",
+                                    nextWeekPlannedNotDoneOnTime: "",
+                                    nextWeekCommitment: "",
+                                });
+                            });
+                        }
+                    }
 
                     const isAdmin = user && (user.role === 'admin' || user.role === 'superadmin');
                     const isHod = user && user.role === 'hod';
