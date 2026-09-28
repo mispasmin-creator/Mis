@@ -134,6 +134,7 @@ const DepartmentDashboard = () => {
     incentiveMap: {},
     phoneMap: {},
     reportedByMap: {},
+    onTimeMap: {},
   });
 
   const [selectedDepartment, setSelectedDepartment] = useState("");
@@ -193,6 +194,7 @@ const DepartmentDashboard = () => {
         const reportedByMap = {};
         const firmMap = {};
         const incentiveMap = {};
+        const onTimeMap = {};
 
         // Extract Incentive Category and Firm Name from Data sheet
         if (dataResult.success && Array.isArray(dataResult.data)) {
@@ -201,6 +203,15 @@ const DepartmentDashboard = () => {
           if (incentiveColIdx === -1) incentiveColIdx = 21;
           let firmColIdx = headerRow.findIndex((h) => h && String(h).trim().toLowerCase() === "firm name");
           if (firmColIdx === -1) firmColIdx = 22;
+
+          // Column K (index 10) = Target, Column U (index 20) = Actual On Time, per task row.
+          // A person has one row per FMS/task, each with its own target size, so a
+          // plain average of each row's "% Work Not Done On Time" (Column N) over-
+          // weights small tasks. Instead we sum Target and Actual On Time across all
+          // of a person's rows and derive one target-weighted on-time % from the
+          // totals — this is what the sheet's own Column N formula does per row
+          // ((Actual On Time - Target) / Target * 100), just aggregated correctly.
+          const onTimeAcc = {};
 
           dataResult.data.slice(1).forEach((row) => {
             const pName = row[4] ? String(row[4]).trim().toLowerCase() : "";
@@ -212,6 +223,22 @@ const DepartmentDashboard = () => {
             if (pName && firm && !firmMap[pName]) {
               firmMap[pName] = firm;
             }
+
+            if (pName) {
+              const targetVal = parseFloat(String(row[10]).replace(/,/g, "")) || 0;
+              const actualOnTimeVal = parseFloat(String(row[20]).replace(/,/g, "")) || 0;
+              if (!onTimeAcc[pName]) onTimeAcc[pName] = { sumTarget: 0, sumActualOnTime: 0 };
+              onTimeAcc[pName].sumTarget += targetVal;
+              onTimeAcc[pName].sumActualOnTime += actualOnTimeVal;
+            }
+          });
+
+          Object.keys(onTimeAcc).forEach((pName) => {
+            const { sumTarget, sumActualOnTime } = onTimeAcc[pName];
+            const pct = sumTarget > 0 ? (sumActualOnTime / sumTarget) * 100 : 0;
+            // Clamp for display sanity; a data anomaly could push Actual On Time
+            // above Target and produce >100%.
+            onTimeMap[pName] = Math.min(100, Math.max(0, pct));
           });
         }
 
@@ -255,6 +282,7 @@ const DepartmentDashboard = () => {
           incentiveMap,
           phoneMap,
           reportedByMap,
+          onTimeMap,
         });
 
         // Store live rows (sheet=For Records)
@@ -421,6 +449,9 @@ const DepartmentDashboard = () => {
         const resolvedDept = sheetDept || findInMap(masterMaps.departmentMap, normalizedName) || "";
         const resolvedDesig = findInMap(masterMaps.designationMap, normalizedName) || "";
         const resolvedPhone = findInMap(masterMaps.phoneMap, normalizedName) || "";
+        // Data sheet Columns K (Target) & U (Actual On Time): target-weighted % of
+        // tasks completed on time, across all of this person's task rows.
+        const onTimePct = masterMaps.onTimeMap?.[normalizedName] ?? 0;
 
         return {
           id: `dept-emp-${index}`,
@@ -440,6 +471,7 @@ const DepartmentDashboard = () => {
           totalWorkDone: parseFloat(String(row[7]).replace(/,/g, '')) || 0,
           weekPending: parseFloat(String(row[8]).replace(/,/g, '')) || 0,
           allPendingTillDate: parseFloat(String(row[9]).replace(/,/g, '')) || 0,
+          onTimePct,
         };
       });
 
