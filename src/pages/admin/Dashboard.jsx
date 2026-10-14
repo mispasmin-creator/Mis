@@ -74,6 +74,7 @@ const AdminDashboard = () => {
   const [sheetEmployees, setSheetEmployees] = useState([]);
   const [departmentScores, setDepartmentScores] = useState([]);
   const [dataSheetRows, setDataSheetRows] = useState([]);
+  const [dataSheetHeaders, setDataSheetHeaders] = useState([]);
   const [dataSheetDateRange, setDataSheetDateRange] = useState({ fromDate: "", toDate: "" });
   const [reportDateRange, setReportDateRange] = useState(getLiveReportDateRange());
   const [rawParsedData, setRawParsedData] = useState([]);
@@ -249,6 +250,7 @@ const AdminDashboard = () => {
       if (dataResult.success && Array.isArray(dataResult.data)) {
         setDataSheetRows(dataResult.data.slice(1));
         const headerRow = dataResult.data[0] || [];
+        setDataSheetHeaders(headerRow);
 
         // Column V (index 21) or header search for Incentive Category
         let incentiveColIdx = headerRow.findIndex(h => h && String(h).trim().toLowerCase() === "incentive category");
@@ -836,34 +838,48 @@ const AdminDashboard = () => {
       return dataName === personName;
     });
 
-    const tasks = matchingRows.map(row => ({
-      fmsName: row[2] || "",
-      taskName: row[3] || "",
-      nameColRef: row[9] || "",
-      taskNameColRef: row[26] || "",
-      department: row[0] || "",
-      sheetId: row[5] || "",
-      scriptUrl: row[25] || "",
-      plannedSheetRef: row[7] || "",
-      actualSheetRef: row[8] || "",
-      target: row[10] || 0,
-      extraDone: row[17] || 0,
-      actualOnTime: row[17] || 0,
-      actualAchievement: row[18] || 0,
-      totalAchievement: (() => {
-        const target = parseFloat(row[10]) || 0;
-        const achievement = parseFloat(row[11]) || 0;
-        // Achievement can never exceed the assigned target
-        return target > 0 ? Math.min(achievement, target) : achievement;
-      })(),
-      workNotDone: row[12] || 0,
-      workNotDoneOnTime: row[13] || 0,
-      allPendingTillDate: row[14] || 0,
-      delayColRef: row[27] || "",
-      // fromDate/toDate: individual rows are empty; use global date range from header row (Col V/W)
-      fromDate: (row[21] && String(row[21]).trim()) || dataSheetDateRange.fromDate, // Column V (falls back to header value)
-      toDate: (row[22] && String(row[22]).trim()) || dataSheetDateRange.toDate       // Column W (falls back to header value)
-    }));
+    // Column U (index 20) in Data sheet is "Actual On Time"
+    let colActualOnTime = -1;
+    if (dataSheetHeaders && dataSheetHeaders.length > 0) {
+      colActualOnTime = dataSheetHeaders.findIndex(h => h && String(h).trim().toLowerCase() === "actual on time");
+    }
+    if (colActualOnTime === -1) colActualOnTime = 20; // Default Column U (index 20)
+
+    const tasks = matchingRows.map(row => {
+      const rawActualOnTime = row[colActualOnTime];
+      const actualOnTimeVal = (rawActualOnTime !== undefined && rawActualOnTime !== null && String(rawActualOnTime).trim() !== "")
+        ? rawActualOnTime
+        : 0;
+
+      return {
+        fmsName: row[2] || "",
+        taskName: row[3] || "",
+        nameColRef: row[9] || "",
+        taskNameColRef: row[26] || "",
+        department: row[0] || "",
+        sheetId: row[5] || "",
+        scriptUrl: row[25] || "",
+        plannedSheetRef: row[7] || "",
+        actualSheetRef: row[8] || "",
+        target: row[10] || 0,
+        extraDone: row[17] || 0,
+        actualOnTime: actualOnTimeVal,
+        actualAchievement: row[18] || 0,
+        totalAchievement: (() => {
+          const target = parseFloat(row[10]) || 0;
+          const achievement = parseFloat(row[11]) || 0;
+          // Achievement can never exceed the assigned target
+          return target > 0 ? Math.min(achievement, target) : achievement;
+        })(),
+        workNotDone: row[12] || 0,
+        workNotDoneOnTime: row[13] || 0,
+        allPendingTillDate: row[14] || 0,
+        delayColRef: row[27] || "",
+        // fromDate/toDate: individual rows are empty; use global date range from header row (Col V/W)
+        fromDate: (row[21] && String(row[21]).trim()) || dataSheetDateRange.fromDate, // Column V (falls back to header value)
+        toDate: (row[22] && String(row[22]).trim()) || dataSheetDateRange.toDate       // Column W (falls back to header value)
+      };
+    });
 
     setSelectedUserDetails({ ...employee, tasks });
   };

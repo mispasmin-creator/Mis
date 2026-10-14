@@ -46,7 +46,7 @@ const UserDetailsModal = ({
 
         const totalTarget = tasks.reduce((sum, t) => sum + (parseFloat(t.target) || 0), 0);
         const totalActual = tasks.reduce((sum, t) => sum + (parseFloat(t.actualAchievement) || 0), 0);
-        const totalActualOnTime = tasks.reduce((sum, t) => sum + (parseFloat(t.actualOnTime ?? t.extraDone) || 0), 0);
+        const totalActualOnTime = tasks.reduce((sum, t) => sum + (parseFloat(t.actualOnTime) || 0), 0);
         const totalAchievement = tasks.reduce((sum, t) => sum + (parseFloat(t.totalAchievement) || 0), 0);
         const totalPending = tasks.reduce((sum, t) => sum + (parseFloat(t.allPendingTillDate) || 0), 0);
         const isTotalAchZero = totalAchievement === 0 && totalTarget > 0;
@@ -362,7 +362,7 @@ const UserDetailsModal = ({
                                         <td style="color: #64748b;">${task.department || '-'}</td>
                                         <td style="font-weight: 700;">${task.target ?? 0}</td>
                                         <td style="font-weight: 600;">${task.actualAchievement ?? 0}</td>
-                                        <td>${task.actualOnTime ?? task.extraDone ?? 0}</td>
+                                        <td>${task.actualOnTime ?? 0}</td>
                                         <td><span class="badge ${badgeClass}">${task.totalAchievement ?? 0}</span></td>
                                         <td>${formatDecimal(task.workNotDone)}</td>
                                         <td>${formatDecimal(task.workNotDoneOnTime)}</td>
@@ -588,7 +588,7 @@ const UserDetailsModal = ({
                                                             <td className="px-2 sm:px-3 py-2 text-xs text-gray-900 border-b border-gray-100 text-center">{task.department}</td>
                                                             <td className="px-2 sm:px-3 py-2 text-xs text-gray-900 font-medium border-b border-gray-100 text-center">{task.target}</td>
                                                             <td className="px-2 sm:px-3 py-2 text-xs text-gray-900 font-medium border-b border-gray-100 text-center">{task.actualAchievement}</td>
-                                                            <td className="px-2 sm:px-3 py-2 text-xs text-gray-900 font-medium border-b border-gray-100 text-center">{task.actualOnTime ?? task.extraDone ?? 0}</td>
+                                                            <td className="px-2 sm:px-3 py-2 text-xs text-gray-900 font-medium border-b border-gray-100 text-center">{task.actualOnTime ?? 0}</td>
                                                             <td className="px-2 sm:px-3 py-2 text-xs font-medium border-b border-gray-100 text-center">
                                                                 <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${parseFloat(task.totalAchievement) < parseFloat(task.target) ? "bg-red-100 text-red-800" : parseFloat(task.totalAchievement) === parseFloat(task.target) ? "bg-green-100 text-green-800" : "bg-indigo-100 text-indigo-800"}`}>
                                                                     {task.totalAchievement}
@@ -616,7 +616,7 @@ const UserDetailsModal = ({
                                                             {selectedUserDetails.tasks.reduce((sum, t) => sum + (parseFloat(t.actualAchievement) || 0), 0)}
                                                         </td>
                                                         <td className="px-2 sm:px-3 py-2 text-xs font-bold text-gray-900 border-b border-gray-200 text-center">
-                                                            {selectedUserDetails.tasks.reduce((sum, t) => sum + (parseFloat(t.actualOnTime ?? t.extraDone) || 0), 0)}
+                                                            {selectedUserDetails.tasks.reduce((sum, t) => sum + (parseFloat(t.actualOnTime) || 0), 0)}
                                                         </td>
                                                         <td className="px-2 sm:px-3 py-2 text-xs font-bold border-b border-gray-200 text-center">
                                                             {(() => {
@@ -673,7 +673,7 @@ const UserDetailsModal = ({
                                                         </div>
                                                         <div>
                                                             <p className="text-[10px] text-gray-400 font-medium uppercase">Actual On Time</p>
-                                                            <p className="text-xs text-gray-700 font-semibold">{task.actualOnTime ?? task.extraDone ?? 0}</p>
+                                                            <p className="text-xs text-gray-700 font-semibold">{task.actualOnTime ?? 0}</p>
                                                         </div>
                                                         <div>
                                                             <p className="text-[10px] text-gray-400 font-medium uppercase">All Pending</p>
