@@ -60,49 +60,7 @@ const EmployeeListSection = ({
                         <h2 className="text-base md:text-lg font-semibold text-gray-800">
                             List of People
                         </h2>
-                        <div className="flex items-center gap-2">
-                            {selectedEmployees.length > 0 && (
-                                <>
-                                    <button
-                                        type="button"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            onWhatsAppSubmit(e);
-                                        }}
-                                        disabled={whatsappSubmitting || mainSubmitting}
-                                        className="inline-flex items-center px-4 py-2 rounded-md shadow-sm text-sm font-medium text-white bg-[#25D366] hover:bg-[#128C7E] transition-all transform active:scale-95 disabled:bg-green-300 disabled:cursor-not-allowed"
-                                    >
-                                        {whatsappSubmitting ? (
-                                            <Loader2 className="animate-spin h-4 w-4" />
-                                        ) : (
-                                            <>
-                                                <MessageSquare className="h-4 w-4 mr-2" />
-                                                WhatsApp
-                                            </>
-                                        )}
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            onMainSubmit(e);
-                                        }}
-                                        disabled={whatsappSubmitting || mainSubmitting}
-                                        className={`inline-flex items-center px-4 py-2 rounded-md shadow-sm text-sm font-medium text-white transition-all transform active:scale-95 ${mainSubmitting ? "bg-indigo-400 cursor-not-allowed" : "bg-indigo-600 hover:bg-indigo-700"
-                                            }`}
-                                    >
-                                        {mainSubmitting ? (
-                                            <>
-                                                <Loader2 className="animate-spin -ml-1 mr-2 h-4 w-4" />
-                                                Submitting...
-                                            </>
-                                        ) : (
-                                            "Submit Selection"
-                                        )}
-                                    </button>
-                                </>
-                            )}
-                        </div>
+                        {/* WhatsApp and Submit Selection buttons hidden */}
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2 md:gap-3">
@@ -212,103 +170,75 @@ const EmployeeListSection = ({
                 <table className="min-w-full divide-y divide-gray-200 border-separate border-spacing-0">
                     <thead className="bg-gray-50 sticky top-0 z-20 shadow-sm">
                         <tr>
-                            <th className="w-12 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                <input
-                                    type="checkbox"
-                                    checked={selectAll}
-                                    onChange={handleSelectAll}
-                                    className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                                />
+                            <th className="w-12 px-3 py-3 text-center align-middle text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                <div className="flex items-center justify-center">
+                                    <input
+                                        type="checkbox"
+                                        checked={selectAll}
+                                        onChange={handleSelectAll}
+                                        className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                                    />
+                                </div>
                             </th>
 
                             {visibleColumns.name && (
-                                <th className="px-2 min-w-24 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                                     {columnLabels.name}
                                 </th>
                             )}
                             {visibleColumns.designation && (
-                                <th className="px-2 min-w-24 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                                     {columnLabels.designation}
                                 </th>
                             )}
                             {visibleColumns.department && (
-                                <th className="px-2 min-w-24 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                                     {columnLabels.department}
                                 </th>
                             )}
                             {visibleColumns.firm && (
-                                <th className="px-2 min-w-24 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                                     {columnLabels.firm}
                                 </th>
                             )}
                             {visibleColumns.target && (
-                                <th className="px-2 min-w-24 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th className="px-3 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                                     {columnLabels.target}
                                 </th>
                             )}
                             {visibleColumns.actualWork && (
-                                <th className="px-2 min-w-24 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th className="px-3 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                                     {columnLabels.actualWork}
                                 </th>
                             )}
                             {visibleColumns.weeklyDone && (
-                                <th className="px-2 min-w-24 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th className="px-3 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                                     {columnLabels.weeklyDone}
                                 </th>
                             )}
                             {visibleColumns.weeklyOnTime && (
-                                <th className="px-2 min-w-24 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th className="px-3 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                                     {columnLabels.weeklyOnTime}
                                 </th>
                             )}
                             {visibleColumns.totalWork && (
-                                <th className="px-2 min-w-24 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th className="px-3 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                                     {columnLabels.totalWork}
                                 </th>
                             )}
                             {visibleColumns.weekPending && (
-                                <th className="px-2 min-w-24 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th className="px-3 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                                     {columnLabels.weekPending}
                                 </th>
                             )}
                             {visibleColumns.allPending && (
-                                <th className="px-2 min-w-24 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th className="px-3 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                                     {columnLabels.allPending}
                                 </th>
                             )}
                             {visibleColumns.incentiveCategory && (
-                                <th className="px-2 min-w-28 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                                     {columnLabels.incentiveCategory || "Incentive Category"}
-                                </th>
-                            )}
-                            {visibleColumns.lastWeekPlannedNotDone && (
-                                <th className="px-2 min-w-24 text-center py-3  text-xs font-bold uppercase tracking-wider bg-red-100 text-red-700">
-                                    Planned % Work Not Done
-                                </th>
-                            )}
-                            {visibleColumns.lastWeekPlannedNotDoneOnTime && (
-                                <th className="px-2 min-w-24 text-center py-3  text-xs font-bold uppercase tracking-wider bg-red-100 text-red-700">
-                                    Planned % Work Not Done On Time
-                                </th>
-                            )}
-                            {visibleColumns.lastWeekCommitment && (
-                                <th className="px-2 min-w-24 text-center py-3  text-xs font-bold uppercase tracking-wider bg-red-100 text-red-700">
-                                    Commitment
-                                </th>
-                            )}
-                            {visibleColumns.nextWeekPlannedNotDone && (
-                                <th className="px-2  min-w-24 text-center py-3  text-xs font-bold uppercase tracking-wider bg-green-100 text-green-700">
-                                    Planned % Work Not Done
-                                </th>
-                            )}
-                            {visibleColumns.nextWeekPlannedNotDoneOnTime && (
-                                <th className="px-2 min-w-24 text-center py-3  text-xs font-bold uppercase tracking-wider bg-green-100 text-green-700">
-                                    Planned % Work Not Done On Time
-                                </th>
-                            )}
-                            {visibleColumns.nextWeekCommitment && (
-                                <th className="px-2 min-w-24 text-center py-3  text-xs font-bold uppercase tracking-wider bg-green-100 text-green-700">
-                                    Commitment
                                 </th>
                             )}
                         </tr>
@@ -348,22 +278,24 @@ const EmployeeListSection = ({
                                             }`}
                                     >
                                         <td
-                                            className="w-12 px-3 py-4"
+                                            className="w-12 px-3 py-3 text-center align-middle"
                                             onClick={(e) => e.stopPropagation()}
                                         >
-                                            <input
-                                                type="checkbox"
-                                                checked={selectedEmployees.includes(employee.id)}
-                                                onChange={() => handleCheckboxChange(employee.id)}
-                                                className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                                            />
+                                            <div className="flex items-center justify-center">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedEmployees.includes(employee.id)}
+                                                    onChange={() => handleCheckboxChange(employee.id)}
+                                                    className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                                                />
+                                            </div>
                                         </td>
 
                                         {visibleColumns.name && (
-                                            <td className="px-6 py-4 whitespace-nowrap">
+                                            <td className="px-4 py-3 whitespace-nowrap align-middle">
                                                 <div className="flex items-center">
                                                     <img
-                                                        className="h-8 w-8 rounded-full object-cover"
+                                                        className="h-8 w-8 rounded-full object-cover flex-shrink-0"
                                                         src={employee.image}
                                                         alt={employee.name}
                                                     />
@@ -376,49 +308,49 @@ const EmployeeListSection = ({
                                             </td>
                                         )}
                                         {visibleColumns.designation && (
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-800 text-left align-middle">
                                                 {employee.designation}
                                             </td>
                                         )}
                                         {visibleColumns.department && (
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-800 text-left align-middle">
                                                 {employee.department}
                                             </td>
                                         )}
                                         {visibleColumns.firm && (
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-800 text-left align-middle">
                                                 {employee.firm}
                                             </td>
                                         )}
                                         {visibleColumns.target && (
-                                            <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                                            <td className="px-3 py-3 whitespace-nowrap text-sm font-medium text-gray-900 text-center align-middle">
                                                 {employee.target}
                                             </td>
                                         )}
                                         {visibleColumns.actualWork && (
-                                            <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                                            <td className="px-3 py-3 whitespace-nowrap text-sm font-medium text-gray-900 text-center align-middle">
                                                 {employee.actualWorkDone}
                                             </td>
                                         )}
                                         {visibleColumns.weeklyDone && (
-                                            <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                                            <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-900 text-center align-middle">
                                                 {employee.weeklyWorkDone}
                                             </td>
                                         )}
                                         {visibleColumns.weeklyOnTime && (
-                                            <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                                            <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-900 text-center align-middle">
                                                 {employee.weeklyWorkDoneOnTime}
                                             </td>
                                         )}
                                         {visibleColumns.totalWork && (
-                                            <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                                            <td className="px-3 py-3 whitespace-nowrap text-sm font-medium text-gray-900 text-center align-middle">
                                                 {employee.totalWorkDone}
                                             </td>
                                         )}
                                         {visibleColumns.weekPending && (
-                                            <td className="px-3 py-4 whitespace-nowrap text-center">
+                                            <td className="px-3 py-3 whitespace-nowrap text-center align-middle">
                                                 <span
-                                                    className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${employee.weekPending > 3
+                                                    className={`inline-flex items-center justify-center min-w-[24px] px-2 py-0.5 rounded-full text-xs font-semibold ${employee.weekPending > 3
                                                         ? "bg-red-100 text-red-800"
                                                         : employee.weekPending > 1
                                                             ? "bg-yellow-100 text-yellow-800"
@@ -430,99 +362,18 @@ const EmployeeListSection = ({
                                             </td>
                                         )}
                                         {visibleColumns.allPending && (
-                                            <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                                            <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-900 text-center align-middle">
                                                 {employee.allPendingTillDate}
                                             </td>
                                         )}
                                         {visibleColumns.incentiveCategory && (
-                                            <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                                            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-center align-middle">
                                                 {employee.incentiveCategory ? (
-                                                    <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
                                                         {employee.incentiveCategory}
                                                     </span>
                                                 ) : (
                                                     <span className="text-gray-400">-</span>
-                                                )}
-                                            </td>
-                                        )}
-                                        {visibleColumns.lastWeekPlannedNotDone && (
-                                            <td className="px-3 py-4 whitespace-nowrap text-sm bg-red-50 text-red-800 font-medium text-center">
-                                                {employee.plannedWorkNotDone}
-                                            </td>
-                                        )}
-                                        {visibleColumns.lastWeekPlannedNotDoneOnTime && (
-                                            <td className="px-3 py-4 whitespace-nowrap text-sm bg-red-50 text-red-800 font-medium text-center">
-                                                {employee.plannedWorkNotDoneOnTime}
-                                            </td>
-                                        )}
-                                        {visibleColumns.lastWeekCommitment && (
-                                            <td className="px-3 py-4 whitespace-nowrap text-sm bg-red-50 text-red-800 font-medium text-center">
-                                                {employee.commitment}
-                                            </td>
-                                        )}
-                                        {visibleColumns.nextWeekPlannedNotDone && (
-                                            <td className="px-3 py-4 whitespace-nowrap bg-green-50 text-center">
-                                                {selectedEmployees.includes(employee.id) ? (
-                                                    <input
-                                                        type="text"
-                                                        placeholder="0"
-                                                        value={editableData[employee.id]?.nextWeekPlannedNotDone || ""}
-                                                        onChange={(e) =>
-                                                            handleInputChange(
-                                                                employee.id,
-                                                                "nextWeekPlannedNotDone",
-                                                                e.target.value
-                                                            )
-                                                        }
-                                                        className="w-16 px-2 py-1 border border-gray-300 rounded text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                                        onClick={(e) => e.stopPropagation()}
-                                                    />
-                                                ) : (
-                                                    <span className="text-sm text-green-800 font-medium">{employee.nextWeekPlannedWorkNotDone || 0}</span>
-                                                )}
-                                            </td>
-                                        )}
-                                        {visibleColumns.nextWeekPlannedNotDoneOnTime && (
-                                            <td className="px-3 py-4 whitespace-nowrap bg-green-50 text-center">
-                                                {selectedEmployees.includes(employee.id) ? (
-                                                    <input
-                                                        type="text"
-                                                        placeholder="0"
-                                                        value={editableData[employee.id]?.nextWeekPlannedNotDoneOnTime || ""}
-                                                        onChange={(e) =>
-                                                            handleInputChange(
-                                                                employee.id,
-                                                                "nextWeekPlannedNotDoneOnTime",
-                                                                e.target.value
-                                                            )
-                                                        }
-                                                        className="w-16 px-2 py-1 border border-gray-300 rounded text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                                        onClick={(e) => e.stopPropagation()}
-                                                    />
-                                                ) : (
-                                                    <span className="text-sm text-green-800 font-medium">{employee.nextWeekPlannedWorkNotDoneOnTime || 0}</span>
-                                                )}
-                                            </td>
-                                        )}
-                                        {visibleColumns.nextWeekCommitment && (
-                                            <td className="px-3 py-4 whitespace-nowrap bg-green-50 text-center">
-                                                {selectedEmployees.includes(employee.id) ? (
-                                                    <input
-                                                        type="text"
-                                                        placeholder="enter your commitment"
-                                                        value={editableData[employee.id]?.nextWeekCommitment || ""}
-                                                        onChange={(e) =>
-                                                            handleInputChange(
-                                                                employee.id,
-                                                                "nextWeekCommitment",
-                                                                e.target.value
-                                                            )
-                                                        }
-                                                        className="w-48 px-2 py-1 border border-gray-300 rounded text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                                        onClick={(e) => e.stopPropagation()}
-                                                    />
-                                                ) : (
-                                                    <span className="text-sm text-green-800 font-medium">{employee.nextWeekCommitment || 0}</span>
                                                 )}
                                             </td>
                                         )}
@@ -664,131 +515,6 @@ const EmployeeListSection = ({
                                                     {employee.incentiveCategory || "-"}
                                                 </p>
                                             </div>
-                                        </div>
-
-                                        {/* Red Background Section - Last Week Performance */}
-                                        <div className="bg-red-50 p-3 rounded-lg border border-red-100 space-y-3">
-                                            <p className="text-xs font-bold text-red-700 uppercase tracking-wider">
-                                                Last Week Performance
-                                            </p>
-                                            <div className="grid grid-cols-2 gap-3 text-xs">
-                                                <div>
-                                                    <p className="text-red-600 font-medium">% Work Not Done</p>
-                                                    <p className="text-sm font-bold text-red-800">
-                                                        {employee.plannedWorkNotDone || 0}
-                                                    </p>
-                                                </div>
-                                                <div>
-                                                    <p className="text-red-600 font-medium">Not Done On Time</p>
-                                                    <p className="text-sm font-bold text-red-800">
-                                                        {employee.plannedWorkNotDoneOnTime || 0}
-                                                    </p>
-                                                </div>
-                                                <div className="col-span-2">
-                                                    <p className="text-red-600 font-medium">Commitment</p>
-                                                    <p className="text-sm font-bold text-red-800">
-                                                        {employee.commitment || 0}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Green Background Section - Next Week Planning */}
-                                        <div className="bg-green-50 p-3 rounded-lg border border-green-100 space-y-3">
-                                            <p className="text-xs font-bold text-green-700 uppercase tracking-wider">
-                                                Next Week Planning
-                                            </p>
-
-                                            {selectedEmployees.includes(employee.id) ? (
-                                                <div className="space-y-3">
-                                                    <div>
-                                                        <label className="text-xs text-green-700 font-medium block mb-1">
-                                                            Work Not Done %
-                                                        </label>
-                                                        <input
-                                                            type="number"
-                                                            min="0"
-                                                            max="100"
-                                                            value={
-                                                                employeeCommitments[employee.id]
-                                                                    ?.nextWeekPlannedWorkNotDone || 0
-                                                            }
-                                                            onChange={(e) =>
-                                                                handleCommitmentChange(
-                                                                    employee.id,
-                                                                    "nextWeekPlannedWorkNotDone",
-                                                                    e.target.value
-                                                                )
-                                                            }
-                                                            className="w-full px-2 py-1.5 border border-green-200 rounded text-sm focus:ring-1 focus:ring-green-500 focus:border-green-500"
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label className="text-xs text-green-700 font-medium block mb-1">
-                                                            Work Not Done On Time %
-                                                        </label>
-                                                        <input
-                                                            type="number"
-                                                            min="0"
-                                                            max="100"
-                                                            value={
-                                                                employeeCommitments[employee.id]
-                                                                    ?.nextWeekPlannedWorkNotDoneOnTime || 0
-                                                            }
-                                                            onChange={(e) =>
-                                                                handleCommitmentChange(
-                                                                    employee.id,
-                                                                    "nextWeekPlannedWorkNotDoneOnTime",
-                                                                    e.target.value
-                                                                )
-                                                            }
-                                                            className="w-full px-2 py-1.5 border border-green-200 rounded text-sm focus:ring-1 focus:ring-green-500 focus:border-green-500"
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label className="text-xs text-green-700 font-medium block mb-1">
-                                                            Commitment %
-                                                        </label>
-                                                        <input
-                                                            type="text"
-                                                            placeholder="enter your commitment"
-                                                            value={
-                                                                employeeCommitments[employee.id]
-                                                                    ?.commitment || ""
-                                                            }
-                                                            onChange={(e) =>
-                                                                handleCommitmentChange(
-                                                                    employee.id,
-                                                                    "commitment",
-                                                                    e.target.value
-                                                                )
-                                                            }
-                                                            className="w-full px-2 py-1.5 border border-green-200 rounded text-sm focus:ring-1 focus:ring-green-500 focus:border-green-500"
-                                                        />
-                                                    </div>
-                                                </div>
-                                            ) : (
-                                                <div className="grid grid-cols-2 gap-3 text-xs">
-                                                    <div>
-                                                        <p className="text-green-600 font-medium">% Work Not Done</p>
-                                                        <p className="text-sm font-bold text-green-800">
-                                                            {employee.nextWeekPlannedWorkNotDone || 0}
-                                                        </p>
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-green-600 font-medium">Not Done On Time</p>
-                                                        <p className="text-sm font-bold text-green-800">
-                                                            {employee.nextWeekPlannedWorkNotDoneOnTime || 0}
-                                                        </p>
-                                                    </div>
-                                                    <div className="col-span-2">
-                                                        <p className="text-green-600 font-medium">Commitment</p>
-                                                        <p className="text-sm font-bold text-green-800">
-                                                            {employee.nextWeekCommitment || 0}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            )}
                                         </div>
                                     </div>
                                 )}

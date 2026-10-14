@@ -109,13 +109,7 @@ const AdminDashboard = () => {
     { key: "totalWork", label: columnLabels.totalWork },
     { key: "weekPending", label: columnLabels.weekPending },
     { key: "allPending", label: columnLabels.allPending },
-    { key: "incentiveCategory", label: columnLabels.incentiveCategory || "Incentive Category" },
-    { key: "lastWeekPlannedNotDone", label: "Last Week Planned Work Not Done %" },
-    { key: "lastWeekPlannedNotDoneOnTime", label: "Last Week Planned Work Not Done On Time %" },
-    { key: "lastWeekCommitment", label: "Last Week Commitment" },
-    { key: "nextWeekPlannedNotDone", label: columnLabels.nextWeekPlannedNotDone },
-    { key: "nextWeekPlannedNotDoneOnTime", label: columnLabels.nextWeekPlannedNotDoneOnTime },
-    { key: "nextWeekCommitment", label: columnLabels.nextWeekCommitment },
+    { key: "incentiveCategory", label: columnLabels.incentiveCategory || "Incentive Category" }
   ];
 
   const [showColumnFilter, setShowColumnFilter] = useState(false);
@@ -854,6 +848,7 @@ const AdminDashboard = () => {
       actualSheetRef: row[8] || "",
       target: row[10] || 0,
       extraDone: row[17] || 0,
+      actualOnTime: row[17] || 0,
       actualAchievement: row[18] || 0,
       totalAchievement: (() => {
         const target = parseFloat(row[10]) || 0;

@@ -416,10 +416,20 @@ const AdminHistoryCommitment = () => {
 
         setSelectedUserDetails({
             name: record.name,
+            id: record.id ? String(record.id) : "",
+            firm: record.firm || "",
             department: userDept,
             image: finalImageUrl,
             dateStart: record.dateStart,
             dateEnd: record.dateEnd,
+            target: record.target || 0,
+            actualWorkDone: record.actualWorkDone || 0,
+            totalWorkDone: record.totalWorkDone || 0,
+            weeklyWorkDone: record.workNotDone || "0%",
+            weeklyWorkDoneOnTime: record.workNotDoneOnTime || "0%",
+            workNotDone: record.workNotDone || "0%",
+            workNotDoneOnTime: record.workNotDoneOnTime || "0%",
+            allPendingTillDate: record.allPendingTillDate || 0,
             tasks: tasks
         });
     };
@@ -773,12 +783,6 @@ const AdminHistoryCommitment = () => {
                                     <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">Total Work Done</th>
                                     <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">Week Pending</th>
                                     <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">All Pending Till Date</th>
-                                    <th className="px-4 py-3 text-right text-xs font-bold bg-red-100 text-red-700 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">LW Planned % Not Done</th>
-                                    <th className="px-4 py-3 text-right text-xs font-bold bg-red-100 text-red-700 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">LW % Not Done On Time</th>
-                                    <th className="px-4 py-3 text-right text-xs font-bold bg-red-100 text-red-700 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">LW Commitment</th>
-                                    <th className="px-4 py-3 text-right text-xs font-bold bg-green-100 text-green-700 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">NW Planned % Not Done</th>
-                                    <th className="px-4 py-3 text-right text-xs font-bold bg-green-100 text-green-700 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">NW % Not Done On Time</th>
-                                    <th className="px-4 py-3 text-right text-xs font-bold bg-green-100 text-green-700 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">NW Commitment</th>
                                 </tr>
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-100">
@@ -848,29 +852,11 @@ const AdminHistoryCommitment = () => {
                                                     {formatValue(r.allPendingTillDate)}
                                                 </span>
                                             </td>
-                                            <td className="px-4 py-3 text-right bg-red-50/30">
-                                                <span className="text-red-700 font-medium">{formatValue(r.lastWeekPlannedNotDone)}</span>
-                                            </td>
-                                            <td className="px-4 py-3 text-right bg-red-50/30">
-                                                <span className="text-red-700 font-medium">{formatValue(r.lastWeekPlannedNotDoneOnTime)}</span>
-                                            </td>
-                                            <td className="px-4 py-3 text-right bg-red-50/30">
-                                                <span className="text-red-700 font-bold">{formatValue(r.lastWeekCommitment)}</span>
-                                            </td>
-                                            <td className="px-4 py-3 text-right bg-green-50/30">
-                                                <span className="text-green-700 font-medium">{formatValue(r.nextWeekPlannedNotDone)}</span>
-                                            </td>
-                                            <td className="px-4 py-3 text-right bg-green-50/30">
-                                                <span className="text-green-700 font-medium">{formatValue(r.nextWeekPlannedNotDoneOnTime)}</span>
-                                            </td>
-                                            <td className="px-4 py-3 text-right bg-green-50/30">
-                                                <span className="text-green-700 font-bold">{formatValue(r.nextWeekCommitment)}</span>
-                                            </td>
                                         </tr>
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan="18" className="px-6 py-12 text-center text-gray-400">
+                                        <td colSpan="12" className="px-6 py-12 text-center text-gray-400">
                                             <div className="flex flex-col items-center gap-2">
                                                 <AlertCircle className="w-8 h-8 text-gray-300" />
                                                 <p className="font-medium text-gray-500">No records found under this category / filter.</p>
@@ -890,7 +876,6 @@ const AdminHistoryCommitment = () => {
                                         <td className="px-4 py-3 text-right text-gray-800 border-t border-gray-200">{averages.totalWorkDone}</td>
                                         <td className="px-4 py-3 text-right text-gray-800 border-t border-gray-200">{averages.weekPending}</td>
                                         <td className="px-4 py-3 text-right text-gray-800 border-t border-gray-200">{averages.allPendingTillDate}</td>
-                                        <td colSpan="6" className="border-t border-gray-200"></td>
                                     </tr>
                                 </tfoot>
                             )}

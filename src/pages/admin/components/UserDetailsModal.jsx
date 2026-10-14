@@ -12,6 +12,14 @@ const UserDetailsModal = ({
     const [timeFilter, setTimeFilter] = React.useState("all");
     const [statusFilter, setStatusFilter] = React.useState("all");
 
+    const formatDecimal = (val) => {
+        if (val === undefined || val === null || val === "") return "0";
+        let str = String(val).trim().replace(/%/g, "");
+        const num = parseFloat(str);
+        if (isNaN(num)) return str;
+        return num % 1 === 0 ? String(num) : num.toFixed(2);
+    };
+
     const handlePrint = () => {
         if (!selectedUserDetails) return;
 
@@ -36,6 +44,15 @@ const UserDetailsModal = ({
             return `${str}%`;
         };
 
+        const totalTarget = tasks.reduce((sum, t) => sum + (parseFloat(t.target) || 0), 0);
+        const totalActual = tasks.reduce((sum, t) => sum + (parseFloat(t.actualAchievement) || 0), 0);
+        const totalActualOnTime = tasks.reduce((sum, t) => sum + (parseFloat(t.actualOnTime ?? t.extraDone) || 0), 0);
+        const totalAchievement = tasks.reduce((sum, t) => sum + (parseFloat(t.totalAchievement) || 0), 0);
+        const totalPending = tasks.reduce((sum, t) => sum + (parseFloat(t.allPendingTillDate) || 0), 0);
+        const isTotalAchZero = totalAchievement === 0 && totalTarget > 0;
+        const isTotalTargetMet = (totalTarget > 0 && totalAchievement >= totalTarget) || (totalTarget === 0 && totalAchievement > 0);
+        const totalBadgeClass = isTotalAchZero ? 'badge-red' : (isTotalTargetMet ? 'badge-green' : 'badge-blue');
+
         const html = `
             <html>
                 <head>
@@ -43,16 +60,22 @@ const UserDetailsModal = ({
                     <style>
                         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
                         
+                        @page {
+                            size: landscape;
+                            margin: 8mm;
+                        }
+
                         body { 
                             font-family: 'Inter', sans-serif; 
-                            padding: 30px; 
+                            padding: 20px; 
                             color: #1e293b;
                             line-height: 1.4;
                             background: #fff;
                         }
                         
                         .report-container {
-                            max-width: 1000px;
+                            max-width: 100%;
+                            width: 100%;
                             margin: 0 auto;
                         }
 
@@ -195,8 +218,7 @@ const UserDetailsModal = ({
                             width: 100%;
                             border-collapse: collapse;
                             margin-top: 5px;
-                            font-size: 10.5px;
-                            table-layout: fixed;
+                            font-size: 10px;
                         }
 
                         th {
@@ -206,43 +228,33 @@ const UserDetailsModal = ({
                             text-transform: uppercase;
                             font-size: 9px;
                             letter-spacing: 0.025em;
-                            padding: 10px 6px;
+                            padding: 8px 4px;
                             text-align: center;
-                            border: 1px solid #e2e8f0;
+                            border: 1px solid #cbd5e1;
                             vertical-align: middle;
                         }
 
-                        th:first-child { text-align: left; width: 25%; }
-                        th.num-col { width: 9%; }
-                        th.red-header { background-color: #fee2e2; color: #991b1b; }
-
                         td {
-                            padding: 10px 6px;
+                            padding: 7px 4px;
                             border: 1px solid #e2e8f0;
                             color: #334155;
                             text-align: center;
                             vertical-align: middle;
+                            font-size: 10px;
                             word-wrap: break-word;
                         }
 
-                        td:first-child { text-align: left; font-weight: 500; }
-
                         .badge {
                             display: inline-block;
-                            padding: 2px 6px;
-                            border-radius: 4px;
+                            padding: 2px 7px;
+                            border-radius: 9999px;
                             font-weight: 700;
+                            font-size: 9.5px;
                         }
 
-                        .badge-blue { background: #e2f6f8; color: #16555a; }
+                        .badge-blue { background: #e0e7ff; color: #4338ca; }
                         .badge-red { background: #fee2e2; color: #991b1b; }
                         .badge-green { background: #dcfce7; color: #166534; }
-
-                        .red-col {
-                            background-color: #fff1f2 !important;
-                            color: #991b1b;
-                            font-weight: 700;
-                        }
 
                         .footer {
                             margin-top: 40px;
@@ -296,8 +308,11 @@ const UserDetailsModal = ({
                             <img src="${selectedUserDetails.image}" alt="${selectedUserDetails.name}" class="emp-photo">
                             <div class="emp-details">
                                 <h2>${selectedUserDetails.name}</h2>
-                                <p>${selectedUserDetails.department || 'Operations Management'}</p>
-                                <p style="font-size: 12px; color: #94a3b8;">User ID: ${selectedUserDetails.id || 'N/A'}</p>
+                                <p style="font-size: 14px; font-weight: 600; color: #334155; margin-top: 2px;">
+                                    <span>${selectedUserDetails.department || 'Operations Management'}</span>
+                                    ${selectedUserDetails.firm ? `<span style="color: #cbd5e1; margin: 0 6px;">&bull;</span><span style="color: #24888f; font-weight: 700;">${selectedUserDetails.firm}</span>` : ''}
+                                </p>
+                                ${selectedUserDetails.id ? `<p style="font-size: 11px; color: #64748b; margin-top: 4px;">User ID: ${selectedUserDetails.id}</p>` : ''}
                             </div>
                         </div>
 
@@ -316,42 +331,60 @@ const UserDetailsModal = ({
                             </div>
                         </div>
 
-                        <h3 class="section-title">Individual Task Breakdown</h3>
+                        <h3 class="section-title">Task Details</h3>
                         <table>
                             <thead>
                                 <tr>
-                                    <th>FMS & TASK DESCRIPTION</th>
-                                    <th class="num-col">TARGET</th>
-                                    <th class="num-col">ACTUAL WORK DONE</th>
-                                    <th class="num-col">WORK NOT DONE %</th>
-                                    <th class="num-col">WORK NOT DONE ON TIME%</th>
-                                    <th class="num-col red-header">PLANNED % WORK NOT DONE</th>
-                                    <th class="num-col red-header">PLANNED % WORK NOT DONE ON TIME</th>
-                                    <th class="num-col red-header">COMMITMENT</th>
+                                    <th style="width: 16%;">FMS NAME</th>
+                                    <th style="width: 18%;">TASK NAME</th>
+                                    <th style="width: 8%;">DEPARTMENT</th>
+                                    <th style="width: 6%;">TARGET</th>
+                                    <th style="width: 9%;">ACTUAL ACHIEVEMENT</th>
+                                    <th style="width: 8%;">ACTUAL ON TIME</th>
+                                    <th style="width: 9%;">TOTAL ACHIEVEMENT</th>
+                                    <th style="width: 9%;">% WORK NOT DONE</th>
+                                    <th style="width: 10%;">% WORK NOT DONE ON TIME</th>
+                                    <th style="width: 8%;">ALL PENDING TILL DATE</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 ${tasks.map(task => {
-                                    const achievement = parseFloat(task.totalAchievement) || 0;
-                                    const target = parseFloat(task.target) || 0;
-                                    const isTargetMet = achievement >= target && target > 0;
-                                    
+                                    const targetVal = parseFloat(task.target) || 0;
+                                    const totalAchVal = parseFloat(task.totalAchievement) || 0;
+                                    const isZero = totalAchVal === 0 && targetVal > 0;
+                                    const isTargetMet = (targetVal > 0 && totalAchVal >= targetVal) || (targetVal === 0 && totalAchVal > 0);
+                                    const badgeClass = isZero ? 'badge-red' : (isTargetMet ? 'badge-green' : 'badge-blue');
+
                                     return `
                                     <tr>
-                                        <td>
-                                            <div style="font-weight: 700; color: #0f172a; font-size: 11px;">${task.fmsName}</div>
-                                            <div style="font-size: 9px; color: #64748b; margin-top: 1px;">${task.taskName}</div>
-                                        </td>
-                                        <td><span class="badge ${target > 0 ? 'badge-blue' : ''}">${task.target}</span></td>
-                                        <td><span class="badge ${isTargetMet ? 'badge-green' : (achievement > 0 ? 'badge-blue' : 'badge-red')}">${task.totalAchievement}</span></td>
-                                        <td>${formatPercent(task.workNotDone)}</td>
-                                        <td>${formatPercent(task.workNotDoneOnTime)}</td>
-                                        <td class="red-col">${formatPercent(selectedUserDetails.plannedWorkNotDone)}</td>
-                                        <td class="red-col">${formatPercent(selectedUserDetails.plannedWorkNotDoneOnTime)}</td>
-                                        <td class="red-col">${selectedUserDetails.commitment || 0}</td>
+                                        <td style="font-weight: 500;">${task.fmsName || '-'}</td>
+                                        <td style="font-weight: 600; color: #0f172a;">${task.taskName || '-'}</td>
+                                        <td style="color: #64748b;">${task.department || '-'}</td>
+                                        <td style="font-weight: 700;">${task.target ?? 0}</td>
+                                        <td style="font-weight: 600;">${task.actualAchievement ?? 0}</td>
+                                        <td>${task.actualOnTime ?? task.extraDone ?? 0}</td>
+                                        <td><span class="badge ${badgeClass}">${task.totalAchievement ?? 0}</span></td>
+                                        <td>${formatDecimal(task.workNotDone)}</td>
+                                        <td>${formatDecimal(task.workNotDoneOnTime)}</td>
+                                        <td>${task.allPendingTillDate ?? 0}</td>
                                     </tr>
-                                `}).join('')}
+                                `;
+                                }).join('')}
                             </tbody>
+                            <tfoot>
+                                <tr style="background-color: #f8fafc; font-weight: 700; border-top: 2px solid #cbd5e1;">
+                                    <td colspan="3" style="font-weight: 800; font-size: 10px; color: #0f172a; text-transform: uppercase; letter-spacing: 0.05em; text-align: center;">TOTAL (${tasks.length} TASKS)</td>
+                                    <td style="font-weight: 800; font-size: 10px; text-align: center; color: #0f172a;">${totalTarget}</td>
+                                    <td style="font-weight: 800; font-size: 10px; text-align: center; color: #0f172a;">${totalActual}</td>
+                                    <td style="font-weight: 800; font-size: 10px; text-align: center; color: #0f172a;">${totalActualOnTime}</td>
+                                    <td style="text-align: center;">
+                                        <span class="badge ${totalBadgeClass}" style="font-size: 9.5px; font-weight: 800; padding: 2px 7px;">${totalAchievement}</span>
+                                    </td>
+                                    <td style="font-weight: 800; font-size: 10px; text-align: center; color: #dc2626;">${formatPercent(selectedUserDetails.weeklyWorkDone)}</td>
+                                    <td style="font-weight: 800; font-size: 10px; text-align: center; color: #dc2626;">${formatPercent(selectedUserDetails.weeklyWorkDoneOnTime)}</td>
+                                    <td style="font-weight: 800; font-size: 10px; text-align: center; color: #0f172a;">${totalPending}</td>
+                                </tr>
+                            </tfoot>
                         </table>
 
                         <div class="sign-section">
@@ -431,13 +464,6 @@ const UserDetailsModal = ({
         return "hover:bg-gray-50";
     };
 
-    const formatDecimal = (val) => {
-        if (val === undefined || val === null || val === "") return "0";
-        const num = parseFloat(val);
-        if (isNaN(num)) return val;
-        return num % 1 === 0 ? num : num.toFixed(2);
-    };
-
     const filteredRows = React.useMemo(() => {
         if (!activeDrillDown || !activeDrillDown.rows) return [];
 
@@ -475,10 +501,10 @@ const UserDetailsModal = ({
         <>
             {/* User Details Modal - Rendered via Portal to cover header/sidebar */}
             {selectedUserDetails && ReactDOM.createPortal(
-                <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-[100] flex items-center justify-center p-2 md:p-4">
-                    <div className="bg-white rounded-lg shadow-lg w-full max-w-6xl max-h-[95vh] overflow-hidden flex flex-col">
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-xs z-[100] flex items-center justify-center p-2 sm:p-4">
+                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-[96vw] 2xl:max-w-[1700px] max-h-[94vh] overflow-hidden flex flex-col border border-gray-200">
                         {/* Header */}
-                        <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex items-center justify-between flex-shrink-0">
+                        <div className="sticky top-0 bg-white border-b border-gray-200 px-4 py-3 sm:px-6 sm:py-3.5 flex items-center justify-between flex-shrink-0">
                             <div className="flex items-center gap-3 min-w-0">
                                 <img
                                     className="h-10 w-10 rounded-full object-cover flex-shrink-0"
@@ -489,50 +515,64 @@ const UserDetailsModal = ({
                                     <h2 className="text-base font-bold text-gray-900 truncate">
                                         {selectedUserDetails.name}
                                     </h2>
-                                    <p className="text-xs text-gray-500 truncate">
-                                        {selectedUserDetails.department}
+                                    <p className="text-xs text-gray-500 truncate flex items-center gap-1.5 mt-0.5">
+                                        <span>{selectedUserDetails.department}</span>
+                                        {selectedUserDetails.firm && (
+                                            <>
+                                                <span className="text-gray-300">•</span>
+                                                <span className="font-semibold text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-200">{selectedUserDetails.firm}</span>
+                                            </>
+                                        )}
                                     </p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-2">
                                 <button
                                     onClick={handlePrint}
-                                    className="flex items-center gap-2 px-3 py-1.5 bg-indigo-600 text-white rounded-md text-xs font-semibold hover:bg-indigo-700 transition-colors shadow-sm"
+                                    className="flex items-center gap-2 px-3 py-1.5 bg-indigo-600 text-white rounded-md text-xs font-semibold hover:bg-indigo-700 transition-colors shadow-sm cursor-pointer"
                                 >
                                     <Printer className="w-4 h-4" />
                                     <span>Print Tasks</span>
                                 </button>
                                 <button
                                     onClick={() => setSelectedUserDetails(null)}
-                                    className="p-2 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
+                                    className="p-2 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0 cursor-pointer"
                                 >
                                     <X className="w-5 h-5 text-gray-600" />
                                 </button>
                             </div>
-                        </div>                        {/* Scrollable Content */}
+                        </div>
+                        {/* Scrollable Content */}
                         <div className="flex-1 overflow-y-auto">
-                            <div className="p-4 space-y-4">
+                            <div className="p-3 sm:p-5 space-y-4">
                                 {/* Tasks Details Section */}
                                 <div>
-                                    <h3 className="text-sm font-semibold text-gray-900 mb-3">
-                                        Task Details
-                                    </h3>
+                                    <div className="flex items-center justify-between mb-3">
+                                        <h3 className="text-sm font-bold text-gray-900 tracking-tight">
+                                            Task Details
+                                        </h3>
+                                        {selectedUserDetails.tasks && (
+                                            <span className="text-xs text-gray-500 font-medium">
+                                                {selectedUserDetails.tasks.length} tasks
+                                            </span>
+                                        )}
+                                    </div>
 
                                     {/* Desktop View - Table */}
-                                    <div className="hidden md:block overflow-auto max-h-[calc(95vh-220px)] border border-gray-200 rounded-lg relative">
-                                        <table className="min-w-full divide-y divide-gray-200 border-separate border-spacing-0">
+                                    <div className="hidden md:block overflow-auto max-h-[calc(94vh-185px)] border border-gray-200 rounded-lg relative shadow-xs">
+                                        <table className="w-full min-w-full divide-y divide-gray-200 border-separate border-spacing-0">
                                             <thead className="bg-gray-100 sticky top-0 z-20 shadow-xs">
                                                 <tr>
-                                                    <th className="sticky top-0 bg-gray-100 z-20 px-3 py-2.5 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">FMS Name</th>
-                                                    <th className="sticky top-0 bg-gray-100 z-20 px-3 py-2.5 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">Task Name</th>
-                                                    <th className="sticky top-0 bg-gray-100 z-20 px-3 py-2.5 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">Department</th>
-                                                    <th className="sticky top-0 bg-gray-100 z-20 px-3 py-2.5 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">Target</th>
-                                                    <th className="sticky top-0 bg-gray-100 z-20 px-3 py-2.5 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">Actual Achievement</th>
-                                                    <th className="sticky top-0 bg-gray-100 z-20 px-3 py-2.5 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">Extra Done</th>
-                                                    <th className="sticky top-0 bg-gray-100 z-20 px-3 py-2.5 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">Total Achievement</th>
-                                                    <th className="sticky top-0 bg-gray-100 z-20 px-3 py-2.5 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">% Work Not Done</th>
-                                                    <th className="sticky top-0 bg-gray-100 z-20 px-3 py-2.5 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">% Work Not Done on Time</th>
-                                                    <th className="sticky top-0 bg-gray-100 z-20 px-3 py-2.5 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">All Pending Till Date</th>
+                                                    <th className="sticky top-0 bg-gray-100 z-20 px-2 sm:px-3 py-2.5 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider border-b border-gray-200">FMS Name</th>
+                                                    <th className="sticky top-0 bg-gray-100 z-20 px-2 sm:px-3 py-2.5 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider border-b border-gray-200">Task Name</th>
+                                                    <th className="sticky top-0 bg-gray-100 z-20 px-2 sm:px-3 py-2.5 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider border-b border-gray-200">Department</th>
+                                                    <th className="sticky top-0 bg-gray-100 z-20 px-2 sm:px-3 py-2.5 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider border-b border-gray-200">Target</th>
+                                                    <th className="sticky top-0 bg-gray-100 z-20 px-2 sm:px-3 py-2.5 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider border-b border-gray-200">Actual Achievement</th>
+                                                    <th className="sticky top-0 bg-gray-100 z-20 px-2 sm:px-3 py-2.5 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider border-b border-gray-200">Actual On Time</th>
+                                                    <th className="sticky top-0 bg-gray-100 z-20 px-2 sm:px-3 py-2.5 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider border-b border-gray-200">Total Achievement</th>
+                                                    <th className="sticky top-0 bg-gray-100 z-20 px-2 sm:px-3 py-2.5 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider border-b border-gray-200">% Work Not Done</th>
+                                                    <th className="sticky top-0 bg-gray-100 z-20 px-2 sm:px-3 py-2.5 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider border-b border-gray-200">% Work Not Done on Time</th>
+                                                    <th className="sticky top-0 bg-gray-100 z-20 px-2 sm:px-3 py-2.5 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider border-b border-gray-200">All Pending Till Date</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="bg-white divide-y divide-gray-200">
@@ -543,26 +583,64 @@ const UserDetailsModal = ({
                                                             onClick={(e) => handleDrillDown(task, "Total Achievement", task.totalAchievement, e)}
                                                             className="hover:bg-indigo-50 cursor-pointer transition-colors"
                                                         >
-                                                            <td className="px-3 py-2 text-xs text-gray-900 border-b border-gray-100 text-center">{task.fmsName}</td>
-                                                            <td className="px-3 py-2 text-xs text-gray-900 border-b border-gray-100 text-center">{task.taskName}</td>
-                                                            <td className="px-3 py-2 text-xs text-gray-900 border-b border-gray-100 text-center">{task.department}</td>
-                                                            <td className="px-3 py-2 text-xs text-gray-900 font-medium border-b border-gray-100 text-center">{task.target}</td>
-                                                            <td className="px-3 py-2 text-xs text-gray-900 font-medium border-b border-gray-100 text-center">{task.actualAchievement}</td>
-                                                            <td className="px-3 py-2 text-xs text-gray-900 font-medium border-b border-gray-100 text-center">{task.extraDone}</td>
-                                                            <td className="px-3 py-2 text-xs font-medium border-b border-gray-100 text-center">
+                                                            <td className="px-2 sm:px-3 py-2 text-xs text-gray-900 border-b border-gray-100 text-center">{task.fmsName}</td>
+                                                            <td className="px-2 sm:px-3 py-2 text-xs text-gray-900 border-b border-gray-100 text-center">{task.taskName}</td>
+                                                            <td className="px-2 sm:px-3 py-2 text-xs text-gray-900 border-b border-gray-100 text-center">{task.department}</td>
+                                                            <td className="px-2 sm:px-3 py-2 text-xs text-gray-900 font-medium border-b border-gray-100 text-center">{task.target}</td>
+                                                            <td className="px-2 sm:px-3 py-2 text-xs text-gray-900 font-medium border-b border-gray-100 text-center">{task.actualAchievement}</td>
+                                                            <td className="px-2 sm:px-3 py-2 text-xs text-gray-900 font-medium border-b border-gray-100 text-center">{task.actualOnTime ?? task.extraDone ?? 0}</td>
+                                                            <td className="px-2 sm:px-3 py-2 text-xs font-medium border-b border-gray-100 text-center">
                                                                 <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${parseFloat(task.totalAchievement) < parseFloat(task.target) ? "bg-red-100 text-red-800" : parseFloat(task.totalAchievement) === parseFloat(task.target) ? "bg-green-100 text-green-800" : "bg-indigo-100 text-indigo-800"}`}>
                                                                     {task.totalAchievement}
                                                                 </span>
                                                             </td>
-                                                            <td className="px-3 py-2 text-xs text-gray-900 border-b border-gray-100 text-center">{formatDecimal(task.workNotDone)}</td>
-                                                            <td className="px-3 py-2 text-xs text-gray-900 border-b border-gray-100 text-center">{formatDecimal(task.workNotDoneOnTime)}</td>
-                                                            <td className="px-3 py-2 text-xs text-gray-900 border-b border-gray-100 text-center">{task.allPendingTillDate}</td>
+                                                            <td className="px-2 sm:px-3 py-2 text-xs text-gray-900 border-b border-gray-100 text-center">{formatDecimal(task.workNotDone)}</td>
+                                                            <td className="px-2 sm:px-3 py-2 text-xs text-gray-900 border-b border-gray-100 text-center">{formatDecimal(task.workNotDoneOnTime)}</td>
+                                                            <td className="px-2 sm:px-3 py-2 text-xs text-gray-900 border-b border-gray-100 text-center">{task.allPendingTillDate}</td>
                                                         </tr>
                                                     ))
                                                 ) : (
                                                     <tr><td colSpan="10" className="px-3 py-2 text-center text-xs text-gray-500">No tasks available</td></tr>
                                                 )}
                                             </tbody>
+                                            {selectedUserDetails.tasks && selectedUserDetails.tasks.length > 0 && (
+                                                <tfoot className="bg-gray-100 font-bold sticky bottom-0 border-t-2 border-gray-300">
+                                                    <tr>
+                                                        <td colSpan="3" className="px-2 sm:px-3 py-2 text-xs font-bold text-gray-900 border-b border-gray-200 text-center uppercase tracking-wider">
+                                                            Total ({selectedUserDetails.tasks.length} Tasks)
+                                                        </td>
+                                                        <td className="px-2 sm:px-3 py-2 text-xs font-bold text-gray-900 border-b border-gray-200 text-center">
+                                                            {selectedUserDetails.tasks.reduce((sum, t) => sum + (parseFloat(t.target) || 0), 0)}
+                                                        </td>
+                                                        <td className="px-2 sm:px-3 py-2 text-xs font-bold text-gray-900 border-b border-gray-200 text-center">
+                                                            {selectedUserDetails.tasks.reduce((sum, t) => sum + (parseFloat(t.actualAchievement) || 0), 0)}
+                                                        </td>
+                                                        <td className="px-2 sm:px-3 py-2 text-xs font-bold text-gray-900 border-b border-gray-200 text-center">
+                                                            {selectedUserDetails.tasks.reduce((sum, t) => sum + (parseFloat(t.actualOnTime ?? t.extraDone) || 0), 0)}
+                                                        </td>
+                                                        <td className="px-2 sm:px-3 py-2 text-xs font-bold border-b border-gray-200 text-center">
+                                                            {(() => {
+                                                                const totalAch = selectedUserDetails.tasks.reduce((sum, t) => sum + (parseFloat(t.totalAchievement) || 0), 0);
+                                                                const totalTgt = selectedUserDetails.tasks.reduce((sum, t) => sum + (parseFloat(t.target) || 0), 0);
+                                                                return (
+                                                                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold ${totalAch < totalTgt ? "bg-red-100 text-red-800" : totalAch === totalTgt ? "bg-green-100 text-green-800" : "bg-indigo-100 text-indigo-800"}`}>
+                                                                        {totalAch}
+                                                                    </span>
+                                                                );
+                                                            })()}
+                                                        </td>
+                                                        <td className="px-2 sm:px-3 py-2 text-xs font-bold text-red-600 border-b border-gray-200 text-center">
+                                                            {formatDecimal(selectedUserDetails.weeklyWorkDone)}%
+                                                        </td>
+                                                        <td className="px-2 sm:px-3 py-2 text-xs font-bold text-red-600 border-b border-gray-200 text-center">
+                                                            {formatDecimal(selectedUserDetails.weeklyWorkDoneOnTime)}%
+                                                        </td>
+                                                        <td className="px-2 sm:px-3 py-2 text-xs font-bold text-gray-900 border-b border-gray-200 text-center">
+                                                            {selectedUserDetails.tasks.reduce((sum, t) => sum + (parseFloat(t.allPendingTillDate) || 0), 0)}
+                                                        </td>
+                                                    </tr>
+                                                </tfoot>
+                                            )}
                                         </table>
                                     </div>
 
@@ -594,8 +672,8 @@ const UserDetailsModal = ({
                                                             <p className="text-xs text-gray-700 font-semibold">{task.actualAchievement}</p>
                                                         </div>
                                                         <div>
-                                                            <p className="text-[10px] text-gray-400 font-medium uppercase">Extra Done</p>
-                                                            <p className="text-xs text-gray-700 font-semibold">{task.extraDone}</p>
+                                                            <p className="text-[10px] text-gray-400 font-medium uppercase">Actual On Time</p>
+                                                            <p className="text-xs text-gray-700 font-semibold">{task.actualOnTime ?? task.extraDone ?? 0}</p>
                                                         </div>
                                                         <div>
                                                             <p className="text-[10px] text-gray-400 font-medium uppercase">All Pending</p>
@@ -637,8 +715,8 @@ const UserDetailsModal = ({
 
             {/* Drill Down Modal - Rendered via Portal above User Details Modal */}
             {activeDrillDown && ReactDOM.createPortal(
-                <div className="fixed inset-0 bg-black/25 backdrop-blur-sm z-[110] flex items-center justify-center p-4">
-                    <div className="bg-white rounded-lg shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col animate-fadeIn border-2 border-gray-100">
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-xs z-[110] flex items-center justify-center p-2 sm:p-4">
+                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[85vh] flex flex-col animate-fadeIn border border-gray-200">
                         <div className="flex items-center justify-between gap-2 p-4 border-b border-gray-200 bg-gray-50 rounded-t-lg flex-wrap">
                             {/* Title */}
                             <div className="min-w-0">
