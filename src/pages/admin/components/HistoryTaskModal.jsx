@@ -44,7 +44,6 @@ const HistoryTaskModal = ({
 
         const totalTarget = tasks.reduce((sum, t) => sum + (parseFloat(t.target) || 0), 0);
         const totalActual = tasks.reduce((sum, t) => sum + (parseFloat(t.actualAchievement) || 0), 0);
-        const totalActualOnTime = tasks.reduce((sum, t) => sum + (parseFloat(t.actualOnTime) || 0), 0);
         const totalAchievement = tasks.reduce((sum, t) => sum + (parseFloat(t.totalAchievement) || 0), 0);
         const totalPending = tasks.reduce((sum, t) => sum + (parseFloat(t.allPendingTillDate) || 0), 0);
         const isTotalAchZero = totalAchievement === 0 && totalTarget > 0;
@@ -320,15 +319,14 @@ const HistoryTaskModal = ({
                         <table>
                             <thead>
                                 <tr>
-                                    <th style="width: 16%;">FMS NAME</th>
-                                    <th style="width: 18%;">TASK NAME</th>
-                                    <th style="width: 8%;">DEPARTMENT</th>
-                                    <th style="width: 6%;">TARGET</th>
-                                    <th style="width: 9%;">ACTUAL ACHIEVEMENT</th>
-                                    <th style="width: 8%;">ACTUAL ON TIME</th>
-                                    <th style="width: 9%;">TOTAL ACHIEVEMENT</th>
-                                    <th style="width: 9%;">% WORK NOT DONE</th>
-                                    <th style="width: 10%;">% WORK NOT DONE ON TIME</th>
+                                    <th style="width: 18%;">FMS NAME</th>
+                                    <th style="width: 22%;">TASK NAME</th>
+                                    <th style="width: 9%;">DEPARTMENT</th>
+                                    <th style="width: 7%;">TARGET</th>
+                                    <th style="width: 10%;">ACTUAL ACHIEVEMENT</th>
+                                    <th style="width: 10%;">TOTAL ACHIEVEMENT</th>
+                                    <th style="width: 8%;">% WORK NOT DONE</th>
+                                    <th style="width: 8%;">% WORK NOT DONE ON TIME</th>
                                     <th style="width: 8%;">ALL PENDING TILL DATE</th>
                                 </tr>
                             </thead>
@@ -347,7 +345,6 @@ const HistoryTaskModal = ({
                                         <td style="color: #64748b;">${task.department || '-'}</td>
                                         <td style="font-weight: 700;">${task.target ?? 0}</td>
                                         <td style="font-weight: 600;">${task.actualAchievement ?? 0}</td>
-                                        <td>${task.actualOnTime ?? 0}</td>
                                         <td><span class="badge ${badgeClass}">${task.totalAchievement ?? 0}</span></td>
                                         <td>${formatDecimal(task.workNotDone)}</td>
                                         <td>${formatDecimal(task.workNotDoneOnTime)}</td>
@@ -356,7 +353,7 @@ const HistoryTaskModal = ({
                                     `;
                                 }).join('') : `
                                     <tr>
-                                        <td colspan="10" style="text-align: center; padding: 40px 20px; color: #64748b; background: #f8fafc;">
+                                        <td colspan="9" style="text-align: center; padding: 40px 20px; color: #64748b; background: #f8fafc;">
                                             <div style="font-size: 14px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">Not Available This Week Record</div>
                                             <div style="font-size: 12px; color: #94a3b8;">Task details are not recorded for the period ${dateRangeStr} in the "Task Wise Record" sheet.</div>
                                         </td>
@@ -369,7 +366,6 @@ const HistoryTaskModal = ({
                                     <td colspan="3" style="font-weight: 800; font-size: 10px; color: #0f172a; text-transform: uppercase; letter-spacing: 0.05em; text-align: center;">TOTAL (${tasks.length} TASKS)</td>
                                     <td style="font-weight: 800; font-size: 10px; text-align: center; color: #0f172a;">${totalTarget}</td>
                                     <td style="font-weight: 800; font-size: 10px; text-align: center; color: #0f172a;">${totalActual}</td>
-                                    <td style="font-weight: 800; font-size: 10px; text-align: center; color: #0f172a;">${totalActualOnTime}</td>
                                     <td style="text-align: center;">
                                         <span class="badge ${totalBadgeClass}" style="font-size: 9.5px; font-weight: 800; padding: 2px 7px;">${totalAchievement}</span>
                                     </td>
@@ -500,7 +496,6 @@ const HistoryTaskModal = ({
                                         <th className="sticky top-0 bg-gray-100 z-20 px-2 sm:px-3 py-2.5 text-xs font-bold text-gray-700 uppercase tracking-wider border-b border-gray-200 text-center">DEPARTMENT</th>
                                         <th className="sticky top-0 bg-gray-100 z-20 px-2 sm:px-3 py-2.5 text-xs font-bold text-gray-700 uppercase tracking-wider border-b border-gray-200 text-center">TARGET</th>
                                         <th className="sticky top-0 bg-gray-100 z-20 px-2 sm:px-3 py-2.5 text-xs font-bold text-gray-700 uppercase tracking-wider border-b border-gray-200 text-center">ACTUAL ACHIEVEMENT</th>
-                                        <th className="sticky top-0 bg-gray-100 z-20 px-2 sm:px-3 py-2.5 text-xs font-bold text-gray-700 uppercase tracking-wider border-b border-gray-200 text-center">ACTUAL ON TIME</th>
                                         <th className="sticky top-0 bg-gray-100 z-20 px-2 sm:px-3 py-2.5 text-xs font-bold text-gray-700 uppercase tracking-wider border-b border-gray-200 text-center">TOTAL ACHIEVEMENT</th>
                                         <th className="sticky top-0 bg-gray-100 z-20 px-2 sm:px-3 py-2.5 text-xs font-bold text-gray-700 uppercase tracking-wider border-b border-gray-200 text-center">% WORK NOT DONE</th>
                                         <th className="sticky top-0 bg-gray-100 z-20 px-2 sm:px-3 py-2.5 text-xs font-bold text-gray-700 uppercase tracking-wider border-b border-gray-200 text-center">% WORK NOT DONE ON TIME</th>
@@ -522,7 +517,6 @@ const HistoryTaskModal = ({
                                                     <td className="px-2 sm:px-3 py-2 text-xs text-gray-600 border-b border-gray-100 text-center">{task.department || "-"}</td>
                                                     <td className="px-2 sm:px-3 py-2 text-xs text-gray-900 font-bold border-b border-gray-100 text-center">{task.target}</td>
                                                     <td className="px-2 sm:px-3 py-2 text-xs text-gray-900 font-medium border-b border-gray-100 text-center">{task.actualAchievement}</td>
-                                                    <td className="px-2 sm:px-3 py-2 text-xs text-gray-900 font-medium border-b border-gray-100 text-center">{task.actualOnTime ?? 0}</td>
                                                     <td className="px-2 sm:px-3 py-2 text-xs font-bold border-b border-gray-100 text-center">
                                                         <span className={`inline-flex items-center justify-center min-w-[28px] px-2 py-0.5 rounded-full text-xs font-bold ${
                                                             isZero
@@ -548,7 +542,7 @@ const HistoryTaskModal = ({
                                         })
                                     ) : (
                                         <tr>
-                                            <td colSpan="10" className="px-6 py-14 text-center bg-gray-50/40">
+                                            <td colSpan="9" className="px-6 py-14 text-center bg-gray-50/40">
                                                 <div className="flex flex-col items-center justify-center gap-2.5 max-w-md mx-auto">
                                                     <div className="w-12 h-12 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 shadow-2xs">
                                                         <Calendar className="w-6 h-6" />
@@ -575,9 +569,6 @@ const HistoryTaskModal = ({
                                             </td>
                                             <td className="px-2 sm:px-3 py-2 text-xs font-bold text-gray-900 border-b border-gray-200 text-center">
                                                 {selectedUserDetails.tasks.reduce((sum, t) => sum + (parseFloat(t.actualAchievement) || 0), 0)}
-                                            </td>
-                                            <td className="px-2 sm:px-3 py-2 text-xs font-bold text-gray-900 border-b border-gray-200 text-center">
-                                                {selectedUserDetails.tasks.reduce((sum, t) => sum + (parseFloat(t.actualOnTime) || 0), 0)}
                                             </td>
                                             <td className="px-2 sm:px-3 py-2 text-xs font-bold border-b border-gray-200 text-center">
                                                 {(() => {
@@ -645,10 +636,6 @@ const HistoryTaskModal = ({
                                                 <div>
                                                     <p className="text-[10px] text-gray-400 font-medium uppercase">Actual Ach.</p>
                                                     <p className="font-semibold text-gray-700">{task.actualAchievement}</p>
-                                                </div>
-                                                <div>
-                                                    <p className="text-[10px] text-gray-400 font-medium uppercase">Actual On Time</p>
-                                                    <p className="font-semibold text-gray-700">{task.actualOnTime ?? 0}</p>
                                                 </div>
                                                 <div>
                                                     <p className="text-[10px] text-gray-400 font-medium uppercase">All Pending</p>

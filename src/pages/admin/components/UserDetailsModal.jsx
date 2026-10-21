@@ -46,7 +46,6 @@ const UserDetailsModal = ({
 
         const totalTarget = tasks.reduce((sum, t) => sum + (parseFloat(t.target) || 0), 0);
         const totalActual = tasks.reduce((sum, t) => sum + (parseFloat(t.actualAchievement) || 0), 0);
-        const totalActualOnTime = tasks.reduce((sum, t) => sum + (parseFloat(t.actualOnTime) || 0), 0);
         const totalAchievement = tasks.reduce((sum, t) => sum + (parseFloat(t.totalAchievement) || 0), 0);
         const totalPending = tasks.reduce((sum, t) => sum + (parseFloat(t.allPendingTillDate) || 0), 0);
         const isTotalAchZero = totalAchievement === 0 && totalTarget > 0;
@@ -335,15 +334,14 @@ const UserDetailsModal = ({
                         <table>
                             <thead>
                                 <tr>
-                                    <th style="width: 16%;">FMS NAME</th>
-                                    <th style="width: 18%;">TASK NAME</th>
-                                    <th style="width: 8%;">DEPARTMENT</th>
-                                    <th style="width: 6%;">TARGET</th>
-                                    <th style="width: 9%;">ACTUAL ACHIEVEMENT</th>
-                                    <th style="width: 8%;">ACTUAL ON TIME</th>
-                                    <th style="width: 9%;">TOTAL ACHIEVEMENT</th>
-                                    <th style="width: 9%;">% WORK NOT DONE</th>
-                                    <th style="width: 10%;">% WORK NOT DONE ON TIME</th>
+                                    <th style="width: 18%;">FMS NAME</th>
+                                    <th style="width: 22%;">TASK NAME</th>
+                                    <th style="width: 9%;">DEPARTMENT</th>
+                                    <th style="width: 7%;">TARGET</th>
+                                    <th style="width: 10%;">ACTUAL ACHIEVEMENT</th>
+                                    <th style="width: 10%;">TOTAL ACHIEVEMENT</th>
+                                    <th style="width: 8%;">% WORK NOT DONE</th>
+                                    <th style="width: 8%;">% WORK NOT DONE ON TIME</th>
                                     <th style="width: 8%;">ALL PENDING TILL DATE</th>
                                 </tr>
                             </thead>
@@ -362,7 +360,6 @@ const UserDetailsModal = ({
                                         <td style="color: #64748b;">${task.department || '-'}</td>
                                         <td style="font-weight: 700;">${task.target ?? 0}</td>
                                         <td style="font-weight: 600;">${task.actualAchievement ?? 0}</td>
-                                        <td>${task.actualOnTime ?? 0}</td>
                                         <td><span class="badge ${badgeClass}">${task.totalAchievement ?? 0}</span></td>
                                         <td>${formatDecimal(task.workNotDone)}</td>
                                         <td>${formatDecimal(task.workNotDoneOnTime)}</td>
@@ -376,7 +373,6 @@ const UserDetailsModal = ({
                                     <td colspan="3" style="font-weight: 800; font-size: 10px; color: #0f172a; text-transform: uppercase; letter-spacing: 0.05em; text-align: center;">TOTAL (${tasks.length} TASKS)</td>
                                     <td style="font-weight: 800; font-size: 10px; text-align: center; color: #0f172a;">${totalTarget}</td>
                                     <td style="font-weight: 800; font-size: 10px; text-align: center; color: #0f172a;">${totalActual}</td>
-                                    <td style="font-weight: 800; font-size: 10px; text-align: center; color: #0f172a;">${totalActualOnTime}</td>
                                     <td style="text-align: center;">
                                         <span class="badge ${totalBadgeClass}" style="font-size: 9.5px; font-weight: 800; padding: 2px 7px;">${totalAchievement}</span>
                                     </td>
@@ -568,7 +564,6 @@ const UserDetailsModal = ({
                                                     <th className="sticky top-0 bg-gray-100 z-20 px-2 sm:px-3 py-2.5 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider border-b border-gray-200">Department</th>
                                                     <th className="sticky top-0 bg-gray-100 z-20 px-2 sm:px-3 py-2.5 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider border-b border-gray-200">Target</th>
                                                     <th className="sticky top-0 bg-gray-100 z-20 px-2 sm:px-3 py-2.5 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider border-b border-gray-200">Actual Achievement</th>
-                                                    <th className="sticky top-0 bg-gray-100 z-20 px-2 sm:px-3 py-2.5 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider border-b border-gray-200">Actual On Time</th>
                                                     <th className="sticky top-0 bg-gray-100 z-20 px-2 sm:px-3 py-2.5 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider border-b border-gray-200">Total Achievement</th>
                                                     <th className="sticky top-0 bg-gray-100 z-20 px-2 sm:px-3 py-2.5 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider border-b border-gray-200">% Work Not Done</th>
                                                     <th className="sticky top-0 bg-gray-100 z-20 px-2 sm:px-3 py-2.5 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider border-b border-gray-200">% Work Not Done on Time</th>
@@ -588,7 +583,6 @@ const UserDetailsModal = ({
                                                             <td className="px-2 sm:px-3 py-2 text-xs text-gray-900 border-b border-gray-100 text-center">{task.department}</td>
                                                             <td className="px-2 sm:px-3 py-2 text-xs text-gray-900 font-medium border-b border-gray-100 text-center">{task.target}</td>
                                                             <td className="px-2 sm:px-3 py-2 text-xs text-gray-900 font-medium border-b border-gray-100 text-center">{task.actualAchievement}</td>
-                                                            <td className="px-2 sm:px-3 py-2 text-xs text-gray-900 font-medium border-b border-gray-100 text-center">{task.actualOnTime ?? 0}</td>
                                                             <td className="px-2 sm:px-3 py-2 text-xs font-medium border-b border-gray-100 text-center">
                                                                 <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${parseFloat(task.totalAchievement) < parseFloat(task.target) ? "bg-red-100 text-red-800" : parseFloat(task.totalAchievement) === parseFloat(task.target) ? "bg-green-100 text-green-800" : "bg-indigo-100 text-indigo-800"}`}>
                                                                     {task.totalAchievement}
@@ -600,7 +594,7 @@ const UserDetailsModal = ({
                                                         </tr>
                                                     ))
                                                 ) : (
-                                                    <tr><td colSpan="10" className="px-3 py-2 text-center text-xs text-gray-500">No tasks available</td></tr>
+                                                    <tr><td colSpan="9" className="px-3 py-2 text-center text-xs text-gray-500">No tasks available</td></tr>
                                                 )}
                                             </tbody>
                                             {selectedUserDetails.tasks && selectedUserDetails.tasks.length > 0 && (
@@ -614,9 +608,6 @@ const UserDetailsModal = ({
                                                         </td>
                                                         <td className="px-2 sm:px-3 py-2 text-xs font-bold text-gray-900 border-b border-gray-200 text-center">
                                                             {selectedUserDetails.tasks.reduce((sum, t) => sum + (parseFloat(t.actualAchievement) || 0), 0)}
-                                                        </td>
-                                                        <td className="px-2 sm:px-3 py-2 text-xs font-bold text-gray-900 border-b border-gray-200 text-center">
-                                                            {selectedUserDetails.tasks.reduce((sum, t) => sum + (parseFloat(t.actualOnTime) || 0), 0)}
                                                         </td>
                                                         <td className="px-2 sm:px-3 py-2 text-xs font-bold border-b border-gray-200 text-center">
                                                             {(() => {
@@ -670,10 +661,6 @@ const UserDetailsModal = ({
                                                         <div>
                                                             <p className="text-[10px] text-gray-400 font-medium uppercase">Actual Achievement</p>
                                                             <p className="text-xs text-gray-700 font-semibold">{task.actualAchievement}</p>
-                                                        </div>
-                                                        <div>
-                                                            <p className="text-[10px] text-gray-400 font-medium uppercase">Actual On Time</p>
-                                                            <p className="text-xs text-gray-700 font-semibold">{task.actualOnTime ?? 0}</p>
                                                         </div>
                                                         <div>
                                                             <p className="text-[10px] text-gray-400 font-medium uppercase">All Pending</p>
