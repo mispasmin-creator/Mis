@@ -675,13 +675,18 @@ const DepartmentDashboard = () => {
       .map((d) => {
         const completionPct = d.target > 0 ? Math.round((d.actual / d.target) * 100) : d.actual > 0 ? 100 : 0;
         const topPerformer = [...d.employees].sort((a, b) => {
-          if (b.actualWorkDone !== a.actualWorkDone) {
-            return b.actualWorkDone - a.actualWorkDone;
+          const aDone100 = (a.completionPct || 0) >= 100;
+          const bDone100 = (b.completionPct || 0) >= 100;
+          if (aDone100 !== bDone100) return aDone100 ? -1 : 1;
+          if (aDone100 && bDone100) {
+            if ((b.onTimePct || 0) !== (a.onTimePct || 0)) return (b.onTimePct || 0) - (a.onTimePct || 0);
+            if ((a.allPendingTillDate || 0) !== (b.allPendingTillDate || 0)) return (a.allPendingTillDate || 0) - (b.allPendingTillDate || 0);
+            return (b.actualWorkDone || 0) - (a.actualWorkDone || 0);
           }
-          if ((b.totalWorkDone || 0) !== (a.totalWorkDone || 0)) {
-            return (b.totalWorkDone || 0) - (a.totalWorkDone || 0);
-          }
-          return (b.completionPct || 0) - (a.completionPct || 0);
+          if ((b.completionPct || 0) !== (a.completionPct || 0)) return (b.completionPct || 0) - (a.completionPct || 0);
+          if ((b.onTimePct || 0) !== (a.onTimePct || 0)) return (b.onTimePct || 0) - (a.onTimePct || 0);
+          if ((a.allPendingTillDate || 0) !== (b.allPendingTillDate || 0)) return (a.allPendingTillDate || 0) - (b.allPendingTillDate || 0);
+          return (b.actualWorkDone || 0) - (a.actualWorkDone || 0);
         })[0];
         return { ...d, completionPct, topPerformer };
       })

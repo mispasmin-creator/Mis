@@ -90,14 +90,35 @@ const OverallTopPerformersReport = ({
       });
 
     return uniqueList.sort((a, b) => {
-      // 1. This week's actual work done vs target (highest done first) — who did the most work
-      if (b.actualWorkDone !== a.actualWorkDone) return b.actualWorkDone - a.actualWorkDone;
-      // 2. On-time % from the Data sheet (highest first) — who did it on time
+      const aDone100 = a.completionPct >= 100;
+      const bDone100 = b.completionPct >= 100;
+
+      // 1. Weekly target 100% done check: Jinka 100% target achieve hua hai wo sabse pehle aayenge
+      if (aDone100 !== bDone100) {
+        return aDone100 ? -1 : 1;
+      }
+
+      // Agar dono ne 100% target complete kiya hai:
+      if (aDone100 && bDone100) {
+        // 2. On-time % (highest first)
+        if (b.onTimePct !== a.onTimePct) return b.onTimePct - a.onTimePct;
+        // 3. Till Date Pending (lowest first - kam pending wala aage)
+        if (a.allPendingTillDate !== b.allPendingTillDate) return a.allPendingTillDate - b.allPendingTillDate;
+        // 4. Actual Work Done (highest first)
+        if (b.actualWorkDone !== a.actualWorkDone) return b.actualWorkDone - a.actualWorkDone;
+        // 5. Completion %
+        return b.completionPct - a.completionPct;
+      }
+
+      // Agar dono ka 100% complete nahi hua hai:
+      // 1. Completion % (highest first - 100% ke sabse kareeb)
+      if (b.completionPct !== a.completionPct) return b.completionPct - a.completionPct;
+      // 2. On-time % (highest first)
       if (b.onTimePct !== a.onTimePct) return b.onTimePct - a.onTimePct;
-      // 3. Among those tied on the above, overall Till Date Pending decides (lowest first)
+      // 3. Till Date Pending (lowest first)
       if (a.allPendingTillDate !== b.allPendingTillDate) return a.allPendingTillDate - b.allPendingTillDate;
-      // 4. Final tie-break: completion percentage (highest first)
-      return b.completionPct - a.completionPct;
+      // 4. Actual Work Done (highest first)
+      return b.actualWorkDone - a.actualWorkDone;
     });
   }, [employees]);
 
@@ -245,7 +266,7 @@ const OverallTopPerformersReport = ({
               </span>
             </div>
             <p className="text-xs text-gray-500 mt-0.5">
-              Ranked by: Actual Done → On-Time % → Till Date Pending
+              Ranked by: 100% Target Done → On-Time % → Till Date Pending
             </p>
           </div>
         </div>
