@@ -929,7 +929,7 @@ const AdminDashboard = () => {
     setActiveDrillDown({
       taskId: task.taskName,
       type,
-      title: `Total Achievement Details`,
+      title: type ? `${type} Details` : "Task Details",
       rows: [],
       loading: true
     });
@@ -1167,7 +1167,7 @@ const AdminDashboard = () => {
       setActiveDrillDown({
         taskId: task.taskName,
         type,
-        title: `Total Achievement Details`,
+        title: type ? `${type} Details` : "Task Details",
         rows,
         loading: false
       });
@@ -1176,7 +1176,7 @@ const AdminDashboard = () => {
       setActiveDrillDown({
         taskId: task.taskName,
         type,
-        title: `Total Achievement Details`,
+        title: type ? `${type} Details` : "Task Details",
         rows: [],
         loading: false,
         error: error.message

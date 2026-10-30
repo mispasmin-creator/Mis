@@ -253,11 +253,31 @@ const HistoryTaskModal = ({
                         .badge-red { background: #fee2e2; color: #991b1b; }
                         .badge-green { background: #dcfce7; color: #166534; }
 
+                        thead {
+                            display: table-header-group;
+                        }
+
+                        tfoot {
+                            display: table-row-group !important;
+                        }
+
+                        tr {
+                            page-break-inside: avoid !important;
+                            break-inside: avoid !important;
+                        }
+
+                        .total-row {
+                            page-break-inside: avoid !important;
+                            break-inside: avoid !important;
+                        }
+
                         .sign-section {
                             display: flex;
                             justify-content: space-between;
                             margin-top: 50px;
                             padding: 0 40px;
+                            page-break-inside: avoid !important;
+                            break-inside: avoid !important;
                         }
 
                         .signature-line {
@@ -273,6 +293,9 @@ const HistoryTaskModal = ({
                         @media print {
                             body { padding: 0; }
                             .report-container { width: 100%; max-width: none; }
+                            thead { display: table-header-group; }
+                            tfoot { display: table-row-group !important; }
+                            tr { page-break-inside: avoid !important; break-inside: avoid !important; }
                         }
                     </style>
                 </head>
@@ -319,25 +342,18 @@ const HistoryTaskModal = ({
                         <table>
                             <thead>
                                 <tr>
-                                    <th style="width: 18%;">FMS NAME</th>
-                                    <th style="width: 22%;">TASK NAME</th>
-                                    <th style="width: 9%;">DEPARTMENT</th>
-                                    <th style="width: 7%;">TARGET</th>
-                                    <th style="width: 10%;">ACTUAL ACHIEVEMENT</th>
-                                    <th style="width: 10%;">TOTAL ACHIEVEMENT</th>
-                                    <th style="width: 8%;">% WORK NOT DONE</th>
-                                    <th style="width: 8%;">% WORK NOT DONE ON TIME</th>
+                                    <th style="width: 20%;">FMS NAME</th>
+                                    <th style="width: 24%;">TASK NAME</th>
+                                    <th style="width: 10%;">DEPARTMENT</th>
+                                    <th style="width: 8%;">TARGET</th>
+                                    <th style="width: 12%;">ACTUAL ACHIEVEMENT</th>
+                                    <th style="width: 9%;">% WORK NOT DONE</th>
+                                    <th style="width: 9%;">% WORK NOT DONE ON TIME</th>
                                     <th style="width: 8%;">ALL PENDING TILL DATE</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 ${tasks.length > 0 ? tasks.map(task => {
-                                    const targetVal = parseFloat(task.target) || 0;
-                                    const totalAchVal = parseFloat(task.totalAchievement) || 0;
-                                    const isZero = totalAchVal === 0 && targetVal > 0;
-                                    const isTargetMet = (targetVal > 0 && totalAchVal >= targetVal) || (targetVal === 0 && totalAchVal > 0);
-                                    const badgeClass = isZero ? 'badge-red' : (isTargetMet ? 'badge-green' : 'badge-blue');
-
                                     return `
                                     <tr>
                                         <td style="font-weight: 500;">${task.fmsName || '-'}</td>
@@ -345,7 +361,6 @@ const HistoryTaskModal = ({
                                         <td style="color: #64748b;">${task.department || '-'}</td>
                                         <td style="font-weight: 700;">${task.target ?? 0}</td>
                                         <td style="font-weight: 600;">${task.actualAchievement ?? 0}</td>
-                                        <td><span class="badge ${badgeClass}">${task.totalAchievement ?? 0}</span></td>
                                         <td>${formatDecimal(task.workNotDone)}</td>
                                         <td>${formatDecimal(task.workNotDoneOnTime)}</td>
                                         <td>${task.allPendingTillDate ?? 0}</td>
@@ -353,27 +368,23 @@ const HistoryTaskModal = ({
                                     `;
                                 }).join('') : `
                                     <tr>
-                                        <td colspan="9" style="text-align: center; padding: 40px 20px; color: #64748b; background: #f8fafc;">
+                                        <td colspan="8" style="text-align: center; padding: 40px 20px; color: #64748b; background: #f8fafc;">
                                             <div style="font-size: 14px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">Not Available This Week Record</div>
                                             <div style="font-size: 12px; color: #94a3b8;">Task details are not recorded for the period ${dateRangeStr} in the "Task Wise Record" sheet.</div>
                                         </td>
                                     </tr>
                                 `}
-                            </tbody>
-                            ${tasks.length > 0 ? `
-                            <tfoot>
-                                <tr style="background-color: #f8fafc; font-weight: 700; border-top: 2px solid #cbd5e1;">
+                                ${tasks.length > 0 ? `
+                                <tr class="total-row" style="background-color: #f8fafc; font-weight: 700; border-top: 2px solid #cbd5e1; page-break-inside: avoid; break-inside: avoid;">
                                     <td colspan="3" style="font-weight: 800; font-size: 10px; color: #0f172a; text-transform: uppercase; letter-spacing: 0.05em; text-align: center;">TOTAL (${tasks.length} TASKS)</td>
                                     <td style="font-weight: 800; font-size: 10px; text-align: center; color: #0f172a;">${totalTarget}</td>
                                     <td style="font-weight: 800; font-size: 10px; text-align: center; color: #0f172a;">${totalActual}</td>
-                                    <td style="text-align: center;">
-                                        <span class="badge ${totalBadgeClass}" style="font-size: 9.5px; font-weight: 800; padding: 2px 7px;">${totalAchievement}</span>
-                                    </td>
                                     <td style="font-weight: 800; font-size: 10px; text-align: center; color: #dc2626;">${formatPercent(selectedUserDetails.workNotDone || selectedUserDetails.weeklyWorkDone)}</td>
                                     <td style="font-weight: 800; font-size: 10px; text-align: center; color: #dc2626;">${formatPercent(selectedUserDetails.workNotDoneOnTime || selectedUserDetails.weeklyWorkDoneOnTime)}</td>
                                     <td style="font-weight: 800; font-size: 10px; text-align: center; color: #0f172a;">${totalPending}</td>
                                 </tr>
-                            </tfoot>` : ''}
+                                ` : ''}
+                            </tbody>
                         </table>
 
                         <div class="sign-section">
@@ -496,7 +507,6 @@ const HistoryTaskModal = ({
                                         <th className="sticky top-0 bg-gray-100 z-20 px-2 sm:px-3 py-2.5 text-xs font-bold text-gray-700 uppercase tracking-wider border-b border-gray-200 text-center">DEPARTMENT</th>
                                         <th className="sticky top-0 bg-gray-100 z-20 px-2 sm:px-3 py-2.5 text-xs font-bold text-gray-700 uppercase tracking-wider border-b border-gray-200 text-center">TARGET</th>
                                         <th className="sticky top-0 bg-gray-100 z-20 px-2 sm:px-3 py-2.5 text-xs font-bold text-gray-700 uppercase tracking-wider border-b border-gray-200 text-center">ACTUAL ACHIEVEMENT</th>
-                                        <th className="sticky top-0 bg-gray-100 z-20 px-2 sm:px-3 py-2.5 text-xs font-bold text-gray-700 uppercase tracking-wider border-b border-gray-200 text-center">TOTAL ACHIEVEMENT</th>
                                         <th className="sticky top-0 bg-gray-100 z-20 px-2 sm:px-3 py-2.5 text-xs font-bold text-gray-700 uppercase tracking-wider border-b border-gray-200 text-center">% WORK NOT DONE</th>
                                         <th className="sticky top-0 bg-gray-100 z-20 px-2 sm:px-3 py-2.5 text-xs font-bold text-gray-700 uppercase tracking-wider border-b border-gray-200 text-center">% WORK NOT DONE ON TIME</th>
                                         <th className="sticky top-0 bg-gray-100 z-20 px-2 sm:px-3 py-2.5 text-xs font-bold text-gray-700 uppercase tracking-wider border-b border-gray-200 text-center">ALL PENDING</th>
@@ -517,17 +527,6 @@ const HistoryTaskModal = ({
                                                     <td className="px-2 sm:px-3 py-2 text-xs text-gray-600 border-b border-gray-100 text-center">{task.department || "-"}</td>
                                                     <td className="px-2 sm:px-3 py-2 text-xs text-gray-900 font-bold border-b border-gray-100 text-center">{task.target}</td>
                                                     <td className="px-2 sm:px-3 py-2 text-xs text-gray-900 font-medium border-b border-gray-100 text-center">{task.actualAchievement}</td>
-                                                    <td className="px-2 sm:px-3 py-2 text-xs font-bold border-b border-gray-100 text-center">
-                                                        <span className={`inline-flex items-center justify-center min-w-[28px] px-2 py-0.5 rounded-full text-xs font-bold ${
-                                                            isZero
-                                                                ? "bg-red-100 text-red-700"
-                                                                : isAchieved
-                                                                ? "bg-green-100 text-green-700"
-                                                                : "bg-emerald-100 text-emerald-800"
-                                                        }`}>
-                                                            {task.totalAchievement}
-                                                        </span>
-                                                    </td>
                                                     <td className="px-2 sm:px-3 py-2 text-xs text-gray-900 border-b border-gray-100 text-center font-medium">
                                                         {formatDecimal(task.workNotDone)}
                                                     </td>
@@ -542,7 +541,7 @@ const HistoryTaskModal = ({
                                         })
                                     ) : (
                                         <tr>
-                                            <td colSpan="9" className="px-6 py-14 text-center bg-gray-50/40">
+                                            <td colSpan="8" className="px-6 py-14 text-center bg-gray-50/40">
                                                 <div className="flex flex-col items-center justify-center gap-2.5 max-w-md mx-auto">
                                                     <div className="w-12 h-12 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 shadow-2xs">
                                                         <Calendar className="w-6 h-6" />
@@ -569,19 +568,6 @@ const HistoryTaskModal = ({
                                             </td>
                                             <td className="px-2 sm:px-3 py-2 text-xs font-bold text-gray-900 border-b border-gray-200 text-center">
                                                 {selectedUserDetails.tasks.reduce((sum, t) => sum + (parseFloat(t.actualAchievement) || 0), 0)}
-                                            </td>
-                                            <td className="px-2 sm:px-3 py-2 text-xs font-bold border-b border-gray-200 text-center">
-                                                {(() => {
-                                                    const totalAch = selectedUserDetails.tasks.reduce((sum, t) => sum + (parseFloat(t.totalAchievement) || 0), 0);
-                                                    const totalTgt = selectedUserDetails.tasks.reduce((sum, t) => sum + (parseFloat(t.target) || 0), 0);
-                                                    return (
-                                                        <span className={`inline-flex items-center justify-center min-w-[28px] px-2 py-0.5 rounded-full text-xs font-bold ${
-                                                            totalAch < totalTgt ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"
-                                                        }`}>
-                                                            {totalAch}
-                                                        </span>
-                                                    );
-                                                })()}
                                             </td>
                                             <td className="px-2 sm:px-3 py-2 text-xs font-bold text-red-600 border-b border-gray-200 text-center">
                                                 {formatPercent(selectedUserDetails.workNotDone || selectedUserDetails.weeklyWorkDone)}
@@ -625,7 +611,7 @@ const HistoryTaskModal = ({
                                                         ? "bg-green-100 text-green-700"
                                                         : "bg-emerald-100 text-emerald-800"
                                                 }`}>
-                                                    {task.totalAchievement} / {task.target}
+                                                    {task.actualAchievement} / {task.target}
                                                 </span>
                                             </div>
                                             <div className="grid grid-cols-2 gap-y-2 gap-x-4 border-t border-gray-100 pt-2 text-xs">

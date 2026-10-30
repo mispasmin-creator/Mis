@@ -267,11 +267,31 @@ const UserDetailsModal = ({
                             font-weight: 500;
                         }
 
+                        thead {
+                            display: table-header-group;
+                        }
+
+                        tfoot {
+                            display: table-row-group !important;
+                        }
+
+                        tr {
+                            page-break-inside: avoid !important;
+                            break-inside: avoid !important;
+                        }
+
+                        .total-row {
+                            page-break-inside: avoid !important;
+                            break-inside: avoid !important;
+                        }
+
                         .sign-section {
                             display: flex;
                             justify-content: space-between;
                             margin-top: 50px;
                             padding: 0 40px;
+                            page-break-inside: avoid !important;
+                            break-inside: avoid !important;
                         }
 
                         .signature-line {
@@ -287,6 +307,9 @@ const UserDetailsModal = ({
                         @media print {
                             body { padding: 0; }
                             .report-container { width: 100%; max-width: none; }
+                            thead { display: table-header-group; }
+                            tfoot { display: table-row-group !important; }
+                            tr { page-break-inside: avoid !important; break-inside: avoid !important; }
                         }
                     </style>
                 </head>
@@ -334,25 +357,18 @@ const UserDetailsModal = ({
                         <table>
                             <thead>
                                 <tr>
-                                    <th style="width: 18%;">FMS NAME</th>
-                                    <th style="width: 22%;">TASK NAME</th>
-                                    <th style="width: 9%;">DEPARTMENT</th>
-                                    <th style="width: 7%;">TARGET</th>
-                                    <th style="width: 10%;">ACTUAL ACHIEVEMENT</th>
-                                    <th style="width: 10%;">TOTAL ACHIEVEMENT</th>
-                                    <th style="width: 8%;">% WORK NOT DONE</th>
-                                    <th style="width: 8%;">% WORK NOT DONE ON TIME</th>
+                                    <th style="width: 20%;">FMS NAME</th>
+                                    <th style="width: 24%;">TASK NAME</th>
+                                    <th style="width: 10%;">DEPARTMENT</th>
+                                    <th style="width: 8%;">TARGET</th>
+                                    <th style="width: 12%;">ACTUAL ACHIEVEMENT</th>
+                                    <th style="width: 9%;">% WORK NOT DONE</th>
+                                    <th style="width: 9%;">% WORK NOT DONE ON TIME</th>
                                     <th style="width: 8%;">ALL PENDING TILL DATE</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 ${tasks.map(task => {
-                                    const targetVal = parseFloat(task.target) || 0;
-                                    const totalAchVal = parseFloat(task.totalAchievement) || 0;
-                                    const isZero = totalAchVal === 0 && targetVal > 0;
-                                    const isTargetMet = (targetVal > 0 && totalAchVal >= targetVal) || (targetVal === 0 && totalAchVal > 0);
-                                    const badgeClass = isZero ? 'badge-red' : (isTargetMet ? 'badge-green' : 'badge-blue');
-
                                     return `
                                     <tr>
                                         <td style="font-weight: 500;">${task.fmsName || '-'}</td>
@@ -360,27 +376,23 @@ const UserDetailsModal = ({
                                         <td style="color: #64748b;">${task.department || '-'}</td>
                                         <td style="font-weight: 700;">${task.target ?? 0}</td>
                                         <td style="font-weight: 600;">${task.actualAchievement ?? 0}</td>
-                                        <td><span class="badge ${badgeClass}">${task.totalAchievement ?? 0}</span></td>
                                         <td>${formatDecimal(task.workNotDone)}</td>
                                         <td>${formatDecimal(task.workNotDoneOnTime)}</td>
                                         <td>${task.allPendingTillDate ?? 0}</td>
                                     </tr>
                                 `;
                                 }).join('')}
-                            </tbody>
-                            <tfoot>
-                                <tr style="background-color: #f8fafc; font-weight: 700; border-top: 2px solid #cbd5e1;">
+                                ${tasks.length > 0 ? `
+                                <tr class="total-row" style="background-color: #f8fafc; font-weight: 700; border-top: 2px solid #cbd5e1; page-break-inside: avoid; break-inside: avoid;">
                                     <td colspan="3" style="font-weight: 800; font-size: 10px; color: #0f172a; text-transform: uppercase; letter-spacing: 0.05em; text-align: center;">TOTAL (${tasks.length} TASKS)</td>
                                     <td style="font-weight: 800; font-size: 10px; text-align: center; color: #0f172a;">${totalTarget}</td>
                                     <td style="font-weight: 800; font-size: 10px; text-align: center; color: #0f172a;">${totalActual}</td>
-                                    <td style="text-align: center;">
-                                        <span class="badge ${totalBadgeClass}" style="font-size: 9.5px; font-weight: 800; padding: 2px 7px;">${totalAchievement}</span>
-                                    </td>
                                     <td style="font-weight: 800; font-size: 10px; text-align: center; color: #dc2626;">${formatPercent(selectedUserDetails.weeklyWorkDone)}</td>
                                     <td style="font-weight: 800; font-size: 10px; text-align: center; color: #dc2626;">${formatPercent(selectedUserDetails.weeklyWorkDoneOnTime)}</td>
                                     <td style="font-weight: 800; font-size: 10px; text-align: center; color: #0f172a;">${totalPending}</td>
                                 </tr>
-                            </tfoot>
+                                ` : ''}
+                            </tbody>
                         </table>
 
                         <div class="sign-section">
@@ -564,7 +576,6 @@ const UserDetailsModal = ({
                                                     <th className="sticky top-0 bg-gray-100 z-20 px-2 sm:px-3 py-2.5 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider border-b border-gray-200">Department</th>
                                                     <th className="sticky top-0 bg-gray-100 z-20 px-2 sm:px-3 py-2.5 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider border-b border-gray-200">Target</th>
                                                     <th className="sticky top-0 bg-gray-100 z-20 px-2 sm:px-3 py-2.5 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider border-b border-gray-200">Actual Achievement</th>
-                                                    <th className="sticky top-0 bg-gray-100 z-20 px-2 sm:px-3 py-2.5 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider border-b border-gray-200">Total Achievement</th>
                                                     <th className="sticky top-0 bg-gray-100 z-20 px-2 sm:px-3 py-2.5 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider border-b border-gray-200">% Work Not Done</th>
                                                     <th className="sticky top-0 bg-gray-100 z-20 px-2 sm:px-3 py-2.5 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider border-b border-gray-200">% Work Not Done on Time</th>
                                                     <th className="sticky top-0 bg-gray-100 z-20 px-2 sm:px-3 py-2.5 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider border-b border-gray-200">All Pending Till Date</th>
@@ -575,7 +586,7 @@ const UserDetailsModal = ({
                                                     selectedUserDetails.tasks.map((task, idx) => (
                                                         <tr
                                                             key={idx}
-                                                            onClick={(e) => handleDrillDown(task, "Total Achievement", task.totalAchievement, e)}
+                                                            onClick={(e) => handleDrillDown(task, "Actual Achievement", task.actualAchievement, e)}
                                                             className="hover:bg-indigo-50 cursor-pointer transition-colors"
                                                         >
                                                             <td className="px-2 sm:px-3 py-2 text-xs text-gray-900 border-b border-gray-100 text-center">{task.fmsName}</td>
@@ -583,18 +594,13 @@ const UserDetailsModal = ({
                                                             <td className="px-2 sm:px-3 py-2 text-xs text-gray-900 border-b border-gray-100 text-center">{task.department}</td>
                                                             <td className="px-2 sm:px-3 py-2 text-xs text-gray-900 font-medium border-b border-gray-100 text-center">{task.target}</td>
                                                             <td className="px-2 sm:px-3 py-2 text-xs text-gray-900 font-medium border-b border-gray-100 text-center">{task.actualAchievement}</td>
-                                                            <td className="px-2 sm:px-3 py-2 text-xs font-medium border-b border-gray-100 text-center">
-                                                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${parseFloat(task.totalAchievement) < parseFloat(task.target) ? "bg-red-100 text-red-800" : parseFloat(task.totalAchievement) === parseFloat(task.target) ? "bg-green-100 text-green-800" : "bg-indigo-100 text-indigo-800"}`}>
-                                                                    {task.totalAchievement}
-                                                                </span>
-                                                            </td>
                                                             <td className="px-2 sm:px-3 py-2 text-xs text-gray-900 border-b border-gray-100 text-center">{formatDecimal(task.workNotDone)}</td>
                                                             <td className="px-2 sm:px-3 py-2 text-xs text-gray-900 border-b border-gray-100 text-center">{formatDecimal(task.workNotDoneOnTime)}</td>
                                                             <td className="px-2 sm:px-3 py-2 text-xs text-gray-900 border-b border-gray-100 text-center">{task.allPendingTillDate}</td>
                                                         </tr>
                                                     ))
                                                 ) : (
-                                                    <tr><td colSpan="9" className="px-3 py-2 text-center text-xs text-gray-500">No tasks available</td></tr>
+                                                    <tr><td colSpan="8" className="px-3 py-2 text-center text-xs text-gray-500">No tasks available</td></tr>
                                                 )}
                                             </tbody>
                                             {selectedUserDetails.tasks && selectedUserDetails.tasks.length > 0 && (
@@ -608,17 +614,6 @@ const UserDetailsModal = ({
                                                         </td>
                                                         <td className="px-2 sm:px-3 py-2 text-xs font-bold text-gray-900 border-b border-gray-200 text-center">
                                                             {selectedUserDetails.tasks.reduce((sum, t) => sum + (parseFloat(t.actualAchievement) || 0), 0)}
-                                                        </td>
-                                                        <td className="px-2 sm:px-3 py-2 text-xs font-bold border-b border-gray-200 text-center">
-                                                            {(() => {
-                                                                const totalAch = selectedUserDetails.tasks.reduce((sum, t) => sum + (parseFloat(t.totalAchievement) || 0), 0);
-                                                                const totalTgt = selectedUserDetails.tasks.reduce((sum, t) => sum + (parseFloat(t.target) || 0), 0);
-                                                                return (
-                                                                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold ${totalAch < totalTgt ? "bg-red-100 text-red-800" : totalAch === totalTgt ? "bg-green-100 text-green-800" : "bg-indigo-100 text-indigo-800"}`}>
-                                                                        {totalAch}
-                                                                    </span>
-                                                                );
-                                                            })()}
                                                         </td>
                                                         <td className="px-2 sm:px-3 py-2 text-xs font-bold text-red-600 border-b border-gray-200 text-center">
                                                             {formatDecimal(selectedUserDetails.weeklyWorkDone)}%
@@ -641,7 +636,7 @@ const UserDetailsModal = ({
                                             selectedUserDetails.tasks.map((task, idx) => (
                                                 <div
                                                     key={idx}
-                                                    onClick={(e) => handleDrillDown(task, "Total Achievement", task.totalAchievement, e)}
+                                                    onClick={(e) => handleDrillDown(task, "Actual Achievement", task.actualAchievement, e)}
                                                     className="bg-white border border-gray-200 rounded-lg p-3 shadow-sm active:bg-indigo-50 transition-colors"
                                                 >
                                                     <div className="flex justify-between items-start mb-2">
@@ -649,8 +644,8 @@ const UserDetailsModal = ({
                                                             <p className="text-[10px] font-bold text-indigo-600 uppercase tracking-wider truncate mb-0.5">{task.fmsName}</p>
                                                             <h4 className="text-sm font-bold text-gray-900 truncate">{task.taskName}</h4>
                                                         </div>
-                                                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold flex-shrink-0 ${parseFloat(task.totalAchievement) < parseFloat(task.target) ? "bg-red-100 text-red-800" : parseFloat(task.totalAchievement) === parseFloat(task.target) ? "bg-green-100 text-green-800" : "bg-indigo-100 text-indigo-800"}`}>
-                                                            {task.totalAchievement} / {task.target}
+                                                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold flex-shrink-0 ${parseFloat(task.actualAchievement) < parseFloat(task.target) ? "bg-red-100 text-red-800" : parseFloat(task.actualAchievement) === parseFloat(task.target) ? "bg-green-100 text-green-800" : "bg-indigo-100 text-indigo-800"}`}>
+                                                            {task.actualAchievement} / {task.target}
                                                         </span>
                                                     </div>
                                                     <div className="grid grid-cols-2 gap-y-2 gap-x-4 border-t border-gray-50 pt-2">
