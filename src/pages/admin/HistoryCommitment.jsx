@@ -51,6 +51,7 @@ const AdminHistoryCommitment = () => {
                 const incentiveMap = {};
                 const imgMap = {};
                 const deptMap = {};
+                const designationMap = {};
 
                 // 1. Extract Incentive Category & Firm Name from Data Sheet (Column V / index 21, Column W / index 22)
                 if (dataResult.success && Array.isArray(dataResult.data)) {
@@ -59,16 +60,22 @@ const AdminHistoryCommitment = () => {
                     if (incentiveColIdx === -1) incentiveColIdx = 21;
                     let firmColIdx = headerRow.findIndex(h => h && String(h).trim().toLowerCase() === "firm name");
                     if (firmColIdx === -1) firmColIdx = 22;
+                    let designationColIdx = headerRow.findIndex(h => h && String(h).trim().toLowerCase() === "designation");
+                    if (designationColIdx === -1) designationColIdx = 23;
 
                     dataResult.data.slice(1).forEach(row => {
                         const pName = row[4] ? String(row[4]).trim().toLowerCase() : "";
                         const cat = row[incentiveColIdx] ? String(row[incentiveColIdx]).trim() : "";
                         const firm = row[firmColIdx] ? String(row[firmColIdx]).trim() : "";
+                        const designation = row[designationColIdx] ? String(row[designationColIdx]).trim() : "";
                         if (pName && cat && !incentiveMap[pName]) {
                             incentiveMap[pName] = cat;
                         }
                         if (pName && firm && !firmMap[pName]) {
                             firmMap[pName] = firm;
+                        }
+                        if (pName && designation && !designationMap[pName]) {
+                            designationMap[pName] = designation;
                         }
                     });
                 }
@@ -85,6 +92,7 @@ const AdminHistoryCommitment = () => {
                         const name = row[0] ? String(row[0]).trim().toLowerCase() : "";
                         const department = row[2] ? String(row[2]).trim() : "";
                         const imageUrl = row[4] ? String(row[4]).trim() : "";
+                        const designation = row[3] ? String(row[3]).trim() : "";
                         const reportedBy = row[9] ? String(row[9]).trim().toLowerCase() : "";
                         const firmName = row[masterFirmIdx] ? String(row[masterFirmIdx]).trim() : "";
                         const masterIncentive = row[masterIncentiveIdx] ? String(row[masterIncentiveIdx]).trim() : "";
@@ -92,6 +100,7 @@ const AdminHistoryCommitment = () => {
                         if (name) {
                             if (department) deptMap[name] = department;
                             if (imageUrl) imgMap[name] = imageUrl;
+                            if (designation && !designationMap[name]) designationMap[name] = designation;
                             if (reportedBy) reportedByMap[name] = reportedBy;
                             if (firmName && !firmMap[name]) firmMap[name] = firmName;
                             if (masterIncentive && !incentiveMap[name]) {
@@ -132,6 +141,7 @@ const AdminHistoryCommitment = () => {
                             dateEnd: row[1] || "",           // Column B (index 1)
                             name: empName,                   // Column C (index 2)
                             firm: firmMap[normalizedName] || "",
+                            designation: designationMap[normalizedName] || "",
                             incentiveCategory: resolvedIncentive,
                             category: category,
                             target: row[3] || "",            // Column D (index 3)
@@ -181,6 +191,7 @@ const AdminHistoryCommitment = () => {
                                     dateEnd: row[1] || "",
                                     name: empName,
                                     firm: firmMap[normalizedName] || "",
+                                    designation: designationMap[normalizedName] || "",
                                     incentiveCategory: resolvedIncentive,
                                     category: categorizeByBasis(resolvedIncentive),
                                     target: row[3] || "",
@@ -416,6 +427,7 @@ const AdminHistoryCommitment = () => {
 
         setSelectedUserDetails({
             name: record.name,
+            designation: record.designation || "",
             id: record.id ? String(record.id) : "",
             firm: record.firm || "",
             department: userDept,
@@ -776,6 +788,7 @@ const AdminHistoryCommitment = () => {
                                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap bg-gray-50 border-b border-gray-200">Date End</th>
                                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap sticky left-12 top-0 bg-gray-50 z-40 border-l border-b border-gray-200">Name</th>
                                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap bg-gray-50 border-b border-gray-200">Firm</th>
+                                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap bg-gray-50 border-b border-gray-200">Designation</th>
                                     <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">Target</th>
                                     <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">Actual Work Done</th>
                                     <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">% Work Not Done</th>
@@ -801,6 +814,7 @@ const AdminHistoryCommitment = () => {
                                                 <span>{formatValue(r.name)}</span>
                                             </td>
                                             <td className="px-4 py-3 text-gray-700 whitespace-nowrap bg-white group-hover:bg-indigo-50/60">{formatValue(r.firm)}</td>
+                                            <td className="px-4 py-3 text-gray-700 whitespace-nowrap bg-white group-hover:bg-indigo-50/60">{formatValue(r.designation)}</td>
                                             <td className="px-4 py-3 text-right text-gray-700">{formatValue(r.target)}</td>
                                             <td className="px-4 py-3 text-right">
                                                 <span className="inline-flex items-center justify-center px-2 py-0.5 rounded text-xs font-semibold bg-green-100 text-green-800 min-w-[3rem]">
@@ -856,7 +870,7 @@ const AdminHistoryCommitment = () => {
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan="12" className="px-6 py-12 text-center text-gray-400">
+                                        <td colSpan="13" className="px-6 py-12 text-center text-gray-400">
                                             <div className="flex flex-col items-center gap-2">
                                                 <AlertCircle className="w-8 h-8 text-gray-300" />
                                                 <p className="font-medium text-gray-500">No records found under this category / filter.</p>
@@ -868,7 +882,7 @@ const AdminHistoryCommitment = () => {
                             {filteredRecords.length > 0 && averages && (
                                 <tfoot className="bg-gray-50 font-bold sticky bottom-0 z-30 shadow-[0_-1px_3px_rgba(0,0,0,0.1)]">
                                     <tr>
-                                        <td colSpan="5" className="px-4 py-3 text-right text-gray-800 border-t border-gray-200">Average:</td>
+                                        <td colSpan="6" className="px-4 py-3 text-right text-gray-800 border-t border-gray-200">Average:</td>
                                         <td className="px-4 py-3 text-right text-gray-800 border-t border-gray-200">{averages.target}</td>
                                         <td className="px-4 py-3 text-right text-gray-800 border-t border-gray-200">{averages.actualWorkDone}</td>
                                         <td className="px-4 py-3 text-right text-gray-800 border-t border-gray-200">{averages.workNotDone}%</td>

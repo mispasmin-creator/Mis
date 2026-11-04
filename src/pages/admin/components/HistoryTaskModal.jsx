@@ -315,6 +315,7 @@ const HistoryTaskModal = ({
                             <img src="${selectedUserDetails.image}" alt="${selectedUserDetails.name}" class="emp-photo">
                             <div class="emp-details">
                                 <h2>${selectedUserDetails.name}</h2>
+                                ${selectedUserDetails.designation ? `<p style="font-size: 12px; font-weight: 700; color: #4338ca; margin-top: 2px;">${selectedUserDetails.designation}</p>` : ''}
                                 <p style="font-size: 14px; font-weight: 600; color: #334155; margin-top: 2px;">
                                     <span>${selectedUserDetails.department || 'Operations Management'}</span>
                                     ${selectedUserDetails.firm ? `<span style="color: #cbd5e1; margin: 0 6px;">&bull;</span><span style="color: #24888f; font-weight: 700;">${selectedUserDetails.firm}</span>` : ''}
@@ -440,7 +441,12 @@ const HistoryTaskModal = ({
                         </div>
                         <div>
                             <h2 className="text-lg font-bold text-gray-900 leading-tight">
-                                {selectedUserDetails.name}
+                                <span>{selectedUserDetails.name}</span>
+                                {selectedUserDetails.designation && (
+                                    <span className="ml-2 text-sm font-semibold text-indigo-700 align-middle">
+                                        ({selectedUserDetails.designation})
+                                    </span>
+                                )}
                             </h2>
                             <div className="flex items-center gap-2 mt-0.5">
                                 <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">

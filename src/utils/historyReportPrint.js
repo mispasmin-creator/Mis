@@ -85,6 +85,7 @@ function buildHistoryReportHTML({
       <tr style="background-color: ${rowBg}; page-break-inside: avoid; break-inside: avoid;">
         <td style="padding: 6px 4px; text-align: center; color: #6b7280; font-weight: 500; border-bottom: 1px solid #e5e7eb; border-right: 1px solid #e5e7eb;">${idx + 1}</td>
         <td style="padding: 6px 6px; text-align: center; font-weight: 600; color: #111827; border-bottom: 1px solid #e5e7eb; border-right: 1px solid #e5e7eb;">${formatVal(r.name)}</td>
+        <td style="padding: 6px 4px; text-align: center; color: #4338ca; font-weight: 600; border-bottom: 1px solid #e5e7eb; border-right: 1px solid #e5e7eb;">${formatVal(r.designation)}</td>
         <td style="padding: 6px 4px; text-align: center; color: #4b5563; border-bottom: 1px solid #e5e7eb; border-right: 1px solid #e5e7eb;">${formatVal(r.firm)}</td>
         <td style="padding: 6px 4px; text-align: center; color: #374151; font-weight: 600; border-bottom: 1px solid #e5e7eb; border-right: 1px solid #e5e7eb;">${formatVal(r.target)}</td>
         <td style="padding: 6px 4px; text-align: center; border-bottom: 1px solid #e5e7eb; border-right: 1px solid #e5e7eb;">
@@ -126,7 +127,7 @@ function buildHistoryReportHTML({
   if (averages && records.length > 0) {
     averageRowHtml = `
       <tr style="background-color: #f3f4f6; font-weight: bold; border-top: 2px solid #16555a; border-bottom: 2px solid #16555a; page-break-inside: avoid; break-inside: avoid;">
-        <td colspan="3" style="padding: 7px 8px; text-align: center; color: #111827; font-size: 11px; text-transform: uppercase; border-right: 1px solid #d1d5db;">Average:</td>
+        <td colspan="4" style="padding: 7px 8px; text-align: center; color: #111827; font-size: 11px; text-transform: uppercase; border-right: 1px solid #d1d5db;">Average:</td>
         <td style="padding: 7px 4px; text-align: center; color: #111827; font-size: 11px; border-right: 1px solid #d1d5db;">${averages.target}</td>
         <td style="padding: 7px 4px; text-align: center; color: #166534; font-size: 11px; border-right: 1px solid #d1d5db;">${averages.actualWorkDone}</td>
         <td style="padding: 7px 4px; text-align: center; color: #111827; font-size: 11px; border-right: 1px solid #d1d5db;">${averages.workNotDone}%</td>
@@ -187,6 +188,7 @@ function buildHistoryReportHTML({
           <tr style="background-color: #16555a; color: #ffffff; text-align: center;">
             <th style="padding: 7px 4px; font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; width: 35px; text-align: center; border-right: 1px solid #1d6d72;">S.No</th>
             <th style="padding: 7px 6px; font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; text-align: center; border-right: 1px solid #1d6d72;">Name</th>
+            <th style="padding: 7px 4px; font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; text-align: center; border-right: 1px solid #1d6d72;">Designation</th>
             <th style="padding: 7px 4px; font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; text-align: center; border-right: 1px solid #1d6d72;">Firm</th>
             <th style="padding: 7px 4px; font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; text-align: center; border-right: 1px solid #1d6d72;">Target</th>
             <th style="padding: 7px 4px; font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; text-align: center; border-right: 1px solid #1d6d72;">Actual Work Done</th>
@@ -199,7 +201,7 @@ function buildHistoryReportHTML({
           </tr>
         </thead>
         <tbody>
-          ${rowsHtml || `<tr><td colspan="11" style="padding: 20px; text-align: center; color: #9ca3af;">No records found.</td></tr>`}
+          ${rowsHtml || `<tr><td colspan="12" style="padding: 20px; text-align: center; color: #9ca3af;">No records found.</td></tr>`}
           ${averageRowHtml}
         </tbody>
       </table>
@@ -359,6 +361,7 @@ export async function downloadHistoryPDF({
       [
         { content: 'S.NO', styles: { halign: 'center' } },
         { content: 'NAME', styles: { halign: 'center' } },
+        { content: 'DESIGNATION', styles: { halign: 'center' } },
         { content: 'FIRM', styles: { halign: 'center' } },
         { content: 'TARGET', styles: { halign: 'center' } },
         { content: 'ACTUAL WORK DONE', styles: { halign: 'center' } },
@@ -393,6 +396,7 @@ export async function downloadHistoryPDF({
       return [
         { content: String(idx + 1), styles: { halign: 'center', textColor: [107, 114, 128] } },
         { content: formatVal(r.name), styles: { halign: 'center', fontStyle: 'bold', textColor: [17, 24, 39] } },
+        { content: formatVal(r.designation), styles: { halign: 'center', fontStyle: 'bold', textColor: [67, 56, 202] } },
         { content: formatVal(r.firm), styles: { halign: 'center', textColor: [75, 85, 99] } },
         { content: formatVal(r.target), styles: { halign: 'center', fontStyle: 'bold', textColor: [55, 65, 81] } },
         { content: formatVal(r.actualWorkDone), styles: { halign: 'center', fontStyle: 'bold', fillColor: [220, 252, 231], textColor: [22, 101, 52] } },
@@ -408,7 +412,7 @@ export async function downloadHistoryPDF({
     // Average Footer Row
     const foot = averages && records.length > 0 ? [
       [
-        { content: 'AVERAGE:', colSpan: 3, styles: { halign: 'center', fontStyle: 'bold', textColor: [17, 24, 39] } },
+        { content: 'AVERAGE:', colSpan: 4, styles: { halign: 'center', fontStyle: 'bold', textColor: [17, 24, 39] } },
         { content: String(averages.target), styles: { halign: 'center', fontStyle: 'bold', textColor: [17, 24, 39] } },
         { content: String(averages.actualWorkDone), styles: { halign: 'center', fontStyle: 'bold', textColor: [22, 101, 52] } },
         { content: `${averages.workNotDone}%`, styles: { halign: 'center', fontStyle: 'bold', textColor: [17, 24, 39] } },
